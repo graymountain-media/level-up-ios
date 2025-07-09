@@ -19,6 +19,10 @@
 
 ## Engagement Loop Between App & Gym
 
+Members will enter the Level Up Fitness gym to workout. The Level Up companion app will track where they workout and will award progress through an in-app avatar that represents the member.
+Leveling up your avatar will give you access to missions that your avatar will complete while you are outside of the gym. These missions will provide rewards for your avatar that can be claimed by returning to the gym the next day.
+
+
 1. Enter the gym and work out  
 2. Earn XP and receive a class designation ("Path")  
 3. Level up your avatar  

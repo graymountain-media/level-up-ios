@@ -1,4 +1,15 @@
-VStack {
+//
+//  AvatarBaseView.swift
+//  Level Up Fitness
+//
+//  Created by Jake Gray on 7/4/25.
+//
+
+import SwiftUI
+
+struct AvatarBaseView: View {
+    var body: some View {
+        VStack {
             Spacer()
             Image("william_vengence")
                 .resizable()
@@ -10,9 +21,13 @@ VStack {
         .background {
             ZStack {
                 Color.black.ignoresSafeArea()
+                    .allowsHitTesting(false)
                 Image("citiscape")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .ignoresSafeArea()
+                    .allowsHitTesting(false)
             }
         }
+    }
+}

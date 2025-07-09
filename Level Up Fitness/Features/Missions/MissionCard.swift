@@ -2,49 +2,150 @@ import SwiftUI
 
 struct MissionCard: View {
     let mission: Mission
-    let onAction: (() -> Void)?
+    var isSelected: Bool = false
+    let onTap: () -> Void
+    let onSelect: () -> Void
     
+    init(mission: Mission, isSelected: Bool = false, onTap: @escaping () -> Void, onSelect: @escaping () -> Void) {
+        self.mission = mission
+        self.isSelected = isSelected
+        self.onTap = onTap
+        self.onSelect = onSelect
+    }
     var body: some View {
-        HStack(spacing: 10) {
-            // Left side: Mission icon
-            Image("CoreItemIcon")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 60, height: 60)
-            
-            // Middle: Mission details
-            VStack(alignment: .leading, spacing: 4) {
-                // Mission title and XP
+        VStack(spacing: 24) {
+            HStack {
+                Image("")
                 Text(mission.title)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                // Mission description
-                Text(mission.description)
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .font(.system(size: 24, weight: .heavy))
+                    .foregroundStyle(.textOrange)
             }
-            Spacer(minLength: 0)
-            VStack(alignment: .trailing, spacing: 10) {
-                Text("Lvl required: \(mission.levelRequirement)")
-                Text("Sucess: \(mission.successRate)%")
-                Button(action: onAction ?? { }) {
-                    Text("Accept Mission")
-                        .foregroundColor(.white)
-                        .padding(8)
-                        .background(Capsule().fill(Color.blue))
-                        .font(.system(size: 14))
-                }
-                Text("\(mission.fluxReward) Flux reward")
+            .padding()
+            .overlay {
+                CustomBorderShape()
+                    .stroke(Color.border, lineWidth: 1)
+                    .padding(5)
+                CustomBorderShape(cornerWidth: 13)
+                    .stroke(Color.border, lineWidth: 5)
             }
-            .font(.system(size: 12))
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTap()
+            }
+            .background(
+                Color.major
+                    .clipShape(
+                        CustomBorderShape()
+                    )
+            )
+            if isSelected {
+                descriptionBody.transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity)
-        .foregroundStyle(Color.white)
-        .background(Color.missionCardBG)
-        .cornerRadius(12)
+        .transition(.opacity)
+        
+    }
+    
+    var descriptionBody: some View {
+        VStack {
+            if mission.status == .inProgress {
+                // In Progress Mission View (matching screenshot)
+                VStack(spacing: 16) {
+                    // Countdown Timer
+                    TimeRemainingView(deadline: mission.deadline ?? Date())
+                        .font(.system(size: 48, weight: .bold))
+                        .foregroundStyle(Color.textOrange)
+                    
+                    Text("REMAINING")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(Color.textOrange)
+                    
+                    // Mission Accepted Banner
+                    Text("MISSION\nACCEPTED")
+                        .font(.system(size: 32, weight: .heavy))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(Color.major)
+                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            Color.textOrange
+                                .clipShape(CustomBorderShape())
+                                .padding(4)
+                        )
+                        .overlay {
+                            CustomBorderShape(cornerWidth: 13)
+                                .stroke(Color.textOrange, lineWidth: 3)
+                        }
+                        .padding(.horizontal, 40)
+                    
+                    // Team Up Info
+                    VStack(spacing: 4) {
+                        Text("TEAM UP WITH PARTY TO")
+                            .font(.system(size: 16, weight: .medium))
+                        Text("INCREASE SUCCESS CHANCES")
+                            .font(.system(size: 16, weight: .medium))
+                        Text("5% PER PERSON (MAX 3)")
+                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .foregroundStyle(Color.white)
+                }
+                .padding(.vertical, 20)
+            } else {
+                // Original view for other mission statuses
+                VStack(spacing: 20) {
+                    // XP Display
+                    Text("\(mission.xpReward) XP")
+                        .font(.system(size: 48, weight: .bold))
+                        .foregroundStyle(Color.textOrange)
+                    
+                    // Mission Details
+                    VStack(spacing: 8) {
+                        Text("COMPLETION TIME: \(mission.completionTime) HOURS")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(Color.textOrange)
+                        
+                        Text("SUCCESS RATE: \(mission.successRate)%")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(Color.textOrange)
+                    }
+                    
+                    // Mission Description
+                    Text(mission.description)
+                        .font(.system(size: 16))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(Color.white)
+                        .padding(.horizontal)
+                    
+                    // Select Button
+                    Button(action: {
+                        onSelect()
+                    }) {
+                        Image("select_button")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(height: 50)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.top, 10)
+                }
+                .padding(.vertical, 20)
+                
+            }
+        }
+        .padding()
+        .overlay {
+            CustomBorderShape()
+                .stroke(Color.border, lineWidth: 4)
+                .padding(10)
+            CustomBorderShape(cornerWidth: 13)
+                .stroke(Color.border, lineWidth: 4)
+        }
+        .background(
+            Color.major
+                .clipShape(
+                    CustomBorderShape()
+                )
+        )
     }
     
     private var buttonTitle: String {
@@ -84,36 +185,42 @@ struct MissionCard: View {
             mission: Mission(
                 title: "Daily Cardio Challenge",
                 description: "Complete 30 minutes of cardio to earn bonus XP and credits.",
-                fluxReward: 150,
+                xpReward: 1300,
+                completionTime: 72,
                 successRate: 100,
                 status: .available,
                 levelRequirement: 1
             ),
-            onAction: {}
+            onTap: {},
+            onSelect: {}
         )
         
         MissionCard(
             mission: Mission(
                 title: "Strength Training",
                 description: "Complete 3 sets of weight training exercises.",
-                fluxReward: 200,
+                xpReward: 200,
+                completionTime: 24,
                 successRate: 70,
                 status: .inProgress,
                 levelRequirement: 5
             ),
-            onAction: {}
+            onTap: {},
+            onSelect: {}
         )
         
         MissionCard(
             mission: Mission(
                 title: "Yoga Flow",
                 description: "Complete a 20-minute yoga session to improve flexibility.",
-                fluxReward: 100,
+                xpReward: 1000,
+                completionTime: 48,
                 successRate: 85,
                 status: .completed,
                 levelRequirement: 2
             ),
-            onAction: {}
+            onTap: {},
+            onSelect: {}
         )
     }
     .padding()

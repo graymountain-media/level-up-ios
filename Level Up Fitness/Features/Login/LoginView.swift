@@ -68,6 +68,14 @@ struct LoginView: View {
                 .padding(.top, 16)
             }
             .padding(30)
+            .overlay {
+                CustomBorderShape(cornerWidth: 15)
+                    .stroke(Color.border, lineWidth: 3)
+                CustomBorderShape()
+                    .stroke(Color.border, lineWidth: 3)
+                    .padding(8)
+            }
+            .padding()
         }
     }
 

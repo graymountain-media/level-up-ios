@@ -1,8 +1,21 @@
-ZStack(alignment: .topLeading) {
+//
+//  FeatureHeader.swift
+//  Level Up Fitness
+//
+//  Created by Jake Gray on 7/3/25.
+//
+
+import SwiftUI
+
+struct FeatureHeader: View {
+    @Environment(\.dismiss) var dismiss
+    var titleImageName: String
+    var body: some View {
+        ZStack(alignment: .topLeading) {
             HStack {
                 Spacer()
                 
-                Image("item_shop_title")
+                Image(titleImageName)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(height: 60)
@@ -20,5 +33,7 @@ ZStack(alignment: .topLeading) {
                     .padding(.horizontal, 24)
                     .foregroundStyle(Color.minor)
             }
-
+            
         }
+    }
+}

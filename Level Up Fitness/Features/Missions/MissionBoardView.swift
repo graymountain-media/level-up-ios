@@ -2,63 +2,21 @@ import SwiftUI
 
 struct MissionBoardView: View {
     @StateObject private var viewModel = MissionBoardViewModel()
+    @State var selectedMission: Mission?
     
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 14) {
-                Spacer()
-                Text("Mission Board")
-                    .font(.system(size: 18))
-                    .bold()
-                Button {
-                    
-                } label: {
-                    Text("Active Missions")
-                        .bold()
-                        .padding(8)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.accentColor))
-                }
-                .buttonStyle(.plain)
-
-            }
-            .foregroundStyle(Color.white)
-            .frame(minHeight: 60)
-            .background(
-                Rectangle()
-                    .fill(Color.missionBoardHeader)
-                    .frame(height: 50)
-            )
+            FeatureHeader(titleImageName: "mission_board_title")
             
             // Content based on selected tab
             ScrollView {
                 VStack(spacing: 16) {
-                    if viewModel.selectedTab == .missionBoard {
-                        if viewModel.availableMissions.isEmpty {
-                            emptyStateView(message: "No missions available. Check back later for new challenges!")
-                        } else {
-                            ForEach(viewModel.availableMissions) { mission in
-                                MissionCard(mission: mission) {
-                                    viewModel.startMission(mission)
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
+                    if viewModel.availableMissions.isEmpty {
+                        emptyStateView(message: "No missions available. Check back later for new challenges!")
                     } else {
-                        if viewModel.activeMissions.isEmpty {
-                            emptyStateView(message: "No active missions. Select missions from the Mission Board to get started!")
-                        } else {
-                            ForEach(viewModel.activeMissions) { mission in
-                                MissionCard(mission: mission) {
-                                    if mission.status == .inProgress {
-                                        viewModel.completeMission(mission)
-                                    } else if mission.status == .completed {
-                                        viewModel.claimReward(for: mission)
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
+                        missionCards.transition(.move(edge: .bottom))
                     }
+                    
                     
                     Spacer()
                         .frame(height: 20)
@@ -68,13 +26,35 @@ struct MissionBoardView: View {
         }
         .background {
             ZStack {
-                Color.black.ignoresSafeArea()
-                Image("MissionsBG")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .ignoresSafeArea()
+                Color.major.ignoresSafeArea()
             }
         }
+    }
+    
+    var missionCards: some View {
+        VStack(spacing: 20) {
+            ForEach(viewModel.availableMissions) { mission in
+                if selectedMission == nil || selectedMission?.id == mission.id {
+                    MissionCard(mission: mission, isSelected: selectedMission?.id == mission.id) {
+                        if selectedMission != nil {
+                            withAnimation {
+                                selectedMission = nil
+                            }
+                        } else {
+                            withAnimation {
+                                selectedMission = mission
+                            }
+                        }
+                    } onSelect: {
+                        viewModel.startMission(mission)
+                    }
+                    .id(mission.id)
+                    .padding(.horizontal)
+                    .transition(.opacity)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
     
     private func emptyStateView(message: String) -> some View {

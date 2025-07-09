@@ -7,10 +7,6 @@
 
 import SwiftUI
 
-@Observable
-class AppState {
-    var isSignedIn = false
-}
 @main
 struct LevelUpApp: App {
     @State var appState = AppState()
@@ -28,10 +24,10 @@ struct RootView: View {
     var body: some View {
         Group {
             if appState.isSignedIn {
-                MainTabView()
+                MainView()
                     .transition(.opacity)
             } else {
-                SplashScreen()
+                LoginView()
                     .transition(.opacity)
             }
         }

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum MainMenuItem: Int, CaseIterable, Identifiable {
+enum Destination: Int, CaseIterable, Identifiable {
     case avatar
     case inventory
     case itemShop
@@ -56,50 +56,107 @@ enum MainMenuItem: Int, CaseIterable, Identifiable {
 }
 
 struct MainView: View {
-    @State private var currentTab: Int = 0
+    @Environment(AppState.self) var appState
+    
     var body: some View {
-        VStack(spacing: 0) {
-            TabView(selection: $currentTab) {
-                AvatarView().tag(0)
-                LogWorkoutView().tag(1)
-                Text("Leaderboard").tag(2)
-                Text("Account").tag(3)
-                MissionBoardView().tag(4)
-            }
-            Rectangle()
-                .fill(Color.white)
-                .frame(height: 1)
-            HStack(spacing: 0) {
-                ForEach(MainTab.allCases) { tab in
-                    tabItem(forTab: tab)
+        @Bindable var appState = appState
+        ZStack {
+            NavigationStack {
+                ZStack(alignment: .leading) {
+                    // Side Menu
+                    VStack(spacing: 0) {
+                        avatarView
+                        navBar
+                    }
                 }
             }
-            .background(LinearGradient(colors: [.tabBarStart, .tabBarEnd], startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea())
+            .tint(Color.minor)
+            SlideOutMenu()
+        }
+        .fullScreenCover(item: $appState.presentedDestination) { destination in
+            switch destination {
+            case .avatar:
+                EmptyView()
+            case .inventory:
+                InventoryView()
+            case .itemShop:
+                ItemShopView()
+            case .missionBoard:
+                MissionBoardView()
+            case .logWorkout:
+                LogWorkoutView()
+            case .leaderboard:
+                LeaderboardView()
+            }
         }
     }
     
-    func tabItem(forTab tab: MainTab) -> some View {
-        let isSelected = currentTab == tab.rawValue
-        return Button(action: {
-            currentTab = tab.rawValue
-        }, label: {
-            VStack {
-                Image(systemName: tab.imageName)
+    var avatarView: some View {
+        AvatarView()
+            .background(Color.major.edgesIgnoringSafeArea(.all))
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        appState.isShowingMenu.toggle()
+                    } label: {
+                        Image(systemName: "line.3.horizontal")
+                            .bold()
+                    }
+                }
+                ToolbarItem(placement: .principal) {
+                    Image("logo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        
+                    } label: {
+                        Image(systemName: "bell.fill")
+                    }
+                }
+            }
+            .toolbarTitleDisplayMode(.inline)
+            .toolbarBackgroundVisibility(.visible, for: .navigationBar)
+            .toolbarBackground(Color.major, for: .navigationBar)
+    }
+    
+    var navBar: some View {
+        HStack {
+            Button {
+                appState.presentedDestination = .missionBoard
+            } label: {
+                Image(Destination.missionBoard.imageName)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(height: 24)
-                Text(tab.title)
-                    .font(.system(size: 10))
+                    .frame(height: 100)
             }
-            .foregroundStyle(isSelected ? Color.accent : Color.white)
-        })
-        .buttonStyle(.plain)
-        .frame(height: 60)
-        .padding(.horizontal, 2)
+            Button {
+                appState.presentedDestination = .logWorkout
+            } label: {
+                Image(Destination.logWorkout.imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: 100)
+            }
+            Button {
+                appState.presentedDestination = .itemShop
+            } label: {
+                Image(Destination.itemShop.imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: 100)
+            }
+        }
         .frame(maxWidth: .infinity)
+        .background(
+            Color.major.ignoresSafeArea()
+        )
     }
+    
 }
 
 #Preview {
     MainView()
+        .environment(AppState())
 }
