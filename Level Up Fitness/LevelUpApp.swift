@@ -1,5 +1,5 @@
 //
-//  Level_Up_FitnessApp.swift
+//  LevelUpApp.swift
 //  Level Up Fitness
 //
 //  Created by Jake Gray on 7/1/25.
@@ -8,10 +8,10 @@
 import SwiftUI
 
 @main
-struct Level_Up_FitnessApp: App {
+struct LevelUpApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginView()
         }
     }
 }
