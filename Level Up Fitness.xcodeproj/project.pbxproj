@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1EFF8B42E1F661800C88FE5 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8B32E1F661800C88FE5 /* Auth */; };
+		A1EFF8B62E1F661800C88FE5 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8B52E1F661800C88FE5 /* PostgREST */; };
+		A1EFF8B82E1F661800C88FE5 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8B72E1F661800C88FE5 /* Storage */; };
+		A1EFF8BB2E1F668500C88FE5 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8BA2E1F668500C88FE5 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		A12533A12E14CBD700C12FA3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +59,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1EFF8BB2E1F668500C88FE5 /* Supabase in Frameworks */,
+				A1EFF8B82E1F661800C88FE5 /* Storage in Frameworks */,
+				A1EFF8B62E1F661800C88FE5 /* PostgREST in Frameworks */,
+				A1EFF8B42E1F661800C88FE5 /* Auth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +89,7 @@
 				A12533952E14CBD500C12FA3 /* Level Up Fitness */,
 				A12533A32E14CBD700C12FA3 /* Level Up FitnessTests */,
 				A12533AD2E14CBD700C12FA3 /* Level Up FitnessUITests */,
+				A1EFF8B92E1F668500C88FE5 /* Frameworks */,
 				A12533942E14CBD500C12FA3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +102,13 @@
 				A12533AA2E14CBD700C12FA3 /* Level Up FitnessUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A1EFF8B92E1F668500C88FE5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +131,10 @@
 			);
 			name = "Level Up Fitness";
 			packageProductDependencies = (
+				A1EFF8B32E1F661800C88FE5 /* Auth */,
+				A1EFF8B52E1F661800C88FE5 /* PostgREST */,
+				A1EFF8B72E1F661800C88FE5 /* Storage */,
+				A1EFF8BA2E1F668500C88FE5 /* Supabase */,
 			);
 			productName = "Level Up Fitness";
 			productReference = A12533932E14CBD500C12FA3 /* Level Up Fitness.app */;
@@ -195,6 +218,9 @@
 			);
 			mainGroup = A125338A2E14CBD500C12FA3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A1EFF8B22E1F661800C88FE5 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A12533942E14CBD500C12FA3 /* Products */;
 			projectDirPath = "";
@@ -400,6 +426,7 @@
 				DEVELOPMENT_TEAM = 3UK26G7UCA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Level-Up-Fitness-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -432,6 +459,7 @@
 				DEVELOPMENT_TEAM = 3UK26G7UCA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Level-Up-Fitness-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -566,6 +594,40 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A1EFF8B22E1F661800C88FE5 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1EFF8B32E1F661800C88FE5 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1EFF8B22E1F661800C88FE5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		A1EFF8B52E1F661800C88FE5 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1EFF8B22E1F661800C88FE5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		A1EFF8B72E1F661800C88FE5 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1EFF8B22E1F661800C88FE5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		A1EFF8BA2E1F668500C88FE5 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1EFF8B22E1F661800C88FE5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A125338B2E14CBD500C12FA3 /* Project object */;
 }

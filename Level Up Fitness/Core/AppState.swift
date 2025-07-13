@@ -6,11 +6,22 @@
 //
 
 import SwiftUI
+import Combine
 
 @Observable
+@MainActor
 class AppState {
-    var isSignedIn = false
+    // Navigation state
     var isShowingMenu: Bool = false
     var presentedDestination: Destination?
+    
+    // Workout state
     var workout: DailyWorkout?
+    
+    // Supabase service reference
+    let supabaseService = SupabaseService()
+    
+    var isAuthenticated: Bool {
+        return supabaseService.isAuthenticated
+    }
 }

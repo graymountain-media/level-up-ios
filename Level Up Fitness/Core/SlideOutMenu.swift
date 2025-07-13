@@ -46,6 +46,12 @@ struct SlideOutMenu: View {
                                         .background(Color.white)
                                         .padding(.vertical, 8)
                                 }
+                                Button("Sign Out") {
+                                    Task {
+                                        let _ = try? await
+                                        appState.supabaseService.signOut()
+                                    }
+                                }
                             }
                         }
                         .padding(.top, 20)

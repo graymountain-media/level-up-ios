@@ -6,10 +6,20 @@
 //
 
 import SwiftUI
+import Supabase
+import UIKit
 
 @main
 struct LevelUpApp: App {
     @State var appState = AppState()
+    init() {
+        for family: String in UIFont.familyNames {
+            print(family)
+            for names: String in UIFont.fontNames(forFamilyName: family) {
+                print("== \(names)")
+            }
+        }
+    }
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -23,7 +33,13 @@ struct RootView: View {
     
     var body: some View {
         Group {
-            if appState.isSignedIn {
+            if appState.supabaseService.isLoadingSession {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.major)
+                    .transition(.opacity)
+            }
+            else if appState.isAuthenticated {
                 MainView()
                     .transition(.opacity)
             } else {
@@ -31,6 +47,10 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.default, value: appState.isSignedIn)
+        .onOpenURL { url in
+            let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            let items = urlComponents?.queryItems
+        }
+        .animation(.default, value: appState.isAuthenticated)
     }
 }

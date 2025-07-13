@@ -54,7 +54,7 @@ struct LUTextField: View {
     var isSecure: Bool
     
     // Customization properties
-    var borderColor: Color = .minor
+    var borderColor: Color = .border
     var borderWidth: CGFloat = 2
     var cornerWidth: CGFloat = 10
     var height: CGFloat = 50
@@ -69,7 +69,7 @@ struct LUTextField: View {
         VStack(spacing: 4) {
             HStack {
                 Text(placeholder.uppercased())
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(Color.textOrange)
                     .shadow(radius: 1)
                 Spacer()
@@ -83,6 +83,7 @@ struct LUTextField: View {
                 .overlay (
                     CustomBorderShape(cornerWidth: cornerWidth)
                         .stroke(borderColor, lineWidth: borderWidth)
+                        .borderShadow()
                 )
                 .padding(.bottom, 8) // Add some padding at the bottom for visual balance
         }
