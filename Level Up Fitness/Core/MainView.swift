@@ -6,94 +6,24 @@
 //
 
 import SwiftUI
-
-enum Destination: Int, CaseIterable, Identifiable {
-    case avatar
-    case inventory
-    case itemShop
-    case missionBoard
-    case logWorkout
-//    case activeMissions
-    case leaderboard
-    
-    var id: Int {
-        return self.rawValue
-    }
-    
-    var imageName: String {
-        switch self {
-        case .avatar:
-            "avatar_icon"
-        case .inventory:
-            "bag_icon"
-        case .itemShop:
-            "store_icon"
-        case .missionBoard:
-            "missions_icon"
-        case .logWorkout:
-            "workout_icon"
-        case .leaderboard:
-            "leaderboard_icon"
-        }
-    }
-    
-    var title: String {
-        switch self {
-        case .avatar:
-            "My Avatar"
-        case .inventory:
-            "Inventory"
-        case .itemShop:
-            "Item Shop"
-        case .missionBoard:
-            "Mission Board"
-        case .logWorkout:
-            "Log a Workout"
-        case .leaderboard:
-            "Leaderboards"
-        }
-    }
-}
+import FactoryKit
 
 struct MainView: View {
-    @Environment(AppState.self) var appState
+    @InjectedObservable(\.appState) var appState
+    @State var currentTab: MainTab = .home
     
     var body: some View {
         @Bindable var appState = appState
         ZStack {
-            NavigationStack {
-                ZStack(alignment: .leading) {
-                    // Side Menu
-                    VStack(spacing: 0) {
-                        avatarView
-                        navBar
-                    }
+            VStack(spacing: 0) {
+                navbar
+                currentTabView
+                    .frame(maxHeight: .infinity)
+                Spacer(minLength: 0)
+                LUTabBar { tab in
+                    currentTab = tab
                 }
             }
-            .tint(Color.minor)
-            SlideOutMenu()
-        }
-        .fullScreenCover(item: $appState.presentedDestination) { destination in
-            switch destination {
-            case .avatar:
-                EmptyView()
-            case .inventory:
-                InventoryView()
-            case .itemShop:
-                ItemShopView()
-            case .missionBoard:
-                MissionBoardView()
-            case .logWorkout:
-                LogWorkoutView()
-            case .leaderboard:
-                LeaderboardView()
-            }
-        }
-    }
-    
-    var avatarView: some View {
-        AvatarView()
-            .background(Color.major.edgesIgnoringSafeArea(.all))
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
@@ -116,42 +46,67 @@ struct MainView: View {
                     }
                 }
             }
-            .toolbarTitleDisplayMode(.inline)
-            .toolbarBackgroundVisibility(.visible, for: .navigationBar)
             .toolbarBackground(Color.major, for: .navigationBar)
-    }
-    
-    var navBar: some View {
-        HStack {
-            Button {
-                appState.presentedDestination = .missionBoard
-            } label: {
-                Image(Destination.missionBoard.imageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 100)
-            }
-            Button {
-                appState.presentedDestination = .logWorkout
-            } label: {
-                Image(Destination.logWorkout.imageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 100)
-            }
-            Button {
-                appState.presentedDestination = .itemShop
-            } label: {
-                Image(Destination.itemShop.imageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 100)
+            .tint(Color.minor)
+            MainMenu()
+        }
+        .task {
+            // Load user data when main view appears and user is authenticated
+            if appState.isAuthenticated && appState.userAccountData == nil {
+                await appState.loadUserData()
             }
         }
-        .frame(maxWidth: .infinity)
-        .background(
-            Color.major.ignoresSafeArea()
-        )
+    }
+    
+    var navbar: some View {
+        ZStack {
+            HStack {
+                Button {
+                    appState.isShowingMenu.toggle()
+                } label: {
+                    Image(systemName: "line.3.horizontal")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 32, height: 32)
+                }
+                Spacer()
+                Button {
+                    
+                } label: {
+                    Image(systemName: "bell.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 32, height: 32)
+                }
+            }
+            .frame(height: 70)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 8)
+            .background(Color.major.ignoresSafeArea())
+            HStack {
+                Spacer()
+                Image("logo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                Spacer()
+            }
+            .frame(height: 70)
+            .padding(.vertical, 8)
+
+        }
+    }
+    @ViewBuilder
+    var currentTabView: some View {
+        switch currentTab {
+        case .home:
+            AvatarView()
+        case .missionBoard:
+            MissionBoardView()
+        case .logWorkout:
+            LogWorkoutView()
+        case .leaderboard:
+            LeaderboardView()
+        }
     }
     
 }

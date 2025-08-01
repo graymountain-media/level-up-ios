@@ -20,7 +20,7 @@ struct ItemShopView: View {
             
             
             VStack(spacing: 0) {
-                FeatureHeader(titleImageName: "item_shop_title")
+                FeatureHeader(title: "Item Shop")
                 categories
                 itemList
             }

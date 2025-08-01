@@ -6,7 +6,7 @@ struct MissionBoardView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            FeatureHeader(titleImageName: "mission_board_title")
+            FeatureHeader(title: "Mission Board")
             
             // Content based on selected tab
             ScrollView {

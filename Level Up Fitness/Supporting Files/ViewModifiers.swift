@@ -15,14 +15,15 @@ struct BoderShadowModifier: ViewModifier {
 }
 
 struct ContainerBorderModifier: ViewModifier {
+    var color: Color = .border
     func body(content: Content) -> some View {
         content
             .overlay {
                 CustomBorderShape(cornerWidth: 18)
-                    .stroke(Color.border, lineWidth: 3)
+                    .stroke(color, lineWidth: 3)
                     .borderShadow()
                 CustomBorderShape(cornerWidth: 15)
-                    .stroke(Color.border, lineWidth: 3)
+                    .stroke(color, lineWidth: 3)
                     .padding(8)
                     .borderShadow()
             }
@@ -34,7 +35,7 @@ extension View {
         self.modifier(BoderShadowModifier())
     }
     
-    func containerBorder() -> some View {
-        self.modifier(ContainerBorderModifier())
+    func containerBorder(color: Color = .border) -> some View {
+        self.modifier(ContainerBorderModifier(color: color))
     }
 }

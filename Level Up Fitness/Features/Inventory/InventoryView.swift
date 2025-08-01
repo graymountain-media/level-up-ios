@@ -35,13 +35,13 @@ struct InventoryView: View {
     var body: some View {
         ZStack {
             // Background
-            Color(hex: "0A1A1F")
+            Color.major
                 .ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 16) {
                     // Close button and header
-                    FeatureHeader(titleImageName: "inventory_title")
+                    FeatureHeader(title: "Inventory")
                     
                     // Main content
                     HStack(alignment: .top, spacing: 16) {

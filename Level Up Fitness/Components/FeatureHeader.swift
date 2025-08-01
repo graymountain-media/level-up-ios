@@ -8,32 +8,26 @@
 import SwiftUI
 
 struct FeatureHeader: View {
-    @Environment(\.dismiss) var dismiss
-    var titleImageName: String
+    var title: String
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            HStack {
-                Spacer()
-                
-                Image(titleImageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 60)
-                
-                Spacer()
-            }
-            .padding(.bottom, 24)
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 20)
-                    .padding(.horizontal, 24)
-                    .foregroundStyle(Color.minor)
-            }
-            
+        VStack(alignment: .center, spacing: 12) {
+            Text(title.uppercased())
+                .font(.mainFont(size: 20).bold())
+                .foregroundStyle(Color.title)
+            LUDivider()
+                .frame(maxWidth: 200)
         }
+        .padding(.vertical, 20)
     }
 }
+
+
+#Preview {
+    VStack {
+        FeatureHeader(title: "Log A Workout")
+        Spacer()
+    }
+    .frame(maxWidth: .infinity)
+    .background(Color.major.ignoresSafeArea())
+}
+

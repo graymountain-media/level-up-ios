@@ -7,21 +7,240 @@
 
 import SwiftUI
 import Combine
+import Supabase
+import FactoryKit
 
 @Observable
 @MainActor
 class AppState {
     // Navigation state
     var isShowingMenu: Bool = false
-    var presentedDestination: Destination?
+    var selectedMenuItem: MenuItem?
     
-    // Workout state
-    var workout: DailyWorkout?
+    var supabaseClient: SupabaseClient
+    // User data service reference
+    var userDataService: UserDataService
     
-    // Supabase service reference
-    let supabaseService = SupabaseService()
+    // Centralized user data - AppState is the single source of truth
+    var authState: AuthState = .loading
+    var userAccountData: UserAccountData?
+    var isLoadingUserData: Bool = false
+    var userDataError: String?
+    
+    // Cached level info to avoid repeated fetches
+    private var cachedLevelInfo: [LevelInfo]?
+    
+    init() {
+        let client = SupabaseClient(
+            supabaseURL: URL(string: "https://uprgcseatwhpptlmmdjr.supabase.co")!,
+            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwcmdjc2VhdHdocHB0bG1tZGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwNzM4NzEsImV4cCI6MjA2NzY0OTg3MX0.D7_ahKtqoYAmfuHs4YX50yQhIkHmX1ChAYvfaD-cqfg"
+        )
+        supabaseClient = client
+        userDataService = UserDataService(client: client)
+        
+        // Check initial authentication status and start observing changes
+        Task {
+            await checkAuthenticationStatus()
+            await observeAuthStateChanges()
+        }
+    }
     
     var isAuthenticated: Bool {
-        return supabaseService.isAuthenticated
+        switch authState {
+        case .authenticated:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    // MARK: - User Data Management
+    
+    /// Fetches and caches user account data
+    func loadUserData() async {
+        await MainActor.run {
+            self.isLoadingUserData = true
+            self.userDataError = nil
+        }
+        
+        let result = await userDataService.fetchUserAccountData()
+        
+        await MainActor.run {
+            switch result {
+            case .success(let data):
+                self.userAccountData = data
+                self.isLoadingUserData = false
+                self.userDataError = nil
+                
+            case .failure(let error):
+                self.userAccountData = nil
+                self.isLoadingUserData = false
+                self.userDataError = error.localizedDescription
+                print("Failed to load user data: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    /// Refreshes user data (useful after workouts or profile changes)
+    func refreshUserData() async {
+        await loadUserData()
+    }
+    
+    /// Updates user XP after a workout and recalculates level/progress
+    func updateUserXP(additionalXP: Int) async {
+        guard let currentData = userAccountData else {
+            await refreshUserData()
+            return
+        }
+        
+        do {
+            // Get level info from cache or fetch if not available
+            let levelInfo = try await getLevelInfo()
+            let newXp = currentData.totalXP + additionalXP
+            let newLevel = UserDataService.calculateNewLevel(currentXp: newXp, levelInfo: levelInfo)
+            try await supabaseClient
+                .from("xp_levels")
+                .update([
+                    "xp": newXp,
+                    "current_level": newLevel
+                ])
+                .eq("user_id", value: currentData.profile.id)
+                .execute()
+            // Update the cached data immediately for responsive UI
+            
+            await refreshUserData()
+        } catch {
+            await refreshUserData()
+        }
+    }
+    
+    private func getLevelInfo() async throws -> [LevelInfo] {
+        let levelInfo: [LevelInfo]
+        if let cached = cachedLevelInfo {
+            levelInfo = cached
+        } else {
+            let info = try await userDataService.fetchLevelInfo()
+            levelInfo = info
+            cachedLevelInfo = info
+        }
+        return levelInfo
+    }
+    
+    // MARK: - Authentication Methods
+    
+    func signUp(email: String, password: String) async -> Result<Void, Error> {
+        return await userDataService.signUp(email: email, password: password)
+    }
+    
+    func signIn(email: String, password: String) async -> Result<Void, Error> {
+        let result = await userDataService.signIn(email: email, password: password)
+        if case .success = result {
+            await checkAuthenticationStatus()
+        }
+        return result
+    }
+    
+    func signOut() async -> Result<Void, Error> {
+        let result = await userDataService.signOut()
+        if case .success = result {
+            await MainActor.run {
+                self.authState = .unauthenticated
+                self.userAccountData = nil
+            }
+        }
+        return result
+    }
+    
+    func resetPassword(email: String) async -> Result<Void, Error> {
+        return await userDataService.resetPassword(email: email)
+    }
+    
+    func createProfile(firstName: String, lastName: String, avatarName: String) async -> Result<Void, Error> {
+        let result = await userDataService.createProfile(firstName: firstName, lastName: lastName, avatarName: avatarName)
+        if case .success = result {
+            await checkAuthenticationStatus()
+        }
+        return result
+    }
+    
+    func updateProfile(firstName: String, lastName: String, avatarName: String) async -> Result<Void, Error> {
+        let result = await userDataService.updateProfile(firstName: firstName, lastName: lastName, avatarName: avatarName)
+        if case .success = result {
+            await refreshUserData()
+        }
+        return result
+    }
+    
+    // MARK: - Auth State Management
+    
+    private func checkAuthenticationStatus() async {
+        let sessionResult = await userDataService.checkExistingSession()
+        
+        switch sessionResult {
+        case .success(let session):
+            if session != nil {
+                // We have a valid session, now check if profile exists
+                let userDataResult = await userDataService.fetchUserAccountData()
+                switch userDataResult {
+                case .success(let userData):
+                    await MainActor.run {
+                        self.authState = .authenticated(hasCompletedOnboarding: true)
+                    }
+                case .failure(let error):
+                    if case .profileNotFound = error {
+                        // User needs to complete onboarding
+                        await MainActor.run {
+                            self.userAccountData = nil
+                            self.authState = .authenticated(hasCompletedOnboarding: false)
+                        }
+                    } else {
+                        await MainActor.run {
+                            self.authState = .error(error)
+                        }
+                    }
+                }
+            } else {
+                await MainActor.run {
+                    self.authState = .unauthenticated
+                    self.userAccountData = nil
+                }
+            }
+        case .failure(let error):
+            await MainActor.run {
+                self.authState = .unauthenticated
+                self.userAccountData = nil
+            }
+        }
+    }
+    
+    private func checkOnboardingStatus(for profile: Profile) -> Bool {
+        return !profile.firstName.isEmpty &&
+               !profile.lastName.isEmpty &&
+               !profile.avatarName.isEmpty
+    }
+    
+    // MARK: - Auth State Observation
+    
+    private func observeAuthStateChanges() async {
+        let authStateStream = userDataService.getAuthStateChanges()
+        
+        for await (event, session) in authStateStream {
+            switch event {
+            case .signedIn:
+                await checkAuthenticationStatus()
+            case .signedOut:
+                await MainActor.run {
+                    self.authState = .unauthenticated
+                    self.userAccountData = nil
+                }
+            case .tokenRefreshed:
+                // Session refreshed, update if needed
+                if session != nil && !isAuthenticated {
+                    await checkAuthenticationStatus()
+                }
+            default:
+                break
+            }
+        }
     }
 }

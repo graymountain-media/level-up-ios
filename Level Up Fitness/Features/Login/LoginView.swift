@@ -7,268 +7,126 @@
 
 import SwiftUI
 import Combine
+import FactoryKit
 
 struct LoginView: View {
-    @State private var showConfirmEmailView: Bool = false
-    @Environment(AppState.self) var appState
-    @State private var isLogin: Bool = true
-    @State private var firstName: String = ""
-    @State private var lastName: String = ""
-    @State private var avatarName: String = ""
-    @State private var email: String = ""
-    @State private var password: String = ""
-    @State private var confirmPassword: String = ""
-    @State private var showingResetPassword = false
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
+    @Environment(\.dismiss) var dismiss
+    @InjectedObservable(\.appState) var appState
+    @State var viewModel: LoginViewModel
     
-    @State private var emailToConfirm: String = ""
-    
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.major
-                    .ignoresSafeArea()
-                    .frame(maxHeight: .infinity)
-                VStack(spacing: 32) {
-                    Image("logo")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                    if !isLogin {
-                        LUTextField("Avatar Name", text: $avatarName)
-                            .autocapitalization(.words)
-
-                        LUTextField("First Name", text: $firstName)
-                            .textContentType(.givenName)
-                            .autocapitalization(.words)
-                        
-                        LUTextField("Last Name", text: $lastName)
-                            .textContentType(.familyName)
-                            .autocapitalization(.words)
-                    }
-                    LUTextField("Email", text: $email)
-                        .keyboardType(.emailAddress)
-                        .textContentType(.emailAddress)
-                        .autocapitalization(.none)
-                    
-                    LUTextField("Password", text: $password, isSecure: true)
-                        .textContentType(isLogin ? .password : .newPassword)
-
-                    if !isLogin {
-                        LUTextField("Confirm Password", text: $confirmPassword, isSecure: true)
-                            .textContentType(.newPassword)
-                            .autocapitalization(.none)
-                    }
-                    
-                    // Sign Up Button
-                    VStack {
-                        LUButton(title: isLogin ? "Login" : "Sign Up") {
-                            handleAuthentication()
-                        }
-                        .frame(maxWidth: .infinity)
-                        
-                        HStack(spacing: 24) {
-                            Button(isLogin ? "SIGN UP" : "LOG IN") {
-                                isLogin.toggle()
-                            }
-                            
-                            if isLogin {
-                                Button("FORGOT PASSWORD") {
-                                    showingResetPassword = true
-                                }
-                            }
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(.minor)
-                    }
-                    .padding(.top, 16)
-                }
-                .navigationDestination(isPresented: $showConfirmEmailView, destination: {
-                    ConfirmEmailView(email: emailToConfirm)
-                })
-                .padding(30)
-                .containerBorder()
-                .padding()
-                .alert(isPresented: $showingAlert) {
-                    Alert(
-                        title: Text("Authentication Error"),
-                        message: Text(alertMessage),
-                        dismissButton: .default(Text("OK"))
-                    )
-                }
-                .sheet(isPresented: $showingResetPassword) {
-                    ResetPasswordView(email: $email)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-        }
-        
-//        .onReceive(appState.supabaseService.$errorMessage) { errorMessage in
-//            if let message = errorMessage, !message.isEmpty {
-//                alertMessage = message
-//                showingAlert = true
-//            }
-//        }
+    init(isLogin: Bool = false) {
+        self._viewModel = State(initialValue: LoginViewModel(isLogin: isLogin))
     }
-    
-    private func handleAuthentication() {
-        func resetFields() {
-            emailToConfirm = email
-            email = ""
-            password = ""
-            confirmPassword = ""
-            firstName = ""
-            lastName = ""
-            avatarName = ""
-            isLogin = true
-        }
-        guard !email.isEmpty, !password.isEmpty else {
-            alertMessage = "Please fill in all required fields"
-            showingAlert = true
-            return
-        }
-        
-        if isLogin {
-            // Handle login
-            Task {
-                let result = await appState.supabaseService.signIn(email: email, password: password)
-                switch result {
-                case .success(let success):
-                    return
-                case .failure(let error):
-                    alertMessage = error.localizedDescription
-                    showingAlert = true
+    var body: some View {
+        GeometryReader { proxy in
+            VStack(alignment: .center, spacing: 36) {
+                LoginHeader()
+                .frame(width: proxy.size.width * 0.7)
+                LUDivider()
+                VStack(spacing: 8) {
+                    Text(viewModel.isLogin ? "Log In Now" : "Sign Up")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.title)
+                    Text("Sign in to continue using our app")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.white)
                 }
-            }
-        } else {
-            // Handle signup
-            guard !avatarName.isEmpty, !firstName.isEmpty, !lastName.isEmpty, !email.isEmpty, !password.isEmpty else {
-                alertMessage = "Please fill in all required fields"
-                showingAlert = true
-                return
-            }
-
-            guard password == confirmPassword else {
-                alertMessage = "Passwords must match"
-                showingAlert = true
-                return
+                VStack(spacing: 8) {
+                    fields
+                    buttons
+                }
+                Spacer()
             }
             
-            Task {
-                let result = await appState.supabaseService.signUp(
-                    email: email,
-                    password: password,
-                    firstName: firstName,
-                    lastName: lastName,
-                    avatarName: avatarName
-                )
-                switch result {
-                case .success:
-                    showConfirmEmailView = true
-                    resetFields()
-                case .failure(let error):
-                    alertMessage = error.localizedDescription
-                    showingAlert = true
-                }
-            }
         }
-    }
-}
-
-// Reset Password View
-struct ResetPasswordView: View {
-    @Environment(AppState.self) var appState
-    @Binding var email: String
-    @State private var showingConfirmation = false
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.major
-                    .ignoresSafeArea()
-                
-                VStack(spacing: 24) {
-                    Text("Reset Password")
-                        .font(.title)
-                        .foregroundColor(.white)
-                        .padding(.top, 32)
-                    
-                    Text("Enter your email address and we'll send you a link to reset your password.")
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                    
-                    LUTextField("Email", text: $email)
-                        .keyboardType(.emailAddress)
-                        .textContentType(.emailAddress)
-                        .autocapitalization(.none)
-                        .padding(.horizontal)
-                    
-                    Button(action: {
-                        resetPassword()
-                    }) {
-                        Text("Send Reset Link")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentColor)
-                            .cornerRadius(10)
-                    }
-                    .padding(.horizontal)
-                    .disabled(email.isEmpty)
-                    
-//                    if appState.supabaseService.isLoading {
-//                        ProgressView()
-//                            .tint(.white)
-//                    }
-                    
-                    Spacer()
-                }
-                .padding()
-                .overlay {
-                    CustomBorderShape(cornerWidth: 15)
-                        .stroke(Color.border, lineWidth: 3)
-                    CustomBorderShape()
-                        .stroke(Color.border, lineWidth: 3)
-                        .padding(8)
-                }
-                .padding()
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(.white)
-                }
-            }
-            .alert("Password Reset Email Sent", isPresented: $showingConfirmation) {
-                Button("OK") {
+        .padding(.horizontal, 40)
+        .background(
+            Image("main_bg")
+                .resizable()
+                .ignoresSafeArea()
+        )
+        .navigationDestination(isPresented: $viewModel.showConfirmEmailView, destination: {
+            ConfirmEmailView(email: viewModel.emailToConfirm)
+        })
+        .alert(isPresented: $viewModel.showingAlert) {
+            Alert(
+                title: Text("Authentication Error"),
+                message: Text(viewModel.alertMessage),
+                dismissButton: .default(Text("OK"))
+            )
+        }
+        .sheet(isPresented: $viewModel.showingResetPassword) {
+            ForgotPasswordView(viewModel: viewModel)
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
                     dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .foregroundStyle(.textfieldBorder)
                 }
-            } message: {
-                Text("Check your email for a link to reset your password.")
+
             }
         }
     }
     
-    private func resetPassword() {
-//        Task {
-//            do {
-//                try await appState.supabaseService.resetPassword(email: email)
-//                showingConfirmation = true
-//            } catch {
-//                // Error is handled in SupabaseService
-//                print("Reset password error: \(error.localizedDescription)")
-//            }
-//        }
+    var fields: some View {
+        VStack {
+            LUTextField(title: "Email", text: $viewModel.email, placeholder: "you@email.com")
+                .keyboardType(.emailAddress)
+                .textContentType(.emailAddress)
+                .autocapitalization(.none)
+            
+            LUTextField(title: "Password", text: $viewModel.password, placeholder: "Create a password", isSecure: true)
+                .textContentType(viewModel.isLogin ? .password : .newPassword)
+            
+            if !viewModel.isLogin {
+                LUTextField(title: "Confirm Password", text: $viewModel.confirmPassword,placeholder: "Re-enter your password", isSecure: true)
+                    .textContentType(.newPassword)
+                    .autocapitalization(.none)
+            }
+        }
+    }
+    
+    var buttons: some View {
+        VStack {
+            LUButton(
+                title: viewModel.isLogin ? "Log In" : "Sign Up",
+                isLoading: viewModel.isLoading,
+                fillSpace: true
+            ) {
+                viewModel.handleAuthentication()
+            }
+            .disabled(viewModel.isLoading)
+            .frame(maxWidth: .infinity)
+            
+            HStack(spacing: 32) {
+                Button {
+                    viewModel.isLogin.toggle()
+                } label: {
+                    Text(viewModel.isLogin ? "Sign Up" : " Have an account? Log In")
+                        
+                }
+                
+                if viewModel.isLogin {
+                    Button {
+                        viewModel.showingResetPassword = true
+                    } label: {
+                        Text("Forgot Password")
+                    }
+                }
+            }
+            .font(.system(size: 18))
+            .foregroundStyle(.textDetail)
+            .frame(height: 46)
+        }
     }
 }
 
 #Preview {
-    LoginView()
-        .environment(AppState())
+    let _ = Container.shared.setupMocks()
+    LoginView(isLogin: true)
 }

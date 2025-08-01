@@ -6,125 +6,81 @@
 //
 
 import SwiftUI
-
-// MARK: - Custom Border Shape
-struct CustomBorderShape: Shape {
-    var cornerWidth: CGFloat = 10
-    
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        
-        // Define the corner size
-        let cornerSize = min(cornerWidth, rect.width / 8)
-        
-        // Start at top left after the corner
-        path.move(to: CGPoint(x: rect.minX + cornerSize, y: rect.minY))
-        
-        // Top edge to top right corner
-        path.addLine(to: CGPoint(x: rect.maxX - cornerSize, y: rect.minY))
-        
-        // Top right corner
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + cornerSize))
-        
-        // Right edge to bottom right corner
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - cornerSize))
-        
-        // Bottom right corner
-        path.addLine(to: CGPoint(x: rect.maxX - cornerSize, y: rect.maxY))
-        
-        // Bottom edge to bottom left corner
-        path.addLine(to: CGPoint(x: rect.minX + cornerSize, y: rect.maxY))
-        
-        // Bottom left corner
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - cornerSize))
-        
-        // Left edge to top left corner
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + cornerSize))
-        
-        // Close the path
-        path.closeSubpath()
-        
-        return path
-    }
-}
+import Combine
 
 struct LUTextField: View {
-    let placeholder: String
+    let title: String
+    var detail: String?
     @Binding var text: String
-    var isSecure: Bool
-    
-    // Customization properties
-    var borderColor: Color = .border
-    var borderWidth: CGFloat = 2
-    var cornerWidth: CGFloat = 10
-    var height: CGFloat = 50
-    
-    init(_ placeholder: String, text: Binding<String>, isSecure: Bool = false) {
-        self.placeholder = placeholder
-        self._text = text
-        self.isSecure = isSecure
-    }
+    var placeholder: String?
+    var isSecure: Bool = false
+    var maxLength: Int?
     
     var body: some View {
-        VStack(spacing: 4) {
-            HStack {
-                Text(placeholder.uppercased())
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(Color.textOrange)
-                    .shadow(radius: 1)
+        VStack(spacing: 8) {
+            HStack(alignment: .bottom) {
+                Text(title)
+                    .font(.system(size: 20, weight: .regular))
+                    .foregroundStyle(Color.textDetail)
                 Spacer()
+                if let detail {
+                    Text(detail)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundStyle(Color.textDetail)
+                }
             }
             
             textField
                 .tint(.white)
                 .foregroundStyle(.white)
                 .padding(.horizontal, 12)
-                .frame(height: height)
+                .frame(height: 46)
+                
+                .background(RoundedRectangle(cornerRadius: 8).fill(.textfieldBg))
                 .overlay (
-                    CustomBorderShape(cornerWidth: cornerWidth)
-                        .stroke(borderColor, lineWidth: borderWidth)
-                        .borderShadow()
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.textfieldBorder, lineWidth: 1)
                 )
                 .padding(.bottom, 8) // Add some padding at the bottom for visual balance
         }
     }
     
-    var textField: some View {
-        Group {
-            if isSecure {
-                SecureField("", text: $text)
-            } else {
-                TextField("", text: $text)
-            }
+    @ViewBuilder
+    private var textField: some View {
+        if isSecure {
+            SecureField(placeholder ?? "", text: $text, prompt: Text(placeholder ?? "").foregroundStyle(.white.opacity(0.5)))
+        } else {
+            TextField(placeholder ?? "", text: $text, prompt: Text(placeholder ?? "").foregroundStyle(.white.opacity(0.5))
+            )
+            .onReceive(Just(text)) { _ in limitText(maxLength) }
+                
+        }
+    }
+    
+    private func limitText(_ upper: Int?) {
+        guard let upper else { return }
+        if text.count > upper {
+            text = String(text.prefix(upper))
         }
     }
 }
 
-// MARK: - Modifiers
-extension LUTextField {
-    func withBorderStyle(color: Color, width: CGFloat = 2, cornerWidth: CGFloat = 20) -> LUTextField {
-        var textField = self
-        textField.borderColor = color
-        textField.borderWidth = width
-        textField.cornerWidth = cornerWidth
-        return textField
+struct TextFieldPreviewView: View {
+    @State var username: String = ""
+    @FocusState var focusState: Field?
+    
+    enum Field: Int, Hashable {
+        case username = 0
     }
     
-    func withHeight(_ height: CGFloat) -> LUTextField {
-        var textField = self
-        textField.height = height
-        return textField
+    var body: some View {
+        ZStack {
+            Color.major.ignoresSafeArea()
+            LUTextField(title: "Username", detail: "\(username.count)/16", text: $username, placeholder: "John Doe", maxLength: 16)
+                .padding()
+        }
     }
 }
-
 #Preview {
-    VStack(spacing: 20) {
-        LUTextField("Username", text: .constant("player1"))
-        LUTextField("Password", text: .constant("secret"), isSecure: true)
-            .withBorderStyle(color: .blue, width: 2.5)
-        LUTextField("Email", text: .constant("example@email.com"))
-            .withHeight(60)
-    }
-    .padding()
-    .background(Color.black)
+    TextFieldPreviewView()
 }

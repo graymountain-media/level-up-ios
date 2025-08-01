@@ -9,6 +9,6 @@ import SwiftUI
 
 extension Font {
     static func mainFont(size: CGFloat) -> Font {
-        .custom("Trajan Pro", size: size)
+        .custom("Cinzel", size: size)
     }
 }

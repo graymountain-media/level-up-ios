@@ -6,224 +6,321 @@
 //
 
 import SwiftUI
+import FactoryKit
+import TipKit
 
-struct DailyWorkout: Identifiable {
-    let id = UUID()
-    var duration: Int
-    var type: String
-    var date: Date
+enum WorkoutIntensity: String, CaseIterable {
+    case low
+    case medium
+    case high
+}
+
+enum WorkoutType: String, CaseIterable {
+    case cardio
+    case strength
+    case functional
 }
 
 struct LogWorkoutView: View {
-    @Environment(AppState.self) var appState
-    @State private var selectedDuration: Int = 20
-    @State private var selectedWorkoutType: String = "Cardio"
-    @State private var isEditingWorkout: Bool = false
-    @State private var todaysWorkout: DailyWorkout? = nil
+    @InjectedObservable(\.appState) var appState
+    @State private var viewModel = WorkoutViewModel()
     
+    @State private var selectedDuration: Int = 20
+    @State private var selectedWorkoutTypes: [WorkoutType] = []
+    
+    @State private var todaysWorkout: Workout? = nil
+    @State private var currentStreak: Int = 0
+    
+    @State private var showHelp: Bool = false
     let durationOptions: [Int] = [20, 25, 30, 35, 40, 45, 50, 55, 60]
-    let workoutTypes = ["Cardio", "Strength", "Flexibility"]
     
     var hasWorkoutForToday: Bool {
-        return appState.workout != nil
+        return todaysWorkout != nil
     }
     
     var body: some View {
-        @Bindable var appState = appState
-        VStack(spacing: 24) {
-            FeatureHeader(titleImageName: "workout_title")
-            Spacer()
-            
-            if hasWorkoutForToday && !isEditingWorkout {
-                workoutAlreadyLoggedView
-            } else {
-                workoutFormView
+        VStack(spacing: 0) {
+            FeatureHeader(title: "Log A Workout")
+            ScrollView {
+                if viewModel.isLoading {
+                    loadingView
+                } else if hasWorkoutForToday {
+                    workoutSuccessView
+                } else {
+                    workoutFormView
+                }
+                Spacer()
             }
-            
-            Spacer()
-            Spacer()
-        }
-        .onAppear {
-            if let workout = appState.workout {
-                self.selectedDuration = workout.duration
-                self.selectedWorkoutType = workout.type
-            }
+            .scrollIndicators(.hidden)
         }
         .foregroundStyle(Color.white)
         .frame(maxWidth: .infinity)
         .background(
-            Color.major.ignoresSafeArea()
+            Image("main_bg")
+                .resizable()
+                .ignoresSafeArea()
         )
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") { viewModel.showError = false }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred")
+        }
+        .task {
+            // Load today's workout when view appears
+            await loadTodaysWorkout()
+        }
+    }
+    
+    var loadingView: some View {
+        VStack(spacing: 24) {
+            ProgressView()
+                .tint(.white)
+                .scaleEffect(1.5)
+            
+            Text("Loading workout data...")
+                .font(.system(size: 16))
+                .foregroundColor(.white)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, 100)
+    }
+    
+    var workoutSuccessView: some View {
+        VStack(spacing: 36) {
+            // Check mark icon
+            VStack(spacing: 6) {
+                Image("checkmark")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 100)
+                
+                // Success title
+                Text("WORKOUT\nLOGGED!")
+                    .font(.mainFont(size: 40).bold())
+                    .foregroundColor(.title)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+            }
+            
+            
+            // Level progress section
+            VStack(spacing: 8) {
+                HStack {
+                    Text("LEVEL \(appState.userAccountData?.currentLevel ?? 1)")
+                        .font(.mainFont(size: 24).bold())
+                        .foregroundColor(.textOrange)
+                    
+                    Spacer()
+                    
+                    Text("\(appState.userAccountData?.xpToNextLevel ?? 100) to next level")
+                        .font(.system(size: 14))
+                        .foregroundColor(.textDetail)
+                }
+                .padding(.horizontal)
+                
+                // Progress bar
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        // Background
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 20)
+                        
+                        // Progress fill
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.green)
+                            .frame(width: geometry.size.width * (appState.userAccountData?.progressToNextLevel ?? 0.0), height: 20)
+                    }
+                }
+                .frame(height: 20)
+            }
+            
+            // XP earned
+            Text("+\(todaysWorkout?.xpEarned ?? 40) XP EARNED")
+                .font(.mainFont(size: 30).bold())
+                .foregroundColor(.textOrange)
+            
+            // Motivational text
+            VStack(spacing: 16) {
+                Text("Keep training to unlock new gear and evolve your avatar.")
+                    .font(.system(size: 16))
+                    .italic()
+                    .foregroundColor(.textDetail)
+                    .multilineTextAlignment(.center)
+                
+                Text("View Missions to see what new missions are available to you.")
+                    .font(.system(size: 16))
+                    .italic()
+                    .foregroundColor(.textDetail)
+                    .multilineTextAlignment(.center)
+            }
+            
+        }
+        .padding(.horizontal, 40)
+        .padding(.vertical, 30)
+    }
+    
+    var workoutFormView: some View {
+        VStack(spacing: 24) {
+            durationSelector
+            typeSection
+            LUButton(title: "Log Workout", isLoading: viewModel.isLoading) {
+                Task {
+                    await saveWorkout()
+                }
+            }
+            helpSection
+        }
+        .padding(.horizontal, 50)
+        .foregroundStyle(Color.white)
+        .frame(maxWidth: .infinity)
     }
     
     var durationSelector: some View {
         VStack(alignment: .leading) {
             Text("Duration")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.textOrange)
-            Picker("Picker", selection: $selectedDuration) {
-                ForEach(durationOptions, id: \.self) { duration in
-                    Text("\(duration) min")
-                        .frame(maxWidth: .infinity)
-                        .tag(duration)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .pickerStyle(.menu)
-            .tint(Color.white)
-            .overlay {
-                CustomBorderShape()
-                    .stroke(Color.border)
-            }
-        }
-    }
-    
-    var typeSelector: some View {
-        VStack(alignment: .leading) {
-            Text("Workout Type")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.textOrange)
-            Picker("Picker", selection: $selectedWorkoutType) {
-                ForEach(workoutTypes, id: \.self) { type in
-                    Text(type)
-                        .frame(maxWidth: .infinity)
-                        .tag(type)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .pickerStyle(.menu)
-            .tint(Color.white)
-            .overlay {
-                CustomBorderShape()
-                    .stroke(Color.border)
-            }
-        }
-    }
-
-
-    // View shown when a workout has already been logged for today
-    var workoutAlreadyLoggedView: some View {
-        VStack(spacing: 24) {
-            VStack(spacing: 16) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.green)
-                
-                Text("Workout Already Logged")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    if let workout = todaysWorkout {
-                        HStack {
-                            Text("Type:")
-                                .fontWeight(.semibold)
-                            Text(workout.type)
+                .font(.system(size: 14))
+                .foregroundStyle(Color.textDetail)
+            HStack {
+                Menu {
+                    ForEach(durationOptions, id: \.self) { duration in
+                        Button {
+                            selectedDuration = duration
+                        } label: {
+                            Text("\(duration) Mins")
+                                .frame(maxWidth: .infinity)
+                                .font(.system(size: 14))
+                                .foregroundStyle(Color.textInput)
+                                .tag(duration)
                         }
+                    }
+                } label: {
+                    HStack {
+                        Text("\(selectedDuration) Mins")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.textInput)
+                        Spacer()
                         
-                        HStack {
-                            Text("Duration:")
-                                .fontWeight(.semibold)
-                            Text("\(workout.duration) minutes")
-                        }
                     }
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.major.opacity(0.3))
-                )
-                
-                Text("You've already logged a workout for today. Great job staying active!")
-                    .font(.body)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                
-                Button(action: {
-                    isEditingWorkout = true
-                }) {
-                    Text("Edit Today's Workout".uppercased())
-                        .font(.headline)
-                        .foregroundColor(.textOrange)
-                        .padding()
-                        .padding(.horizontal, 16)
-                        .overlay {
-                            CustomBorderShape(cornerWidth: 13)
-                                .stroke(Color.border)
-                            CustomBorderShape()
-                                .stroke(Color.textOrange)
-                                .padding(4)
-                        }
+                    .contentShape(Rectangle())
                 }
             }
-            .padding(.horizontal, 48)
+            .padding(.horizontal, 16)
+            .frame(height: 38)
+            .background(
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(Color.textfieldBg)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(Color.textfieldBorder)
+            }
         }
-        .foregroundStyle(Color.white)
-        .frame(maxWidth: .infinity)
-        .background(
-            Color.major.ignoresSafeArea()
-        )
     }
     
-    // View for entering a new workout or editing an existing one
-    var workoutFormView: some View {
-        VStack(spacing: 24) {
-            durationSelector
-            typeSelector
-            Text("Note: One workout can be logged each day.")
-                .font(.system(size: 12, weight: .regular))
-            Button(action: {
-                saveWorkout()
-            }) {
-                Text(isEditingWorkout ? "Update Workout".uppercased() : "Submit Workout".uppercased())
-                    .font(.headline)
-                    .foregroundColor(.textOrange)
-                    .padding()
-                    .padding(.horizontal, 16)
-                    .overlay {
-                        CustomBorderShape(cornerWidth: 13)
-                            .stroke(Color.border)
-                        CustomBorderShape()
-                            .stroke(Color.textOrange)
-                            .padding(4)
-                    }
+    var typeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Workout Type (select all that apply)")
+                .font(.system(size: 14))
+                .foregroundStyle(Color.textDetail)
+            ForEach(WorkoutType.allCases, id: \.rawValue) { type in
+                typeButton(for: type)
+            }
+        }
+    }
+    
+    private func typeButton(for type: WorkoutType) -> some View {
+        let isSelected = selectedWorkoutTypes.contains(type)
+        return Button {
+            if isSelected {
+                selectedWorkoutTypes.removeAll(where: { $0 == type })
+            } else {
+                selectedWorkoutTypes.append(type)
+            }
+        } label: {
+            Text(type.rawValue.uppercased())
+                .font(.system(size: 14))
+                .foregroundStyle(Color.textInput)
+                .frame(maxWidth: .infinity)
+        }
+        .padding(8)
+        .frame(height: 38)
+        .background {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(Color.minor.opacity(0.5))
+            } else {
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(Color.textfieldBg)
+            }
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 5)
+                .stroke(Color.textfieldBorder)
+        }
+    }
+    
+    var helpSection: some View {
+        VStack(alignment: .center, spacing: 4) {
+            Text("Questions?")
+                .font(.system(size: 14))
+                .foregroundStyle(Color.textDetail)
+            Button {
+                print("Tapped")
+                showHelp = true
+            } label: {
+                Text("User Guidelines")
+                    .font(.mainFont(size: 16))
+                    .bold()
+                    .foregroundStyle(.title)
+            }
+            .popover(isPresented: $showHelp, attachmentAnchor: .point(.top), arrowEdge: .none) {
+                VStack {
+                    Text("Title")
+                        .font(.headline)
+                        .foregroundStyle(.title)
+                    Text("Explanation for what this tool tip is for")
+                        .font(.subheadline)
+                        .foregroundStyle(.minor)
+                }
+                .padding(.horizontal)
+                .presentationCompactAdaptation(.popover)
             }
             
-            if isEditingWorkout {
-                Button(action: {
-                    isEditingWorkout = false
-                }) {
-                    Text("Cancel")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.8))
-                        .padding(.top, 8)
-                }
-            }
         }
-        .padding(.horizontal, 48)
-        .foregroundStyle(Color.white)
-        .frame(maxWidth: .infinity)
-        .background(
-            Color.major.ignoresSafeArea()
-        )
     }
     
     // Function to save or update a workout
-    private func saveWorkout() {
-        let workout = DailyWorkout(
+    private func saveWorkout() async {
+        guard !selectedWorkoutTypes.isEmpty else {
+            viewModel.errorMessage = "Please select at least one workout type"
+            viewModel.showError = true
+            return
+        }
+        
+        await viewModel.saveWorkout(
             duration: selectedDuration,
-            type: selectedWorkoutType,
-            date: Date()
+            types: selectedWorkoutTypes.map { $0.rawValue }
         )
         
-        // Here you would save the workout to your data store
-        appState.workout = workout
-        
-        // In a real app, you'd persist this data
+        if viewModel.saveSuccess {
+            // Refresh the workout data
+            await loadTodaysWorkout()
+            
+            // Update centralized user data with new XP
+            if let workout = todaysWorkout {
+                await appState.updateUserXP(additionalXP: workout.xpEarned)
+            }
+        }
+    }
+    
+    // Load today's workout if it exists
+    private func loadTodaysWorkout() async {
+        todaysWorkout = await viewModel.fetchTodaysWorkout()
     }
 }
 
 #Preview {
+    let _ = Container.shared.setupMocks()
     LogWorkoutView()
 }

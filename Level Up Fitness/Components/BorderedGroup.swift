@@ -7,12 +7,29 @@
 
 import SwiftUI
 
-struct BorderedGroup: View {
+struct BorderedGroup<Content: View>: View {
+    let content: Content
+    let padding: CGFloat
+    init(padding: CGFloat = 30, @ViewBuilder content: () -> Content) {
+        self.padding = padding
+        self.content = content()
+    }
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Group {
+            content
+        }
+        .frame(maxWidth: .infinity)
+        .padding(padding)
+        .containerBorder()
     }
 }
 
 #Preview {
-    BorderedGroup()
+    BorderedGroup {
+        VStack {
+            Text("Hi")
+            Text("Hello")
+        }
+    }
 }
