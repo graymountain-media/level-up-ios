@@ -53,11 +53,7 @@ struct ForgotPasswordView: View {
             Spacer()
         }
         .padding(.horizontal, 46)
-        .background(
-            Image("main_bg")
-                .resizable()
-                .ignoresSafeArea()
-        )
+        .mainBackground()
         .alert("Password Reset Email Sent", isPresented: $viewModel.isShowingResetConfirmation) {
             Button("OK") {
                 dismiss()

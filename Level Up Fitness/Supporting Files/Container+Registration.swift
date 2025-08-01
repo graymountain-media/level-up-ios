@@ -13,6 +13,13 @@ extension Container {
         self { @MainActor in AppState() }.singleton
     }
     
+    var missionService: Factory<MissionServiceProtocol> {
+        self { @MainActor in
+            let appState = self.appState()
+            return MissionService(client: appState.supabaseClient)
+        }
+    }
+    
     var userDataService: Factory<UserDataServiceProtocol> {
         self { @MainActor in 
             let appState = self.appState()
@@ -39,6 +46,7 @@ extension Container {
         workoutService.register { @MainActor in MockWorkoutService() }
         leaderboardService.register { @MainActor in MockLeaderboardService() }
         avatarService.register { @MainActor in MockAvatarService() }
+        missionService.register { @MainActor in MockMissionService() }
         return EmptyView()
     }
 }

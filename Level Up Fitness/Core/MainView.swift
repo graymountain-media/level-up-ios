@@ -48,6 +48,16 @@ struct MainView: View {
             }
             .toolbarBackground(Color.major, for: .navigationBar)
             .tint(Color.minor)
+            .fullScreenCover(item: $appState.selectedMenuItem) { item in
+                switch item {
+                case .accountSettings:
+                    ProfileSettings()
+                case .itemShop:
+                    ItemShopView()
+                case .help:
+                    Text("Help")
+                }
+            }
             MainMenu()
         }
         .task {

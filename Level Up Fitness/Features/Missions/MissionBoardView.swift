@@ -1,7 +1,8 @@
 import SwiftUI
+import FactoryKit
 
 struct MissionBoardView: View {
-    @StateObject private var viewModel = MissionBoardViewModel()
+    @State private var viewModel = MissionBoardViewModel()
     @State var selectedMission: Mission?
     
     var body: some View {
@@ -24,10 +25,9 @@ struct MissionBoardView: View {
                 .padding(.vertical, 8)
             }
         }
-        .background {
-            ZStack {
-                Color.major.ignoresSafeArea()
-            }
+        .mainBackground()
+        .task {
+            await viewModel.loadAllMissions()
         }
     }
     
@@ -36,6 +36,7 @@ struct MissionBoardView: View {
             ForEach(viewModel.availableMissions) { mission in
                 if selectedMission == nil || selectedMission?.id == mission.id {
                     MissionCard(mission: mission, isSelected: selectedMission?.id == mission.id) {
+                        print("Tapped")
                         if selectedMission != nil {
                             withAnimation {
                                 selectedMission = nil
@@ -74,8 +75,6 @@ struct MissionBoardView: View {
 }
 
 #Preview {
-    NavigationView {
-        MissionBoardView()
-    }
-    .preferredColorScheme(.dark)
+    let _ = Container.shared.setupMocks()
+    MissionBoardView()
 }

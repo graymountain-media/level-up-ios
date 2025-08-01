@@ -61,11 +61,7 @@ struct OnboardingView: View {
             }
             .scrollIndicators(.hidden)
         }
-        .background(
-            Image("main_bg")
-                .resizable()
-                .ignoresSafeArea()
-        )
+        .mainBackground()
     }
     
     var fields: some View {

@@ -40,11 +40,7 @@ struct LoginView: View {
             
         }
         .padding(.horizontal, 40)
-        .background(
-            Image("main_bg")
-                .resizable()
-                .ignoresSafeArea()
-        )
+        .mainBackground()
         .navigationDestination(isPresented: $viewModel.showConfirmEmailView, destination: {
             ConfirmEmailView(email: viewModel.emailToConfirm)
         })

@@ -46,11 +46,7 @@ struct PasswordResetView: View {
             Spacer()
         }
         .padding(.horizontal, 46)
-        .background(
-            Image("main_bg")
-                .resizable()
-                .ignoresSafeArea()
-        )
+        .mainBackground()
     }
 }
 

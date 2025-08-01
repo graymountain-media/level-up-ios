@@ -44,11 +44,7 @@ struct ConfirmEmailView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(
-            Image("main_bg")
-                .resizable()
-                .ignoresSafeArea()
-        )
+        .mainBackground()
     }
 }
 

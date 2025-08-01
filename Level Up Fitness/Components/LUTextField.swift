@@ -14,6 +14,7 @@ struct LUTextField: View {
     @Binding var text: String
     var placeholder: String?
     var isSecure: Bool = false
+    var rightIconName: String? = nil
     var maxLength: Int?
     
     var body: some View {
@@ -30,18 +31,27 @@ struct LUTextField: View {
                 }
             }
             
-            textField
-                .tint(.white)
-                .foregroundStyle(.white)
-                .padding(.horizontal, 12)
-                .frame(height: 46)
-                
-                .background(RoundedRectangle(cornerRadius: 8).fill(.textfieldBg))
-                .overlay (
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.textfieldBorder, lineWidth: 1)
-                )
-                .padding(.bottom, 8) // Add some padding at the bottom for visual balance
+            HStack(spacing: 4) {
+                textField
+                    .tint(.white)
+                    .foregroundStyle(.white)
+                    
+                if let rightIconName {
+                    Image(rightIconName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 18, height: 18)
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 46)
+            
+            .background(RoundedRectangle(cornerRadius: 8).fill(.textfieldBg))
+            .overlay (
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.textfieldBorder, lineWidth: 1)
+            )
+            .padding(.bottom, 8) // Add some padding at the bottom for visual balance
         }
     }
     
@@ -76,7 +86,7 @@ struct TextFieldPreviewView: View {
     var body: some View {
         ZStack {
             Color.major.ignoresSafeArea()
-            LUTextField(title: "Username", detail: "\(username.count)/16", text: $username, placeholder: "John Doe", maxLength: 16)
+            LUTextField(title: "Username", detail: "\(username.count)/16", text: $username, placeholder: "John Doe", rightIconName: "pencil", maxLength: 16)
                 .padding()
         }
     }

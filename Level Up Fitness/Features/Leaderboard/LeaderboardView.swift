@@ -47,11 +47,7 @@ struct LeaderboardView: View {
             .padding(.horizontal, 20)
             .padding(.top, 42)
         }
-        .background(
-            Image("main_bg")
-                .resizable()
-                .ignoresSafeArea()
-        )
+        .mainBackground()
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { viewModel.showError = false }
         } message: {

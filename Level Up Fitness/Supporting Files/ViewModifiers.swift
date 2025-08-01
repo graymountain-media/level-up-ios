@@ -30,6 +30,16 @@ struct ContainerBorderModifier: ViewModifier {
     }
 }
 
+struct MainBackgroundModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(
+                Image("main_bg")
+                    .resizable()
+                    .ignoresSafeArea()
+            )
+    }
+}
 extension View {
     func borderShadow() -> some View {
         self.modifier(BoderShadowModifier())
@@ -37,5 +47,9 @@ extension View {
     
     func containerBorder(color: Color = .border) -> some View {
         self.modifier(ContainerBorderModifier(color: color))
+    }
+    
+    func mainBackground() -> some View {
+        self.modifier(MainBackgroundModifier())
     }
 }

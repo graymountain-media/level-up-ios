@@ -55,11 +55,7 @@ struct LogWorkoutView: View {
         }
         .foregroundStyle(Color.white)
         .frame(maxWidth: .infinity)
-        .background(
-            Image("main_bg")
-                .resizable()
-                .ignoresSafeArea()
-        )
+        .mainBackground()
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { viewModel.showError = false }
         } message: {
