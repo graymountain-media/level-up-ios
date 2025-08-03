@@ -149,9 +149,9 @@ struct MissionBoardView: View {
                     selectedTab = tab
                 }) {
                     Text(tab.displayName)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.white)
-                        .frame(height: 27)
+                        .frame(height: 36)
                         .frame(maxWidth: .infinity)
                         .background(
                             RoundedRectangle(cornerRadius: 5)

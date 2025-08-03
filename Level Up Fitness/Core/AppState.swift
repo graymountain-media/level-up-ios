@@ -18,15 +18,14 @@ class AppState {
     // Navigation state
     var isShowingMenu: Bool = false
     var selectedMenuItem: MenuItem?
+    var currentTab: MainTab = .home
     var isShowingHelp: Bool = false
     
     // Mission Ready Notification State
     var showMissionReadyPopup: Bool {
         missionManager.showMissionReadyNotification
     }
-    var missionReadyMessage: String {
-        "A mission is ready to complete! Check the Mission Board to claim your rewards."
-    }
+    
     func dismissMissionReadyPopup() {
         missionManager.dismissMissionReadyNotification()
     }
@@ -163,16 +162,16 @@ class AppState {
         return await userDataService.resetPassword(email: email)
     }
     
-    func createProfile(firstName: String, lastName: String, avatarName: String) async -> Result<Void, Error> {
-        let result = await userDataService.createProfile(firstName: firstName, lastName: lastName, avatarName: avatarName)
+    func createProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil) async -> Result<Void, Error> {
+        let result = await userDataService.createProfile(firstName: firstName, lastName: lastName, avatarName: avatarName, avatarUrl: avatarUrl, profilePictureUrl: profilePictureUrl)
         if case .success = result {
             await checkAuthenticationStatus()
         }
         return result
     }
     
-    func updateProfile(firstName: String, lastName: String, avatarName: String) async -> Result<Void, Error> {
-        let result = await userDataService.updateProfile(firstName: firstName, lastName: lastName, avatarName: avatarName)
+    func updateProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil) async -> Result<Void, Error> {
+        let result = await userDataService.updateProfile(firstName: firstName, lastName: lastName, avatarName: avatarName, avatarUrl: avatarUrl, profilePictureUrl: profilePictureUrl)
         if case .success = result {
             await refreshUserData()
         }

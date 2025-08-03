@@ -138,7 +138,7 @@ class MockUserDataService: UserDataServiceProtocol {
         }
     }
     
-    func createProfile(firstName: String, lastName: String, avatarName: String) async -> Result<Void, Error> {
+    func createProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil) async -> Result<Void, Error> {
         if shouldFail {
             return .failure(NSError(domain: "MockUserDataService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Mock profile creation failed"]))
         }
@@ -146,7 +146,7 @@ class MockUserDataService: UserDataServiceProtocol {
         return .success(())
     }
     
-    func updateProfile(firstName: String, lastName: String, avatarName: String) async -> Result<Void, Error> {
+    func updateProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil) async -> Result<Void, Error> {
         if shouldFail {
             return .failure(NSError(domain: "MockUserDataService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Mock profile update failed"]))
         }

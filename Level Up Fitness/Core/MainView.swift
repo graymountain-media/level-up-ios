@@ -10,7 +10,6 @@ import FactoryKit
 
 struct MainView: View {
     @InjectedObservable(\.appState) var appState
-    @State var currentTab: MainTab = .home
     
     var body: some View {
         @Bindable var appState = appState
@@ -21,7 +20,7 @@ struct MainView: View {
                     .frame(maxHeight: .infinity)
                 Spacer(minLength: 0)
                 LUTabBar { tab in
-                    currentTab = tab
+                    appState.currentTab = tab
                 }
             }
             .toolbar {
@@ -113,7 +112,7 @@ struct MainView: View {
     }
     @ViewBuilder
     var currentTabView: some View {
-        switch currentTab {
+        switch appState.currentTab {
         case .home:
             AvatarView()
         case .missionBoard:

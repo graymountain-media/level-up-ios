@@ -8,14 +8,16 @@ class Profile: Codable, Identifiable {
     var lastName: String
     var avatarName: String
     var avatarUrl: String?
+    var profilePictureUrl: String?
     var credits: Int
     
-    init(id: UUID, firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, credits: Int = 0) {
+    init(id: UUID, firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil, credits: Int = 0) {
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
         self.avatarName = avatarName
         self.avatarUrl = avatarUrl
+        self.profilePictureUrl = profilePictureUrl
         self.credits = credits
     }
 
@@ -25,6 +27,7 @@ class Profile: Codable, Identifiable {
         case lastName = "last_name"
         case avatarName = "avatar_name"
         case avatarUrl = "avatar_image_url"
+        case profilePictureUrl = "profile_picture_url"
         case credits
     }
 }
@@ -133,8 +136,8 @@ protocol UserDataServiceProtocol {
     
     // Profile and user data methods (fetchCurrentProfile combined into fetchUserAccountData)
     func fetchUserAccountData() async -> Result<UserAccountData, UserDataError>
-    func createProfile(firstName: String, lastName: String, avatarName: String) async -> Result<Void, Error>
-    func updateProfile(firstName: String, lastName: String, avatarName: String) async -> Result<Void, Error>
+    func createProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String?, profilePictureUrl: String?) async -> Result<Void, Error>
+    func updateProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String?, profilePictureUrl: String?) async -> Result<Void, Error>
     func refreshUserData() async -> Result<UserAccountData, UserDataError>
     
     // Individual data fetching methods
@@ -243,10 +246,10 @@ class UserDataService: UserDataServiceProtocol {
 
     // MARK: - Profile Management
     
-    func createProfile(firstName: String, lastName: String, avatarName: String) async -> Result<Void, Error> {
+    func createProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil) async -> Result<Void, Error> {
         do {
             let userId = try await client.auth.session.user.id
-            let newProfile = Profile(id: userId, firstName: firstName, lastName: lastName, avatarName: avatarName, credits: 0)
+            let newProfile = Profile(id: userId, firstName: firstName, lastName: lastName, avatarName: avatarName, avatarUrl: avatarUrl, profilePictureUrl: profilePictureUrl, credits: 0)
             
             try await client.from("profiles")
                 .upsert(newProfile)
@@ -258,7 +261,7 @@ class UserDataService: UserDataServiceProtocol {
         }
     }
     
-    func updateProfile(firstName: String, lastName: String, avatarName: String) async -> Result<Void, Error> {
+    func updateProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil) async -> Result<Void, Error> {
         do {
             let userId = try await client.auth.session.user.id
             
@@ -270,7 +273,7 @@ class UserDataService: UserDataServiceProtocol {
                 .execute()
                 .value
             
-            let updatedProfile = Profile(id: userId, firstName: firstName, lastName: lastName, avatarName: avatarName, credits: currentProfile.credits)
+            let updatedProfile = Profile(id: userId, firstName: firstName, lastName: lastName, avatarName: avatarName, avatarUrl: avatarUrl ?? currentProfile.avatarUrl, profilePictureUrl: profilePictureUrl ?? currentProfile.profilePictureUrl, credits: currentProfile.credits)
             
             try await client.from("profiles")
                 .update(updatedProfile)

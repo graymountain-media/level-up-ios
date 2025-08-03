@@ -41,9 +41,10 @@ struct MissionCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(mission.title.uppercased())
                         .font(.mainFont(size: 17.5))
-                        .minimumScaleFactor(0.5)
                         .bold()
                         .foregroundColor(.textOrange)
+                        .minimumScaleFactor(0.8)
+                        .lineLimit(1)
                     HStack(alignment: .top, spacing: 4) {
                         if !isSelected {
                             if isActiveMission {
@@ -89,9 +90,7 @@ struct MissionCard: View {
                         }
                         
                     }
-                    Spacer(minLength: 0)
                 }
-                .frame(height: 56)
             }
             .padding(.vertical, 20)
             .padding(.horizontal, 24)
@@ -129,23 +128,31 @@ struct MissionCard: View {
                 VStack(spacing: 20) {
                     VStack(spacing: 16) {
                         HStack(spacing: 8) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
-                                .font(.system(size: 20))
-                            Text("MISSION SUCCESS!")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.green)
-                        }
-                        
-                        HStack(spacing: 4) {
-                            Text("+\(mission.reward)")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.textDetail)
-                            Image("gold_icon")
+                            Image("checkmark")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(width: 16, height: 16)
+                                .frame(width: 60, height: 60)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("MISSION SUCCESS!")
+                                    .font(.mainFont(size: 17.5))
+                                    .bold()
+                                    .foregroundColor(.title)
+                                HStack(spacing: 4) {
+                                    Text("+\(mission.reward)")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.textOrange)
+                                    Image("gold_icon")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 16, height: 16)
+                                    Text("EARNED")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.textOrange)
+                                }
+                            }
                         }
+                        
+                        
                     }
                     
                     Text(mission.successMessage)
@@ -204,7 +211,6 @@ struct MissionCard: View {
                     #if DEBUG
                     // Debug button to instantly complete mission
                     Button("🐛 DEBUG: Complete Now") {
-                        print("🐛 DEBUG: Button tapped for mission: \(mission.title)")
                         missionManager.debugCompleteMission(mission)
                     }
                     .font(.system(size: 12, weight: .medium))
@@ -279,16 +285,18 @@ struct MissionCard: View {
 }
 
 #Preview {
-    VStack(spacing: 12) {
-        ForEach(Mission.testData) { mission in
-            MissionCard(
-                mission: mission,
-                isSelected: true,
-                isLoading: false,
-                onTap: {},
-                onSelect: {},
-                onComplete: {}
-            )
+    ScrollView {
+        VStack(spacing: 12) {
+            ForEach(Mission.testData) { mission in
+                MissionCard(
+                    mission: mission,
+                    isSelected: false,
+                    isLoading: false,
+                    onTap: {},
+                    onSelect: {},
+                    onComplete: {}
+                )
+            }
         }
     }
     .padding()

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A13314EC2E4008F6000DDCC0 /* CropImage in Frameworks */ = {isa = PBXBuildFile; productRef = A13314EB2E4008F6000DDCC0 /* CropImage */; };
 		A1EFF8B42E1F661800C88FE5 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8B32E1F661800C88FE5 /* Auth */; };
 		A1EFF8B62E1F661800C88FE5 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8B52E1F661800C88FE5 /* PostgREST */; };
 		A1EFF8B82E1F661800C88FE5 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8B72E1F661800C88FE5 /* Storage */; };
@@ -63,6 +64,7 @@
 			files = (
 				A1EFF8F52E2C9A2200C88FE5 /* FactoryKit in Frameworks */,
 				A1EFF8F02E2C3B9000C88FE5 /* Vortex in Frameworks */,
+				A13314EC2E4008F6000DDCC0 /* CropImage in Frameworks */,
 				A1EFF8BB2E1F668500C88FE5 /* Supabase in Frameworks */,
 				A1EFF8B82E1F661800C88FE5 /* Storage in Frameworks */,
 				A1EFF8B62E1F661800C88FE5 /* PostgREST in Frameworks */,
@@ -141,6 +143,7 @@
 				A1EFF8BA2E1F668500C88FE5 /* Supabase */,
 				A1EFF8EF2E2C3B9000C88FE5 /* Vortex */,
 				A1EFF8F42E2C9A2200C88FE5 /* FactoryKit */,
+				A13314EB2E4008F6000DDCC0 /* CropImage */,
 			);
 			productName = "Level Up Fitness";
 			productReference = A12533932E14CBD500C12FA3 /* Level Up.app */;
@@ -228,6 +231,7 @@
 				A1EFF8B22E1F661800C88FE5 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				A1EFF8EE2E2C3B9000C88FE5 /* XCRemoteSwiftPackageReference "Vortex" */,
 				A1EFF8F32E2C9A2200C88FE5 /* XCRemoteSwiftPackageReference "Factory" */,
+				A13314EA2E4008F6000DDCC0 /* XCRemoteSwiftPackageReference "CropImage" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A12533942E14CBD500C12FA3 /* Products */;
@@ -608,6 +612,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		A13314EA2E4008F6000DDCC0 /* XCRemoteSwiftPackageReference "CropImage" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/laosb/CropImage.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.8.2;
+			};
+		};
 		A1EFF8B22E1F661800C88FE5 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift.git";
@@ -635,6 +647,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A13314EB2E4008F6000DDCC0 /* CropImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A13314EA2E4008F6000DDCC0 /* XCRemoteSwiftPackageReference "CropImage" */;
+			productName = CropImage;
+		};
 		A1EFF8B32E1F661800C88FE5 /* Auth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A1EFF8B22E1F661800C88FE5 /* XCRemoteSwiftPackageReference "supabase-swift" */;

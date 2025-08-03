@@ -1,6 +1,15 @@
 {
-  "originHash" : "f9bbdc310074eef5b49ddf41856ef48bb6ae04d064b1a6088322e42b07ce851b",
+  "originHash" : "590f875ac92d3bb6b0b3ef9461f2ac6a0ffbd8f878cc69b9cb2cd231b5e770d3",
   "pins" : [
+    {
+      "identity" : "cropimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/laosb/CropImage.git",
+      "state" : {
+        "revision" : "481f59cf412f41641d4b737d8fbb51433031ce03",
+        "version" : "0.8.2"
+      }
+    },
     {
       "identity" : "factory",
       "kind" : "remoteSourceControl",

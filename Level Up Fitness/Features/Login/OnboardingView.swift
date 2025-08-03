@@ -11,6 +11,7 @@ import PhotosUI
 
 struct OnboardingView: View {
     @InjectedObservable(\.appState) var appState
+    @Injected(\.avatarService) var avatarService
     @State private var firstName: String = ""
     @State private var lastName: String = ""
     @State private var avatarName: String = ""
@@ -19,6 +20,7 @@ struct OnboardingView: View {
     @State private var alertMessage: String = ""
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var avatarImage: Image?
+    @State private var avatarImageData: Data?
     
     private let avatarNameMaxLength: Int = 16
     var body: some View {
@@ -82,68 +84,69 @@ struct OnboardingView: View {
                         maxLength: avatarNameMaxLength)
                 .autocapitalization(.words)
             
-//            VStack {
-//                HStack {
-//                    Text("Avatar Photo")
-//                        .font(.system(size: 20, weight: .regular))
-//                        .foregroundStyle(Color.textDetail)
-//                    Spacer()
-//                }
-//                PhotosPicker(
-//                    selection: $selectedPhotoItem,
-//                    matching: .images, // Filter for PNG images
-//                    photoLibrary: .shared()
-//                ) {
-//                    ZStack {
-//                        RoundedRectangle(cornerRadius: 8)
-//                            .fill(Color.textfieldBg)
-//                            .aspectRatio(1, contentMode: .fit)
-//                            .overlay {
-//                                RoundedRectangle(cornerRadius: 8)
-//                                    .stroke(Color.textfieldBorder)
-//                            }
-//                        
-//                        if let avatarImage {
-//                            avatarImage
-//                                .resizable()
-//                                .aspectRatio(contentMode: .fill)
-//                                .clipShape(RoundedRectangle(cornerRadius: 8))
-//                        } else {
-//                            VStack(spacing: 8) {
-//                                Image(systemName: "square.and.arrow.up")
-//                                    .resizable()
-//                                    .aspectRatio(contentMode: .fit)
-//                                    .frame(width: 40, height: 40)
-//                                Text("400 x 1500 px (PNG only)\n(optional)")
-//                                    .multilineTextAlignment(.center)
-//                            }
-//                            .foregroundStyle(.minor)
-//                        }
-//                    }
-//                }
-//                .onChange(of: selectedPhotoItem) { _, newItem in
-//                    Task {
-//                        // Reset image first
-//                        self.avatarImage = nil
-//                        
-//                        // Load and validate the new item
-//                        guard let data = try? await newItem?.loadTransferable(type: Data.self),
-//                              let uiImage = UIImage(data: data) else {
-//                            return
-//                        }
-//                        
-//                        // Check dimensions
-//                        if uiImage.size.width == 400 && uiImage.size.height == 1500 {
-//                            self.avatarImage = Image(uiImage: uiImage)
-//                        } else {
-//                            // Trigger alert for wrong dimensions
-//                            self.alertMessage = "Image must be a 400x1500 PNG."
-//                            self.showingAlert = true
-//                            self.selectedPhotoItem = nil // Reset selection
-//                        }
-//                    }
-//                }
-//            }
+            VStack {
+                HStack {
+                    Text("Avatar Photo")
+                        .font(.system(size: 20, weight: .regular))
+                        .foregroundStyle(Color.textDetail)
+                    Spacer()
+                }
+                PhotosPicker(
+                    selection: $selectedPhotoItem,
+                    matching: .images, // Filter for PNG images
+                    photoLibrary: .shared()
+                ) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.textfieldBg)
+                            .aspectRatio(1, contentMode: .fit)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.textfieldBorder)
+                            }
+                        
+                        if let avatarImage {
+                            avatarImage
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        } else {
+                            VStack(spacing: 8) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 40, height: 40)
+                                Text("800 x 1000 px (PNG only)\n(optional)")
+                                    .multilineTextAlignment(.center)
+                            }
+                            .foregroundStyle(.minor)
+                        }
+                    }
+                }
+                .onChange(of: selectedPhotoItem) { _, newItem in
+                    Task {
+                        // Reset image first
+                        self.avatarImage = nil
+                        
+                        // Load and validate the new item
+                        guard let data = try? await newItem?.loadTransferable(type: Data.self),
+                              let uiImage = UIImage(data: data) else {
+                            return
+                        }
+                        
+                        // Check dimensions
+                        if uiImage.size.width == 800 && uiImage.size.height == 1000 {
+                            self.avatarImage = Image(uiImage: uiImage)
+                            self.avatarImageData = data // Store the data for upload
+                        } else {
+                            // Trigger alert for wrong dimensions
+                            self.alertMessage = "Image must be a 800x1000 PNG."
+                            self.showingAlert = true
+                            self.selectedPhotoItem = nil // Reset selection
+                        }
+                    }
+                }
+            }
             
         }
     }
@@ -158,10 +161,32 @@ struct OnboardingView: View {
         isLoading = true
         
         Task {
+            var avatarUrl: String? = nil
+            
+            // Upload avatar if image is selected
+            if let imageData = avatarImageData {
+                let fileName = "\(UUID().uuidString).png"
+                let uploadResult = await avatarService.uploadAvatar(imageData: imageData, fileName: fileName, currentAvatarUrl: nil)
+                
+                switch uploadResult {
+                case .success(let url):
+                    avatarUrl = url
+                case .failure(let error):
+                    await MainActor.run {
+                        isLoading = false
+                        alertMessage = "Failed to upload avatar: \(error.localizedDescription)"
+                        showingAlert = true
+                    }
+                    return
+                }
+            }
+            
+            // Create profile with avatar URL
             let result = await appState.createProfile(
                 firstName: firstName,
                 lastName: lastName,
-                avatarName: avatarName
+                avatarName: avatarName,
+                avatarUrl: avatarUrl
             )
             
             await MainActor.run {

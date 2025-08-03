@@ -75,8 +75,9 @@ struct RootView: View {
     
                 // Mission Ready Notification Popup
                 if appState.showMissionReadyPopup {
-                    MissionCompletePopupView(message: appState.missionReadyMessage) {
+                    MessagePopover(imageName: "checkmark", title: "Mission Complete!", message: "A mission is ready to complete! Check the Mission Board to claim your rewards.", ctaTitle: "Go to Missions") {
                         appState.dismissMissionReadyPopup()
+                        appState.currentTab = .missionBoard
                     }
                     .zIndex(99)
                     .transition(.opacity)
