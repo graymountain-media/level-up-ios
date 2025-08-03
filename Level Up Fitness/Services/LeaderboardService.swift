@@ -1,5 +1,6 @@
 import Foundation
 import Supabase
+import FactoryKit
 
 // MARK: - Error Types
 
@@ -39,24 +40,16 @@ protocol LeaderboardServiceProtocol {
 
 @MainActor
 class LeaderboardService: LeaderboardServiceProtocol {
-    private let appState: AppState
-    private let client: SupabaseClient
+    @ObservationIgnored @Injected(\.appState) var appState
     
-    init(appState: AppState) {
-        self.appState = appState
-        self.client = appState.supabaseClient
-    }
-    
-    var userDataService: UserDataService {
-        appState.userDataService
-    }
+    init() {}
     
     private var isAuthenticated: Bool {
         return appState.isAuthenticated
     }
     
     private var currentUserId: UUID? {
-        return appState.supabaseClient.auth.currentUser?.id
+        return client.auth.currentUser?.id
     }
     
     func fetchLeaderboard() async -> Result<[any LeaderboardEntry], LeaderboardError> {

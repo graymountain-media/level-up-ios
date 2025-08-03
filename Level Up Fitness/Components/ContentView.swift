@@ -62,7 +62,7 @@ struct PopoverHandler: ViewModifier {
                     .blendMode(.destinationOut)
                 }
                 .compositingGroup()
-                Text("Popover for \(popoverTarget)")
+                Text("Popover for \(popoverTarget.id)")
                     .padding()
                     .foregroundStyle(.gray)
                     .background {

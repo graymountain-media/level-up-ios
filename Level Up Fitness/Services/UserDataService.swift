@@ -144,13 +144,9 @@ protocol UserDataServiceProtocol {
 }
 
 class UserDataService: UserDataServiceProtocol {
-    let client: SupabaseClient
-    
     // MARK: - Initialization
     
-    init(client: SupabaseClient) {
-        self.client = client
-    }
+    init() {}
     
     // MARK: - Authentication Methods
     

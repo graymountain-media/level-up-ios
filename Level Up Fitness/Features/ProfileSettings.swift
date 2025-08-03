@@ -73,7 +73,7 @@ struct ProfileSettings: View {
         .task {
             firstName = appState.userAccountData?.profile.firstName ?? ""
             lastName = appState.userAccountData?.profile.lastName ?? ""
-            email = appState.supabaseClient.auth.currentUser?.email ?? ""
+            email = client.auth.currentUser?.email ?? ""
             avatarName = appState.userAccountData?.profile.avatarName ?? ""
         }
         

@@ -13,13 +13,23 @@ import FactoryKit
 @Observable
 @MainActor
 class AppState {
+    @ObservationIgnored @Injected(\.missionManager) var missionManager
+    @ObservationIgnored @Injected(\.userDataService) var userDataService
     // Navigation state
     var isShowingMenu: Bool = false
     var selectedMenuItem: MenuItem?
+    var isShowingHelp: Bool = false
     
-    var supabaseClient: SupabaseClient
-    // User data service reference
-    var userDataService: UserDataService
+    // Mission Ready Notification State
+    var showMissionReadyPopup: Bool {
+        missionManager.showMissionReadyNotification
+    }
+    var missionReadyMessage: String {
+        "A mission is ready to complete! Check the Mission Board to claim your rewards."
+    }
+    func dismissMissionReadyPopup() {
+        missionManager.dismissMissionReadyNotification()
+    }
     
     // Centralized user data - AppState is the single source of truth
     var authState: AuthState = .loading
@@ -31,14 +41,6 @@ class AppState {
     private var cachedLevelInfo: [LevelInfo]?
     
     init() {
-        let client = SupabaseClient(
-            supabaseURL: URL(string: "https://uprgcseatwhpptlmmdjr.supabase.co")!,
-            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwcmdjc2VhdHdocHB0bG1tZGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwNzM4NzEsImV4cCI6MjA2NzY0OTg3MX0.D7_ahKtqoYAmfuHs4YX50yQhIkHmX1ChAYvfaD-cqfg"
-        )
-        supabaseClient = client
-        userDataService = UserDataService(client: client)
-        
-        // Check initial authentication status and start observing changes
         Task {
             await checkAuthenticationStatus()
             await observeAuthStateChanges()
@@ -51,6 +53,12 @@ class AppState {
             return true
         default:
             return false
+        }
+    }
+    
+    func setMenuItem(_ menuItem: MenuItem) {
+        withAnimation {
+            selectedMenuItem = menuItem
         }
     }
     
@@ -98,7 +106,7 @@ class AppState {
             let levelInfo = try await getLevelInfo()
             let newXp = currentData.totalXP + additionalXP
             let newLevel = UserDataService.calculateNewLevel(currentXp: newXp, levelInfo: levelInfo)
-            try await supabaseClient
+            try await client
                 .from("xp_levels")
                 .update([
                     "xp": newXp,
@@ -185,6 +193,9 @@ class AppState {
                 case .success(let userData):
                     await MainActor.run {
                         self.authState = .authenticated(hasCompletedOnboarding: true)
+                    }
+                    Task {
+                        await self.missionManager.loadAllMissions(userData.currentLevel)
                     }
                 case .failure(let error):
                     if case .profileNotFound = error {

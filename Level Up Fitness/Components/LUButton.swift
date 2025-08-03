@@ -7,16 +7,22 @@
 
 import SwiftUI
 
+enum LUButtonSize {
+    case regular
+    case small
+}
+
 struct LUButton: View {
     let title: String
     var isLoading: Bool = false
     var fillSpace: Bool = false
+    var size: LUButtonSize = .regular
     let action: () -> Void
     var body: some View {
         Button(action: action) {
             Text(title.uppercased())
         }
-        .buttonStyle(LUButtonStyle(isLoading: isLoading, fillSpace: fillSpace))
+        .buttonStyle(LUButtonStyle(isLoading: isLoading, fillSpace: fillSpace, size: size))
     }
 }
 
@@ -24,16 +30,44 @@ struct LUButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) var isEnabled
     var isLoading: Bool = false
     var fillSpace: Bool = false
+    var size: LUButtonSize
+    
+    var fontSize: CGFloat {
+        switch size {
+        case .regular:
+            24
+        case .small:
+            17
+        }
+    }
+    
+    var horizontalPadding: CGFloat {
+        switch size {
+        case .regular:
+            24
+        case .small:
+            12
+        }
+    }
+    
+    var verticalPadding: CGFloat {
+        switch size {
+        case .regular:
+            8
+        case .small:
+            4
+        }
+    }
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(isLoading ? .clear : .major)
-            .font(Font.mainFont(size: 24))
+            .font(Font.mainFont(size: fontSize))
             .fontWeight(.bold)
             .multilineTextAlignment(.center)
             .frame(maxWidth: fillSpace ? .infinity : nil)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 8)
-            .padding(.top, 4)
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
+            .padding(.top, size == .regular ? 4 : 2)
             .background(
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)

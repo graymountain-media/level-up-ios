@@ -1,5 +1,6 @@
 import Foundation
 import Supabase
+import FactoryKit
 
 // MARK: - Error Types
 
@@ -67,17 +68,9 @@ protocol AvatarServiceProtocol {
 
 @MainActor
 class AvatarService: AvatarServiceProtocol {
-    private let appState: AppState
-    private let client: SupabaseClient
+    @ObservationIgnored @Injected(\.appState) var appState
     
-    init(appState: AppState) {
-        self.appState = appState
-        self.client = appState.supabaseClient
-    }
-    
-    var userDataService: UserDataService {
-        appState.userDataService
-    }
+    init() {}
     
     private var isAuthenticated: Bool {
         return appState.isAuthenticated

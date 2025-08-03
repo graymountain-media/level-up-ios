@@ -72,12 +72,14 @@ struct MainMenu: View {
                         // Menu Items
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(MenuItem.allCases) { feature in
-                                menuButton(for: feature)
-                                
-                                if [.accountSettings].contains(feature) {
-                                    Divider()
-                                        .background(Color.white)
-                                        .padding(.vertical, 8)
+                                if feature != .itemShop {
+                                    menuButton(for: feature)
+                                    
+                                    if [.accountSettings].contains(feature) {
+                                        Divider()
+                                            .background(Color.white)
+                                            .padding(.vertical, 8)
+                                    }
                                 }
                                 
                             }
@@ -111,7 +113,13 @@ struct MainMenu: View {
     
     func menuButton(for item: MenuItem) -> some View {
         Button(action: {
-            appState.selectedMenuItem = item
+            if item == .help {
+                withAnimation {
+                    appState.isShowingHelp = true
+                }
+            } else {
+                appState.setMenuItem(item)
+            }
             withAnimation {
                 appState.isShowingMenu = false
             }

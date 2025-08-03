@@ -32,6 +32,8 @@ enum MissionServiceError: LocalizedError {
 protocol MissionServiceProtocol {
     func fetchAllMissions() async -> Result<[Mission], MissionServiceError>
     func fetchUserMissions() async -> Result<[UserMission], MissionServiceError>
+    func startUserMission(mission: Mission) async -> Result<UserMission, MissionServiceError>
+    func completeMission(mission: Mission, success: Bool) async -> Result<Void, MissionServiceError>
 }
 
 // MARK: - Models
@@ -41,7 +43,7 @@ struct UserMission: Codable, Identifiable, Equatable {
     let missionId: UUID
     let completed: Bool
     let startedAt: Date
-    let completedAt: Date
+    let finishAt: Date
     
     var id: UUID {
         return userId
@@ -51,7 +53,7 @@ struct UserMission: Codable, Identifiable, Equatable {
         case missionId = "mission_id"
         case completed
         case startedAt = "started_at"
-        case completedAt = "completed_at"
+        case finishAt = "finish_at"
     }
 }
 
@@ -59,11 +61,32 @@ struct UserMission: Codable, Identifiable, Equatable {
 
 @MainActor
 class MissionService: MissionServiceProtocol {
-    private let client: SupabaseClient
-    
-    init(client: SupabaseClient) {
-        self.client = client
+    func startUserMission(mission: Mission) async -> Result<UserMission, MissionServiceError> {
+        guard let userId = client.auth.currentUser?.id else {
+            return .failure(.notAuthenticated)
+        }
+        let now = Date()
+        let finishAt = Calendar.current.date(byAdding: .hour, value: mission.duration, to: now) ?? now
+        let userMission = UserMission(
+            userId: userId,
+            missionId: mission.id,
+            completed: false,
+            startedAt: now,
+            finishAt: finishAt
+        )
+        do {
+            let _: [UserMission] = try await client.from("user_missions")
+                .insert([userMission])
+                .select()
+                .execute()
+                .value
+            return .success(userMission)
+        } catch {
+            return .failure(.databaseError(error.localizedDescription))
+        }
     }
+    
+    init() {}
     
     func fetchAllMissions() async -> Result<[Mission], MissionServiceError> {
         do {
@@ -87,6 +110,47 @@ class MissionService: MissionServiceProtocol {
                 .execute()
                 .value
             return .success(userMissions)
+        } catch {
+            return .failure(.databaseError(error.localizedDescription))
+        }
+    }
+    
+    func completeMission(mission: Mission, success: Bool) async -> Result<Void, MissionServiceError> {
+        guard let userId = client.auth.currentUser?.id else {
+            return .failure(.notAuthenticated)
+        }
+        
+        do {
+            if success {
+                // Mark mission as completed in user_missions
+                let _: [UserMission] = try await client.from("user_missions")
+                    .update(["completed": true])
+                    .eq("user_id", value: userId)
+                    .eq("mission_id", value: mission.id)
+                    .select()
+                    .execute()
+                    .value
+                
+                // Award gold to user profile using RPC
+                let _: [[String: AnyJSON]] = try await client.rpc(
+                    "add_gold_to_profile",
+                    params: [
+                        "user_id": AnyJSON.string(userId.uuidString),
+                        "gold_amount": AnyJSON.integer(mission.reward)
+                    ]
+                )
+                    .execute()
+                    .value
+            } else {
+                // Delete the user_mission row on failure
+                try await client.from("user_missions")
+                    .delete()
+                    .eq("user_id", value: userId)
+                    .eq("mission_id", value: mission.id)
+                    .execute()
+            }
+            
+            return .success(())
         } catch {
             return .failure(.databaseError(error.localizedDescription))
         }

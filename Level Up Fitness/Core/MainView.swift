@@ -55,10 +55,16 @@ struct MainView: View {
                 case .itemShop:
                     ItemShopView()
                 case .help:
-                    Text("Help")
+                    EmptyView()
                 }
             }
             MainMenu()
+        }
+        .overlay {
+            if appState.isShowingHelp {
+                HelpCenterView()
+                    .transition(.opacity)
+            }
         }
         .task {
             // Load user data when main view appears and user is authenticated

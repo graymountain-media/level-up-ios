@@ -13,30 +13,34 @@ extension Container {
         self { @MainActor in AppState() }.singleton
     }
     
+    var missionManager: Factory<MissionManager> {
+        self {
+            @MainActor in MissionManager()
+        }.singleton
+    }
+    
     var missionService: Factory<MissionServiceProtocol> {
         self { @MainActor in
-            let appState = self.appState()
-            return MissionService(client: appState.supabaseClient)
+            return MissionService()
         }
     }
     
     var userDataService: Factory<UserDataServiceProtocol> {
-        self { @MainActor in 
-            let appState = self.appState()
-            return UserDataService(client: appState.supabaseClient)
+        self { @MainActor in
+            return UserDataService()
         }
     }
     
     var workoutService: Factory<WorkoutServiceProtocol> {
-        self { @MainActor in WorkoutService(appState: self.appState()) }
+        self { @MainActor in WorkoutService() }
     }
     
     var leaderboardService: Factory<LeaderboardServiceProtocol> {
-        self { @MainActor in LeaderboardService(appState: self.appState()) }
+        self { @MainActor in LeaderboardService() }
     }
     
     var avatarService: Factory<AvatarServiceProtocol> {
-        self { @MainActor in AvatarService(appState: self.appState()) }
+        self { @MainActor in AvatarService() }
     }
 }
 

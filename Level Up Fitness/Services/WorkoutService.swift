@@ -1,5 +1,6 @@
 import Foundation
 import Supabase
+import FactoryKit
 
 // MARK: - Error Types
 
@@ -40,17 +41,8 @@ protocol WorkoutServiceProtocol {
 
 @MainActor
 class WorkoutService: WorkoutServiceProtocol {
-    private let appState: AppState
-    private let client: SupabaseClient
-    
-    init(appState: AppState) {
-        self.appState = appState
-        self.client = appState.supabaseClient
-    }
-    
-    var userDataService: UserDataService {
-        appState.userDataService
-    }
+    @ObservationIgnored @Injected(\.appState) var appState
+    init() {}
     
     private var isAuthenticated: Bool {
         return appState.isAuthenticated
