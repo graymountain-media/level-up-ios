@@ -32,6 +32,7 @@ struct ProfileSettings: View {
     @State private var imageForCropping: UIImage?
     @State private var croppedProfileImage: UIImage?
     @State private var profileImageData: Data?
+    @State private var didSave = false
     
     var firstNameText: String {
         return appState.userAccountData?.profile.firstName ?? ""
@@ -44,7 +45,7 @@ struct ProfileSettings: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
-                FeatureHeader(title: "Account Details")
+                FeatureHeader(title: "Account Details", showCloseButton: true)
                 HStack(alignment: .center, spacing: 16) {
                     profileImage
                     VStack(alignment: .leading, spacing: 2) {
@@ -76,13 +77,20 @@ struct ProfileSettings: View {
                     LUTextField(title: "Avatar Name", text: $avatarName, rightIconName: "pencil")
                 }
                 avatarImageView
-                Spacer(minLength: 20)
-                LUButton(title: "Save Changes", isLoading: isLoading) {
-                    saveProfile()
+                VStack(spacing: 8) {
+                    LUButton(title: "Save Changes", isLoading: isLoading) {
+                        saveProfile()
+                    }
+                    .disabled(isLoading)
+                    if didSave {
+                        Text("Account Updated")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.green)
+                    }
                 }
-                .disabled(isLoading)
             }
             .padding(.horizontal, 24)
+            .padding(.bottom, 24)
         }
         .task {
             firstName = appState.userAccountData?.profile.firstName ?? ""
@@ -309,6 +317,7 @@ struct ProfileSettings: View {
     }
     
     private func saveProfile() {
+        didSave = false
         guard !firstName.isEmpty, !lastName.isEmpty, !avatarName.isEmpty else {
             alertMessage = "Please fill in all fields"
             showingAlert = true
@@ -373,7 +382,7 @@ struct ProfileSettings: View {
                 
                 switch result {
                 case .success:
-                    dismiss() // Close the view on success
+                    didSave = true
                 case .failure(let error):
                     alertMessage = "Failed to update profile: \(error.localizedDescription)"
                     showingAlert = true

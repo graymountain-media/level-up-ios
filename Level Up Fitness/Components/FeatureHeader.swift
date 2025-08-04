@@ -8,14 +8,34 @@
 import SwiftUI
 
 struct FeatureHeader: View {
+    @Environment(\.dismiss) var dismiss
     var title: String
+    var showCloseButton: Bool = false
     var body: some View {
-        VStack(alignment: .center, spacing: 12) {
-            Text(title.uppercased())
-                .font(.mainFont(size: 20).bold())
-                .foregroundStyle(Color.title)
-            LUDivider()
-                .frame(maxWidth: 200)
+        ZStack(alignment: .topLeading) {
+            HStack {
+                Spacer()
+                VStack(alignment: .center, spacing: 12) {
+                    Text(title.uppercased())
+                        .font(.mainFont(size: 20).bold())
+                        .foregroundStyle(Color.title)
+                    LUDivider()
+                        .frame(maxWidth: 200)
+                }
+                Spacer()
+            }
+            if showCloseButton {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                        .foregroundStyle(.textfieldBorder)
+                }
+                .frame(width: 40, height: 40)
+            }
         }
         .padding(.vertical, 20)
     }
@@ -24,7 +44,7 @@ struct FeatureHeader: View {
 
 #Preview {
     VStack {
-        FeatureHeader(title: "Log A Workout")
+        FeatureHeader(title: "Log A Workout", showCloseButton: true)
         Spacer()
     }
     .frame(maxWidth: .infinity)

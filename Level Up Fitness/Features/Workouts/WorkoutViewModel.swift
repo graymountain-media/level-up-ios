@@ -21,20 +21,18 @@ class WorkoutViewModel {
     ///   - duration: Duration of the workout in minutes
     ///   - type: Type of workout (cardio, strength, etc.)
     ///   - intensity: Intensity level of the workout
-    func saveWorkout(duration: Int, types: [String]) async {
+    func saveWorkout(duration: Int, types: [String]) async -> Workout? {
         isLoading = true
         errorMessage = nil
         showError = false
         saveSuccess = false
         let result = await workoutService.saveWorkout(duration: duration, types: types)
         switch result {
-        case .success:
-            await MainActor.run {
-                isLoading = false
-                saveSuccess = true
-            }
+        case .success(let workout):
+            return workout
         case .failure(let error):
             setError("Failed to save workout: \(error.localizedDescription)")
+            return nil
         }
     }
     
@@ -96,6 +94,50 @@ class WorkoutViewModel {
             print("Failed to fetch streak: \(error.localizedDescription)")
             return 0
         }
+    }
+    
+    /// Fetches all workouts for today
+    /// - Returns: Array of today's workouts
+    func fetchTodaysWorkouts() async -> [Workout] {
+        let result = await workoutService.fetchTodaysWorkouts()
+        
+        switch result {
+        case .success(let workouts):
+            return workouts
+        case .failure(let error):
+            self.errorMessage = "Failed to fetch today's workouts: \(error.localizedDescription)"
+            self.showError = true
+            return []
+        }
+    }
+    
+    /// Fetches the total minutes logged today
+    /// - Returns: Total minutes logged today
+    func fetchTodaysTotalMinutes() async -> Int {
+        let result = await workoutService.fetchTodaysTotalMinutes()
+        
+        switch result {
+        case .success(let totalMinutes):
+            return totalMinutes
+        case .failure(let error):
+            print("Failed to fetch today's total minutes: \(error.localizedDescription)")
+            return 0
+        }
+    }
+    
+    /// Calculates available minutes remaining for today
+    /// - Returns: Minutes remaining (0-60)
+    func fetchAvailableMinutes() async -> Int {
+        let totalMinutes = await fetchTodaysTotalMinutes()
+        return max(0, 60 - totalMinutes)
+    }
+    
+    /// Checks if user can log a workout of the given duration
+    /// - Parameter duration: Duration in minutes to check
+    /// - Returns: True if workout can be logged, false if it would exceed 60 minutes
+    func canLogWorkout(duration: Int) async -> Bool {
+        let availableMinutes = await fetchAvailableMinutes()
+        return duration <= availableMinutes
     }
     
     // MARK: - Private Methods

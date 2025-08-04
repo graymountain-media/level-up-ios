@@ -28,14 +28,22 @@ struct LogWorkoutView: View {
     @State private var selectedDuration: Int = 20
     @State private var selectedWorkoutTypes: [WorkoutType] = []
     
-    @State private var todaysWorkout: Workout? = nil
+    @State private var todaysWorkouts: [Workout] = []
     @State private var currentStreak: Int = 0
+    @State private var availableMinutes: Int = 60
+    @State private var totalMinutesToday: Int = 0
+    @State private var showWorkoutSuccess: Bool = false
+    @State private var latestLoggedWorkout: Workout?
     
     @State private var showHelp: Bool = false
     let durationOptions: [Int] = [20, 25, 30, 35, 40, 45, 50, 55, 60]
     
-    var hasWorkoutForToday: Bool {
-        return todaysWorkout != nil
+    var hasMaxedOutToday: Bool {
+        return availableMinutes <= 0
+    }
+    
+    var canLogSelectedWorkout: Bool {
+        return selectedDuration <= availableMinutes
     }
     
     var body: some View {
@@ -44,8 +52,6 @@ struct LogWorkoutView: View {
             ScrollView {
                 if viewModel.isLoading {
                     loadingView
-                } else if hasWorkoutForToday {
-                    workoutSuccessView
                 } else {
                     workoutFormView
                 }
@@ -62,8 +68,14 @@ struct LogWorkoutView: View {
             Text(viewModel.errorMessage ?? "An unknown error occurred")
         }
         .task {
-            // Load today's workout when view appears
-            await loadTodaysWorkout()
+            // Load today's workouts and calculate available minutes
+            await loadTodaysData()
+        }
+        .fullScreenCover(item: $latestLoggedWorkout) { workout in
+            WorkoutSuccessView(workout: workout, dismiss: {
+                dismissWorkoutSuccess()
+            })
+            .presentationBackground(.clear)
         }
     }
     
@@ -81,97 +93,44 @@ struct LogWorkoutView: View {
         .padding(.vertical, 100)
     }
     
-    var workoutSuccessView: some View {
-        VStack(spacing: 36) {
-            // Check mark icon
-            VStack(spacing: 6) {
-                Image("checkmark")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 100)
-                
-                // Success title
-                Text("WORKOUT\nLOGGED!")
-                    .font(.mainFont(size: 40).bold())
-                    .foregroundColor(.title)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-            }
-            
-            
-            // Level progress section
-            VStack(spacing: 8) {
-                HStack {
-                    Text("LEVEL \(appState.userAccountData?.currentLevel ?? 1)")
-                        .font(.mainFont(size: 24).bold())
-                        .foregroundColor(.textOrange)
-                    
-                    Spacer()
-                    
-                    Text("\(appState.userAccountData?.xpToNextLevel ?? 100) to next level")
-                        .font(.system(size: 14))
-                        .foregroundColor(.textDetail)
-                }
-                .padding(.horizontal)
-                
-                // Progress bar
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        // Background
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 20)
-                        
-                        // Progress fill
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.green)
-                            .frame(width: geometry.size.width * (appState.userAccountData?.progressToNextLevel ?? 0.0), height: 20)
-                    }
-                }
-                .frame(height: 20)
-            }
-            
-            // XP earned
-            Text("+\(todaysWorkout?.xpEarned ?? 40) XP EARNED")
-                .font(.mainFont(size: 30).bold())
-                .foregroundColor(.textOrange)
-            
-            // Motivational text
-            VStack(spacing: 16) {
-                Text("Keep training to unlock new gear and evolve your avatar.")
-                    .font(.system(size: 16))
-                    .italic()
-                    .foregroundColor(.textDetail)
-                    .multilineTextAlignment(.center)
-                
-                Text("View Missions to see what new missions are available to you.")
-                    .font(.system(size: 16))
-                    .italic()
-                    .foregroundColor(.textDetail)
-                    .multilineTextAlignment(.center)
-            }
-            
-        }
-        .padding(.horizontal, 40)
-        .padding(.vertical, 30)
-    }
+    
     
     var workoutFormView: some View {
         VStack(spacing: 24) {
             durationSelector
             typeSection
-            LUButton(title: "Log Workout", isLoading: viewModel.isLoading) {
-                Task {
-                    await saveWorkout()
+            VStack(spacing: 12) {
+                availableMinutesView
+                LUButton(title: "Log Workout", isLoading: viewModel.isLoading) {
+                    Task {
+                        await saveWorkout()
+                    }
                 }
+                .disabled(!canLogSelectedWorkout)
+                helpSection
             }
-            helpSection
         }
         .padding(.horizontal, 50)
         .foregroundStyle(Color.white)
         .frame(maxWidth: .infinity)
     }
     
+    var availableMinutesView: some View {
+        let willLogTooMuch: Bool = selectedDuration > availableMinutes
+        return VStack(spacing: 4) {
+            if availableMinutes > 0 {
+                Text("\(willLogTooMuch ? "You only have " : "")\(availableMinutes) minutes available to log today")
+                    .font(.system(size: 14))
+                    .foregroundColor(willLogTooMuch ? .red : .textDetail)
+                    .multilineTextAlignment(.center)
+            } else {
+                Text("Max minutes reached. Log your next workout tomorrow")
+                    .font(.system(size: 14))
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+            }
+        }
+    }
     var durationSelector: some View {
         VStack(alignment: .leading) {
             Text("Duration")
@@ -294,25 +253,46 @@ struct LogWorkoutView: View {
             return
         }
         
-        await viewModel.saveWorkout(
+        // Check if the selected duration would exceed daily limit
+        guard await viewModel.canLogWorkout(duration: selectedDuration) else {
+            viewModel.errorMessage = "This workout would exceed your daily 60-minute limit. You have \(availableMinutes) minutes remaining."
+            viewModel.showError = true
+            return
+        }
+        
+        let workout = await viewModel.saveWorkout(
             duration: selectedDuration,
             types: selectedWorkoutTypes.map { $0.rawValue }
         )
         
-        if viewModel.saveSuccess {
-            // Refresh the workout data
-            await loadTodaysWorkout()
-            
-            // Update centralized user data with new XP
-            if let workout = todaysWorkout {
-                await appState.updateUserXP(additionalXP: workout.xpEarned)
+        if let workout {
+            await appState.updateUserXP(additionalXP: workout.xpEarned)
+            // Show success popup
+            withAnimation {
+                latestLoggedWorkout = workout
             }
+            // Refresh the workout data
+            await loadTodaysData()
+            
+            selectedDuration = 20
+            selectedWorkoutTypes = []
         }
     }
     
-    // Load today's workout if it exists
-    private func loadTodaysWorkout() async {
-        todaysWorkout = await viewModel.fetchTodaysWorkout()
+    // Load today's workouts and calculate available minutes
+    private func loadTodaysData() async {
+        viewModel.isLoading = true
+        todaysWorkouts = await viewModel.fetchTodaysWorkouts()
+        totalMinutesToday = await viewModel.fetchTodaysTotalMinutes()
+        availableMinutes = await viewModel.fetchAvailableMinutes()
+        viewModel.isLoading = false
+    }
+    
+    // Dismiss workout success popup
+    private func dismissWorkoutSuccess() {
+        withAnimation {
+            latestLoggedWorkout = nil
+        }
     }
 }
 

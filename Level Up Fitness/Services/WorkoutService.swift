@@ -31,9 +31,11 @@ enum WorkoutError: LocalizedError {
 // MARK: - Protocol
 
 protocol WorkoutServiceProtocol {
-    func saveWorkout(duration: Int, types: [String]) async -> Result<Void, WorkoutError>
+    func saveWorkout(duration: Int, types: [String]) async -> Result<Workout, WorkoutError>
     func updateWorkout(workoutId: String, duration: Int, types: [String]) async -> Result<Void, WorkoutError>
     func fetchTodaysWorkout() async -> Result<Workout?, WorkoutError>
+    func fetchTodaysWorkouts() async -> Result<[Workout], WorkoutError>
+    func fetchTodaysTotalMinutes() async -> Result<Int, WorkoutError>
     func fetchCurrentStreak() async -> Result<Int, WorkoutError>
 }
 
@@ -52,7 +54,7 @@ class WorkoutService: WorkoutServiceProtocol {
         return client.auth.currentUser?.id
     }
     
-    func saveWorkout(duration: Int, types: [String]) async -> Result<Void, WorkoutError> {
+    func saveWorkout(duration: Int, types: [String]) async -> Result<Workout, WorkoutError> {
         guard isAuthenticated, let userId = currentUserId else {
             return .failure(.notAuthenticated)
         }
@@ -71,10 +73,13 @@ class WorkoutService: WorkoutServiceProtocol {
                 .insert(workout)
                 .execute()
             
-            // Update the user's streak
-            _ = await updateStreak(userId: userId)
+            // Update the user's streak only if this is the first workout today
+            let isFirstWorkoutToday = await isFirstWorkoutOfDay(userId: userId)
+            if isFirstWorkoutToday {
+                _ = await updateStreak(userId: userId)
+            }
             
-            return .success(())
+            return .success(workout)
         } catch {
             return .failure(.databaseError(error.localizedDescription))
         }
@@ -109,6 +114,16 @@ class WorkoutService: WorkoutServiceProtocol {
     }
     
     func fetchTodaysWorkout() async -> Result<Workout?, WorkoutError> {
+        let result = await fetchTodaysWorkouts()
+        switch result {
+        case .success(let workouts):
+            return .success(workouts.first)
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+    
+    func fetchTodaysWorkouts() async -> Result<[Workout], WorkoutError> {
         guard isAuthenticated, let userId = currentUserId else {
             return .failure(.notAuthenticated)
         }
@@ -125,38 +140,39 @@ class WorkoutService: WorkoutServiceProtocol {
             let todayString = formatter.string(from: today)
             let tomorrowString = formatter.string(from: tomorrow)
             
-            // Query for workouts from today only
+            // Query for all workouts from today
             let workouts: [Workout] = try await client.from("workouts")
                 .select()
                 .eq("user_id", value: userId.uuidString)
                 .gte("date", value: todayString)
                 .lt("date", value: tomorrowString)
                 .order("date", ascending: false)
-                .limit(1)
                 .execute()
                 .value
             
-            // Additional client-side validation to ensure workout is from today
-            guard let workout = workouts.first else {
-                return .success(nil)
+            // Additional client-side validation to ensure workouts are from today
+            let validWorkouts = workouts.filter { workout in
+                let workoutDate = workout.date
+                return calendar.isDate(workoutDate, inSameDayAs: now) &&
+                       workoutDate >= today &&
+                       workoutDate < tomorrow
             }
             
-            // Validate that the workout date falls within today's range
-            let workoutDate = workout.date
-            let isFromToday = calendar.isDate(workoutDate, inSameDayAs: now) &&
-                             workoutDate >= today &&
-                             workoutDate < tomorrow
-            
-            if isFromToday {
-                return .success(workout)
-            } else {
-                // Workout exists but not from today (shouldn't happen with proper query)
-                print("Warning: Fetched workout is not from today. Workout date: \(workoutDate), Today: \(today)")
-                return .success(nil)
-            }
+            return .success(validWorkouts)
             
         } catch {
             return .failure(.databaseError(error.localizedDescription))
+        }
+    }
+    
+    func fetchTodaysTotalMinutes() async -> Result<Int, WorkoutError> {
+        let result = await fetchTodaysWorkouts()
+        switch result {
+        case .success(let workouts):
+            let totalMinutes = workouts.reduce(0) { $0 + $1.duration }
+            return .success(totalMinutes)
+        case .failure(let error):
+            return .failure(error)
         }
     }
     
@@ -197,6 +213,38 @@ class WorkoutService: WorkoutServiceProtocol {
     
     private func calculateXP(duration: Int) -> Int {
         return min(duration, 60)
+    }
+    
+    private func isFirstWorkoutOfDay(userId: UUID) async -> Bool {
+        do {
+            // Get today's date range (midnight to 11:59:59 PM)
+            let calendar = Calendar.current
+            let now = Date()
+            let today = calendar.startOfDay(for: now)
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+            
+            // Format dates for the query
+            let formatter = ISO8601DateFormatter()
+            let todayString = formatter.string(from: today)
+            let tomorrowString = formatter.string(from: tomorrow)
+            
+            // Check if there are any existing workouts for today
+            let existingWorkouts: [Workout] = try await client.from("workouts")
+                .select("id") // Only select id to minimize data transfer
+                .eq("user_id", value: userId.uuidString)
+                .gte("date", value: todayString)
+                .lt("date", value: tomorrowString)
+                .execute()
+                .value
+            
+            // If no existing workouts, this is the first workout of the day
+            return existingWorkouts.isEmpty
+            
+        } catch {
+            print("Error checking if first workout of day: \(error.localizedDescription)")
+            // If we can't determine, assume it's the first to be safe with streak counting
+            return true
+        }
     }
     
     private func updateStreak(userId: UUID) async -> Int {
@@ -280,33 +328,44 @@ class WorkoutService: WorkoutServiceProtocol {
 
 class MockWorkoutService: WorkoutServiceProtocol {
     var shouldFail = false
-    var mockTodaysWorkout: Workout?
+    var mockTodaysWorkouts: [Workout] = []
     var mockStreak = 5
     
     init() {
-        mockTodaysWorkout = Workout(
-            userId: UUID().uuidString,
-            duration: 60,
-            workoutTypes: ["cardio"],
-            date: Date(),
-            xpEarned: min(60, 60)
-        )
+        // Initialize with some mock workouts totaling 35 minutes (allowing 25 more)
+        mockTodaysWorkouts = [
+            Workout(
+                userId: UUID().uuidString,
+                duration: 20,
+                workoutTypes: ["cardio"],
+                date: Date(),
+                xpEarned: 20
+            ),
+            Workout(
+                userId: UUID().uuidString,
+                duration: 15,
+                workoutTypes: ["strength"],
+                date: Date(),
+                xpEarned: 15
+            )
+        ]
     }
-    func saveWorkout(duration: Int, types: [String]) async -> Result<Void, WorkoutError> {
+    func saveWorkout(duration: Int, types: [String]) async -> Result<Workout, WorkoutError> {
         if shouldFail {
             return .failure(.unknownError("Mock save failed"))
         }
         
-        // Simulate a successful save by creating a mock workout
-        mockTodaysWorkout = Workout(
+        // Simulate a successful save by adding a new mock workout
+        let newWorkout = Workout(
             userId: UUID().uuidString,
             duration: duration,
             workoutTypes: types,
             date: Date(),
             xpEarned: min(duration, 60)
         )
+        mockTodaysWorkouts.append(newWorkout)
         
-        return .success(())
+        return .success(newWorkout)
     }
     
     func updateWorkout(workoutId: String, duration: Int, types: [String]) async -> Result<Void, WorkoutError> {
@@ -320,7 +379,22 @@ class MockWorkoutService: WorkoutServiceProtocol {
         if shouldFail {
             return .failure(.unknownError("Mock fetch failed"))
         }
-        return .success(mockTodaysWorkout)
+        return .success(mockTodaysWorkouts.first)
+    }
+    
+    func fetchTodaysWorkouts() async -> Result<[Workout], WorkoutError> {
+        if shouldFail {
+            return .failure(.unknownError("Mock fetch failed"))
+        }
+        return .success(mockTodaysWorkouts)
+    }
+    
+    func fetchTodaysTotalMinutes() async -> Result<Int, WorkoutError> {
+        if shouldFail {
+            return .failure(.unknownError("Mock fetch failed"))
+        }
+        let totalMinutes = mockTodaysWorkouts.reduce(0) { $0 + $1.duration }
+        return .success(totalMinutes)
     }
     
     func fetchCurrentStreak() async -> Result<Int, WorkoutError> {
