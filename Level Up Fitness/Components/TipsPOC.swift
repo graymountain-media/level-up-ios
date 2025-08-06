@@ -8,19 +8,6 @@
 import SwiftUI
 import TipKit
 
-struct FirstTip: Tip {
-    var title: Text = Text("First")
-}
-struct SecondTip: Tip {
-    var title: Text = Text("Second")
-}
-struct ThirdTip: Tip {
-    var title: Text = Text("Third")
-}
-struct FourthTip: Tip {
-    var title: Text = Text("Fourth")
-}
-
 struct TipContent: Equatable {
     let id: Int
     let title: String
@@ -34,20 +21,27 @@ struct TipsPOC: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            Text("First")
-                .messageSource(id: 0, nameSpace: namespace)
+            Rectangle()
+                .fill(.red)
+                .frame(width: 100, height: 40)
+                .tipSource(id: 0, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
             Text("Second")
-                .messageSource(id: 1, nameSpace: namespace)
+                .foregroundStyle(.white)
+                .tipSource(id: 1, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
             Text("Third")
-                .messageSource(id: 2, nameSpace: namespace)
+                .foregroundStyle(.white)
+                .tipSource(id: 2, nameSpace: namespace, manager: manager)
             Text("Fourth")
-                .messageSource(id: 3, nameSpace: namespace)
+                .foregroundStyle(.white)
+                .tipSource(id: 3, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
                 
         }
+        .padding(40)
+        .background(Color.major)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .messageOverlay(namespace: namespace, manager: manager)
+        .tipOverlay(namespace: namespace, manager: manager)
         .onAppear {
-            manager.startTips()
+            manager.forceStartTips()
         }
     }
     
@@ -55,27 +49,52 @@ struct TipsPOC: View {
 }
 
 extension View {
-    func messageOverlay(namespace: Namespace.ID, manager: SequentialTipsManager) -> some View {
-        self.modifier(MessageOverlayModifier(namespace: namespace, manager: manager))
+    func tipOverlay(
+        namespace: Namespace.ID,
+        manager: SequentialTipsManager
+    ) -> some View {
+        self.modifier(TipOverlayModifier(namespace: namespace, manager: manager))
     }
     
-    func messageSource(id: Int, nameSpace: Namespace.ID, anchorPoint: UnitPoint = .top) -> some View {
-        self.modifier(MessageSourceModifier(id: id, namespace: nameSpace, anchorPoint: anchorPoint))
+    func tipSource(
+        id: Int,
+        nameSpace: Namespace.ID,
+        manager: SequentialTipsManager,
+        anchorPoint: UnitPoint = .top
+    ) -> some View {
+        // Capture the view before applying the modifier
+        manager.captureView(id: id, view: self)
+        return self.modifier(
+            TipSourceModifier(
+                id: id,
+                namespace: nameSpace,
+                manager: manager,
+                anchorPoint: anchorPoint
+            )
+        )
     }
 }
 
-struct MessageSourceModifier: ViewModifier {
+struct TipSourceModifier: ViewModifier {
     var id: Int
     var namespace: Namespace.ID
     var anchorPoint: UnitPoint
+    var manager: SequentialTipsManager
     
+    init(id: Int, namespace: Namespace.ID, manager: SequentialTipsManager, anchorPoint: UnitPoint) {
+        self.id = id
+        self.namespace = namespace
+        self.manager = manager
+        self.anchorPoint = anchorPoint
+        
+    }
     func body(content: Content) -> some View {
         content
             .matchedGeometryEffect(id: id, in: namespace, properties: .frame, anchor: anchorPoint)
     }
 }
 
-struct MessageOverlayModifier: ViewModifier {
+struct TipOverlayModifier: ViewModifier {
     var namespace: Namespace.ID
     var manager: SequentialTipsManager
     
@@ -92,31 +111,36 @@ struct MessageOverlayModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay {
-                if let tip = manager.currentTip {
+                if let tip = manager.currentTip,
+                    let view = manager.capturedViews.first(where: { $0.key == tip.id})?.value as? AnyView {
                     ZStack {
                         ZStack {
                             Color.black
-                                .opacity(0.3)
+                                .opacity(0.7)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .ignoresSafeArea()
-                            RoundedRectangle(cornerRadius: 12)
-                                .padding(-10)
-                                .matchedGeometryEffect(id: tip.id, in: namespace, properties: .frame, anchor: tip.position, isSource: false)
-                                .blendMode(.destinationOut)
+//                            RoundedRectangle(cornerRadius: 12)
+//                                .padding(-10)
+//                                .matchedGeometryEffect(id: tip.id, in: namespace, properties: .frame, anchor: tip.position, isSource: false)
+//                                .blendMode(.destinationOut)
                         }
                         .compositingGroup()
                         .onTapGesture {
                             manager.nextTip()
                         }
-                            
+                        view
+                            .matchedGeometryEffect(id: tip.id, in: namespace, properties: .frame, anchor: tip.position, isSource: false)
+                            .onTapGesture {
+                                manager.nextTip()
+                            }
                         TipPopoverView(tip: tip, manager: manager)
                             .matchedGeometryEffect(id: tip.id, in: namespace, properties: .position, anchor: oppositeAnchor(tip.position), isSource: false)
                     }
                     
                 }
             }
-        
             .animation(.easeInOut(duration: 0.2), value: manager.currentTip)
+            .zIndex(99)
     }
 }
 

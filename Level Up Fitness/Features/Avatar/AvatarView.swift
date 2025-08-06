@@ -52,7 +52,7 @@ struct AvatarView: View {
                     .onAppear {
                         manager.startTips()
                     }
-                    .messageOverlay(namespace: namespace, manager: manager)
+                    .tipOverlay(namespace: namespace, manager: manager)
             }
         }
         
@@ -80,11 +80,17 @@ struct AvatarView: View {
                         .bold()
                         .foregroundStyle(.textOrange)
                         .shadow(radius: 4, y: 4)
+                    if let faction = appState.userAccountData?.profile.faction {
+                        Image(faction.iconName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 45, height: 45)
+                    }
                     Spacer()
                 }
                 ProgressBar()
-                    .messageSource(id: 0, nameSpace: namespace, anchorPoint: .bottom)
-                    .messageSource(id: 1, nameSpace: namespace, anchorPoint: .bottom )
+                    .tipSource(id: 0, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
+                    .tipSource(id: 1, nameSpace: namespace, manager: manager, anchorPoint: .bottom )
                 .background(
                     ZStack {
                         RoundedRectangle(cornerRadius: 12)
@@ -100,6 +106,7 @@ struct AvatarView: View {
                         Text("Streak:")
                             .bold()
                         Text("\(appState.userAccountData?.currentStreak ?? 0) days")
+                            .foregroundStyle(.white)
                         Image("fire-icon")
                             .resizable()
                             .aspectRatio(contentMode: .fit)
@@ -107,7 +114,7 @@ struct AvatarView: View {
                         Spacer()
                     }
                 }
-                .messageSource(id: 3, nameSpace: namespace, anchorPoint: .bottom)
+                .tipSource(id: 3, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
                 
                 
             }
@@ -119,7 +126,7 @@ struct AvatarView: View {
                     image
                         .resizable()
                         .aspectRatio(4/5, contentMode: .fit)
-                        .messageSource(id: 2, nameSpace: namespace)
+                        .tipSource(id: 2, nameSpace: namespace, manager: manager)
                 } placeholder: {
                     Image("avatar_placeholder")
                         .resizable()
@@ -131,7 +138,7 @@ struct AvatarView: View {
                     .resizable()
                     .aspectRatio(4/5, contentMode: .fit)
                     .opacity(0.5)
-                    .messageSource(id: 2, nameSpace: namespace)
+                    .tipSource(id: 2, nameSpace: namespace, manager: manager)
             }
         }
         .padding(.top, 32)

@@ -34,7 +34,7 @@ struct MainView: View {
                 LUTabBar { tab in
                     appState.currentTab = tab
                 }
-                .messageSource(id: 99, nameSpace: mainViewNamespace, anchorPoint: .top)
+                .tipSource(id: 99, nameSpace: mainViewNamespace, manager: tipManager, anchorPoint: .top)
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -77,7 +77,7 @@ struct MainView: View {
                 tipManager.showSingleTip(key: "missions_unlocked")
             }
         }
-        .messageOverlay(namespace: mainViewNamespace, manager: tipManager)
+        .tipOverlay(namespace: mainViewNamespace, manager: tipManager)
         .overlay {
             if appState.isShowingHelp {
                 HelpCenterView()

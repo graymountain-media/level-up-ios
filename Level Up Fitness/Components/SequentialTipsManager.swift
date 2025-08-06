@@ -15,6 +15,7 @@ class SequentialTipsManager {
     private let storageKey: String
     private var singleTips: [String: TipContent] = [:]
     private var activeSingleTipKey: String?
+    var capturedViews: [Int: AnyView] = [:]
     
     var currentTip: TipContent? {
         // Show active single tip if set, otherwise show sequential tip
@@ -23,6 +24,15 @@ class SequentialTipsManager {
         }
         guard currentTipIndex >= 0 && currentTipIndex < tips.count else { return nil }
         return tips[currentTipIndex]
+    }
+    
+    func captureView<V: View>(id: Int, view: V) {
+        if capturedViews.contains(where: { $0.key == id }) {
+            return
+        }
+        
+        print("DEBUG: View captured for tip \(id)")
+        capturedViews[id] = AnyView(view)
     }
     
     var hasMoreTips: Bool {
@@ -37,6 +47,10 @@ class SequentialTipsManager {
         self.tips = tips
         self.storageKey = storageKey
         loadProgress()
+    }
+    
+    func forceStartTips() {
+        currentTipIndex = 0
     }
     
     func startTips() {
@@ -169,9 +183,6 @@ struct TipPopoverView: View {
         )
         .padding(.vertical)
         .padding(.horizontal)
-        .onDisappear {
-            manager.nextTip()
-        }
         .presentationBackground(.clear)
     }
 }

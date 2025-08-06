@@ -64,7 +64,7 @@ struct LogWorkoutView: View {
         .foregroundStyle(Color.white)
         .frame(maxWidth: .infinity)
         .mainBackground()
-        .messageOverlay(namespace: namespace, manager: tipManager)
+        .tipOverlay(namespace: namespace, manager: tipManager)
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { viewModel.showError = false }
         } message: {
@@ -240,7 +240,7 @@ struct LogWorkoutView: View {
                     .bold()
                     .foregroundStyle(.title)
             }
-            .messageSource(id: 1, nameSpace: namespace)
+            .tipSource(id: 1, nameSpace: namespace, manager: tipManager)
             
         }
     }

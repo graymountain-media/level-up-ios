@@ -54,7 +54,7 @@ struct MissionBoardView: View {
             }
         }
         .mainBackground()
-        .messageOverlay(namespace: namespace, manager: tipManager)
+        .tipOverlay(namespace: namespace, manager: tipManager)
         .task {
             isLoading = true
             await missionManager.loadAllMissions(appState.userAccountData?.currentLevel ?? 1)
@@ -123,8 +123,8 @@ struct MissionBoardView: View {
                 .id(mission.id)
                 .padding(.horizontal)
                 .transition(.opacity)
-                .messageSource(id: 0, nameSpace: namespace, anchorPoint: .bottom)
-                .messageSource(id: 1, nameSpace: namespace, anchorPoint: .top)
+                .tipSource(id: 0, nameSpace: namespace, manager: tipManager, anchorPoint: .bottom)
+                .tipSource(id: 1, nameSpace: namespace, manager: tipManager, anchorPoint: .top)
             }
         }
         .frame(maxWidth: .infinity)
