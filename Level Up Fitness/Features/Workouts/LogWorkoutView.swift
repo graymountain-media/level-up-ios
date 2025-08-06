@@ -25,7 +25,7 @@ struct LogWorkoutView: View {
     @InjectedObservable(\.appState) var appState
     @State private var viewModel = WorkoutViewModel()
     
-    @State private var selectedDuration: Int = 20
+    @State private var selectedDuration: Int?
     @State private var selectedWorkoutTypes: [WorkoutType] = []
     
     @State private var todaysWorkouts: [Workout] = []
@@ -44,6 +44,7 @@ struct LogWorkoutView: View {
     }
     
     var canLogSelectedWorkout: Bool {
+        guard let selectedDuration, !selectedWorkoutTypes.isEmpty else { return false }
         return selectedDuration <= availableMinutes
     }
     
@@ -121,7 +122,7 @@ struct LogWorkoutView: View {
     }
     
     var availableMinutesView: some View {
-        let willLogTooMuch: Bool = selectedDuration > availableMinutes
+        let willLogTooMuch: Bool = selectedDuration ?? 0 > availableMinutes
         return VStack(spacing: 4) {
             if availableMinutes > 0 {
                 Text("\(willLogTooMuch ? "You only have " : "")\(availableMinutes) minutes available to log today")
@@ -137,7 +138,13 @@ struct LogWorkoutView: View {
         }
     }
     var durationSelector: some View {
-        VStack(alignment: .leading) {
+        var durationText: String {
+            guard let selectedDuration else {
+                return "Select duration"
+            }
+            return "\(selectedDuration) Mins"
+        }
+        return VStack(alignment: .leading) {
             Text("Duration")
                 .font(.system(size: 14))
                 .foregroundStyle(Color.textDetail)
@@ -147,7 +154,7 @@ struct LogWorkoutView: View {
                         Button {
                             selectedDuration = duration
                         } label: {
-                            Text("\(duration) Mins")
+                            Text("\(duration) mins")
                                 .frame(maxWidth: .infinity)
                                 .font(.system(size: 14))
                                 .foregroundStyle(Color.textInput)
@@ -156,7 +163,7 @@ struct LogWorkoutView: View {
                     }
                 } label: {
                     HStack {
-                        Text("\(selectedDuration) Mins")
+                        Text(durationText)
                             .font(.system(size: 14))
                             .foregroundStyle(Color.textInput)
                         Spacer()
@@ -240,6 +247,11 @@ struct LogWorkoutView: View {
     
     // Function to save or update a workout
     private func saveWorkout() async {
+        guard let selectedDuration else {
+            viewModel.errorMessage = "Please enter a workout duration"
+            viewModel.showError = true
+            return
+        }
         guard !selectedWorkoutTypes.isEmpty else {
             viewModel.errorMessage = "Please select at least one workout type"
             viewModel.showError = true
@@ -267,7 +279,7 @@ struct LogWorkoutView: View {
             // Refresh the workout data
             await loadTodaysData()
             
-            selectedDuration = 20
+            self.selectedDuration = nil
             selectedWorkoutTypes = []
         }
     }
@@ -286,6 +298,8 @@ struct LogWorkoutView: View {
         withAnimation {
             latestLoggedWorkout = nil
         }
+        // Notify AppState that workout success is dismissed
+        appState.showLevelPopupIfNeeded()
     }
 }
 

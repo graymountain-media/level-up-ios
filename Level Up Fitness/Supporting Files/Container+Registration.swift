@@ -42,6 +42,10 @@ extension Container {
     var avatarService: Factory<AvatarServiceProtocol> {
         self { @MainActor in AvatarService() }
     }
+    
+    var levelManager: Factory<LevelManager> {
+        self { @MainActor in LevelManager() }.singleton
+    }
 }
 
 extension Container {

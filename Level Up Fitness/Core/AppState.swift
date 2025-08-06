@@ -10,11 +10,17 @@ import Combine
 import Supabase
 import FactoryKit
 
+// MARK: - Notification Names
+extension Notification.Name {
+    static let showMissionsUnlockedTip = Notification.Name("showMissionsUnlockedTip")
+}
+
 @Observable
 @MainActor
 class AppState {
     @ObservationIgnored @Injected(\.missionManager) var missionManager
     @ObservationIgnored @Injected(\.userDataService) var userDataService
+    @ObservationIgnored @Injected(\.levelManager) var levelManager
     // Navigation state
     var isShowingMenu: Bool = false
     var selectedMenuItem: MenuItem?
@@ -28,6 +34,108 @@ class AppState {
     
     func dismissMissionReadyPopup() {
         missionManager.dismissMissionReadyNotification()
+    }
+    
+    var showLevelUpPopup: Bool = false
+    
+    func showLevelPopupIfNeeded() {
+        showLevelUpPopup = levelManager.pendingLevelUpNotification != nil
+    }
+    
+    var levelUpNotification: LevelUpNotification? {
+        levelManager.pendingLevelUpNotification
+    }
+    
+    // Faction Selection State
+    private var shouldShowFactionSelection: Bool = false
+    
+    var showFactionSelection: Bool {
+        // Only show faction selection if no other popups are showing
+        shouldShowFactionSelection && !showLevelUpPopup
+    }
+    
+    func dismissLevelUpPopup() {
+        // Store unlocked content before dismissing
+        let unlockedContent = levelManager.pendingLevelUpNotification?.unlockedContent ?? []
+        let hasFactionUnlock = unlockedContent.contains(.factions)
+        
+        levelManager.dismissLevelUpNotification()
+        showLevelUpPopup = false
+        
+        // If factions were unlocked, show faction selection after a delay
+        if hasFactionUnlock {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.shouldShowFactionSelection = true
+            }
+        } else {
+            // Otherwise, trigger content unlock tips
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.triggerUnlockedContentTips(unlockedContent)
+            }
+        }
+    }
+    
+    func selectFaction(_ faction: Faction) {
+        Task {
+            await levelManager.completeFactionSelection(faction)
+            
+            // Refresh user data to get updated faction
+            await refreshUserData()
+            
+            // Dismiss faction selection
+            await MainActor.run {
+                self.shouldShowFactionSelection = false
+                self.currentTab = .home
+                // After faction selection, trigger any remaining content unlock tips
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    // Get the unlocked content that triggered faction selection
+                    self.triggerUnlockedContentTips([.factions, .factionLeaderboards])
+                }
+            }
+        }
+    }
+    
+    func dismissFactionSelection() {
+        shouldShowFactionSelection = false
+        levelManager.dismissFactionSelection()
+    }
+    
+    // Content Unlock Tips
+    private func triggerUnlockedContentTips(_ unlockedContent: [UnlockableContent]) {
+        for content in unlockedContent {
+            switch content {
+            case .missions:
+                // Trigger missions tab tip - this will show the messageOverlay
+                NotificationCenter.default.post(
+                    name: .showMissionsUnlockedTip,
+                    object: nil
+                )
+            case .factions:
+                // Factions unlock is handled by faction selection view
+                // Could trigger a tip about faction features here if needed
+                break
+            case .factionLeaderboards:
+                // Could trigger a tip about faction leaderboards
+                break
+            case .paths:
+                // Could trigger a tip about paths
+                break
+            }
+        }
+    }
+    
+    // MARK: - Content Unlocking
+    
+    /// Check if content is unlocked for the current user
+    func isContentUnlocked(_ content: UnlockableContent) -> Bool {
+        guard let userData = userAccountData else { return false }
+        return levelManager.isContentUnlocked(content, userLevel: userData.currentLevel)
+    }
+    
+    /// Get all content unlocked for the current user
+    func getAllUnlockedContent() -> [UnlockableContent] {
+        guard let userData = userAccountData else { return [] }
+        return levelManager.getAllUnlockedContent(upToLevel: userData.currentLevel)
     }
     
     // Centralized user data - AppState is the single source of truth
@@ -93,30 +201,25 @@ class AppState {
         await loadUserData()
     }
     
-    /// Updates user XP after a workout and recalculates level/progress
+    /// Updates user XP after a workout and checks for level up
     func updateUserXP(additionalXP: Int) async {
         guard let currentData = userAccountData else {
             await refreshUserData()
             return
         }
         
-        do {
-            // Get level info from cache or fetch if not available
-            let levelInfo = try await getLevelInfo()
-            let newXp = currentData.totalXP + additionalXP
-            let newLevel = UserDataService.calculateNewLevel(currentXp: newXp, levelInfo: levelInfo)
-            try await client
-                .from("xp_levels")
-                .update([
-                    "xp": newXp,
-                    "current_level": newLevel
-                ])
-                .eq("user_id", value: currentData.profile.id)
-                .execute()
-            // Update the cached data immediately for responsive UI
-            
+        let result = await levelManager.updateUserXPAndCheckLevelUp(
+            currentUserData: currentData,
+            additionalXP: additionalXP
+        )
+        
+        switch result {
+        case .leveledUp(let notification):
+            // Level up notification will be shown automatically via showLevelUpPopup
             await refreshUserData()
-        } catch {
+        case .noLevelChange:
+            await refreshUserData()
+        case .error:
             await refreshUserData()
         }
     }

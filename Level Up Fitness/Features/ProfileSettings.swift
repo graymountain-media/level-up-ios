@@ -25,6 +25,7 @@ struct ProfileSettings: View {
     @State private var isLoading: Bool = false
     @State private var showingAlert: Bool = false
     @State private var alertMessage: String = ""
+    @State private var showingHelpReset: Bool = false
     
     // Profile picture states
     @State private var selectedProfilePhotoItem: PhotosPickerItem?
@@ -96,7 +97,7 @@ struct ProfileSettings: View {
                     .font(.system(size: 14))
                     .foregroundColor(.textOrange)
                     
-                    Text("This will reset all tutorial tips and help bubbles.")
+                    Text("This will reset all tutorial tips and help guides.")
                         .font(.caption2)
                         .foregroundColor(.textDetail)
                         .multilineTextAlignment(.center)
@@ -214,6 +215,13 @@ struct ProfileSettings: View {
         .alert(isPresented: $showingAlert) {
             Alert(
                 title: Text("Error"),
+                message: Text(alertMessage),
+                dismissButton: .default(Text("OK"))
+            )
+        }
+        .alert(isPresented: $showingHelpReset) {
+            Alert(
+                title: Text("Help Guides Reset"),
                 message: Text(alertMessage),
                 dismissButton: .default(Text("OK"))
             )
@@ -336,7 +344,7 @@ struct ProfileSettings: View {
         
         // Show confirmation
         alertMessage = "Help content has been reset. All tutorial tips will show again."
-        showingAlert = true
+        showingHelpReset = true
     }
     
     private func saveProfile() {

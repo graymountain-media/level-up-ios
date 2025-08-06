@@ -18,7 +18,8 @@ class MockUserDataService: UserDataServiceProtocol {
         firstName: "William",
         lastName: "Vengeance",
         avatarName: "William Vengeance",
-        credits: 150
+        credits: 150,
+        faction: .echoreach
     )
     
     // Mock level info data that matches the screenshot
@@ -151,6 +152,15 @@ class MockUserDataService: UserDataServiceProtocol {
             return .failure(NSError(domain: "MockUserDataService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Mock profile update failed"]))
         }
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
+        return .success(())
+    }
+    
+    func updateFaction(_ faction: Faction) async -> Result<Void, Error> {
+        if shouldFail {
+            return .failure(NSError(domain: "MockUserDataService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Mock faction update failed"]))
+        }
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
+        print("Mock: Updated faction to \(faction.name)")
         return .success(())
     }
 }

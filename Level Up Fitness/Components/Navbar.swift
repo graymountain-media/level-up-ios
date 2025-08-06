@@ -43,11 +43,21 @@ enum MainTab: Int, CaseIterable, Identifiable {
             "Leaderboard"
         }
     }
+    
+    var requiredContent: UnlockableContent? {
+        switch self {
+        case .home, .logWorkout, .leaderboard:
+            return nil // Always available
+        case .missionBoard:
+            return .missions
+        }
+    }
 }
 
 struct LUTabBar: View {
     @InjectedObservable(\.appState) var appState
     var didSelectTab: (MainTab) -> Void
+    
     
     var body: some View {
         HStack {
@@ -61,10 +71,16 @@ struct LUTabBar: View {
         .background(
             Color.major.ignoresSafeArea()
         )
+        
     }
+        
     
     func tabButton(for tab: MainTab) -> some View {
-        Button {
+        var isUnlocked: Bool = true
+        if let content = tab.requiredContent {
+            isUnlocked = appState.isContentUnlocked(content)
+        }
+        return Button {
             didSelectTab(tab)
         } label: {
             VStack(alignment: .center, spacing: 4) {
@@ -75,7 +91,9 @@ struct LUTabBar: View {
                     .foregroundStyle(.textDetail)
                     .font(.system(size: 12))
             }
+            .opacity(isUnlocked ? 1 : 0.5)
         }
+        .disabled(!isUnlocked)
     }
 }
 

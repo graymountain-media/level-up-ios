@@ -10,6 +10,18 @@ import FactoryKit
 
 struct MainView: View {
     @InjectedObservable(\.appState) var appState
+    @Namespace var mainViewNamespace
+    let tipManager = SequentialTipsManager(tips: [], storageKey: "missions_unlocked_temp")
+    
+    init() {
+        tipManager.registerSingleTip(
+            key: "missions_unlocked",
+            id: 99,
+            title: "Missions Unlocked!",
+            message: "You can now take on missions to earn bonus XP and exclusive rewards. Tap the Missions tab to get started!",
+            position: .top
+        )
+    }
     
     var body: some View {
         @Bindable var appState = appState
@@ -22,6 +34,7 @@ struct MainView: View {
                 LUTabBar { tab in
                     appState.currentTab = tab
                 }
+                .messageSource(id: 99, nameSpace: mainViewNamespace, anchorPoint: .top)
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -59,10 +72,39 @@ struct MainView: View {
             }
             MainMenu()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .showMissionsUnlockedTip)) { _ in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                tipManager.showSingleTip(key: "missions_unlocked")
+            }
+        }
+        .messageOverlay(namespace: mainViewNamespace, manager: tipManager)
         .overlay {
             if appState.isShowingHelp {
                 HelpCenterView()
                     .transition(.opacity)
+            }
+        }
+        .overlay {
+            // Level Up Popup
+            if appState.showLevelUpPopup, let notification = appState.levelUpNotification {
+                LevelUpPopupView(notification: notification) {
+                    appState.dismissLevelUpPopup()
+                }
+                .transition(.opacity)
+            }
+        }
+        .overlay {
+            // Faction Selection
+            if appState.showFactionSelection {
+                FactionSelectionView(
+                    onFactionSelected: { faction in
+                        appState.selectFaction(faction)
+                    },
+                    onDismiss: {
+                        appState.dismissFactionSelection()
+                    }
+                )
+                .transition(.opacity)
             }
         }
         .task {
@@ -71,6 +113,7 @@ struct MainView: View {
                 await appState.loadUserData()
             }
         }
+        
     }
     
     var navbar: some View {

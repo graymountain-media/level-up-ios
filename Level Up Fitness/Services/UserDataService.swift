@@ -10,8 +10,9 @@ class Profile: Codable, Identifiable {
     var avatarUrl: String?
     var profilePictureUrl: String?
     var credits: Int
+    var faction: Faction?
     
-    init(id: UUID, firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil, credits: Int = 0) {
+    init(id: UUID, firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil, credits: Int = 0, faction: Faction? = nil) {
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
@@ -19,6 +20,7 @@ class Profile: Codable, Identifiable {
         self.avatarUrl = avatarUrl
         self.profilePictureUrl = profilePictureUrl
         self.credits = credits
+        self.faction = faction
     }
 
     enum CodingKeys: String, CodingKey {
@@ -29,6 +31,45 @@ class Profile: Codable, Identifiable {
         case avatarUrl = "avatar_image_url"
         case profilePictureUrl = "profile_picture_url"
         case credits
+        case faction
+    }
+    
+    // Custom decoding to convert string to Faction enum
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        firstName = try container.decode(String.self, forKey: .firstName)
+        lastName = try container.decode(String.self, forKey: .lastName)
+        avatarName = try container.decode(String.self, forKey: .avatarName)
+        avatarUrl = try container.decodeIfPresent(String.self, forKey: .avatarUrl)
+        profilePictureUrl = try container.decodeIfPresent(String.self, forKey: .profilePictureUrl)
+        credits = try container.decode(Int.self, forKey: .credits)
+        
+        // Convert string to Faction enum
+        if let factionString = try container.decodeIfPresent(String.self, forKey: .faction) {
+            faction = Faction.fromString(factionString)
+        } else {
+            faction = nil
+        }
+    }
+    
+    // Custom encoding to convert Faction enum to string
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(firstName, forKey: .firstName)
+        try container.encode(lastName, forKey: .lastName)
+        try container.encode(avatarName, forKey: .avatarName)
+        try container.encodeIfPresent(avatarUrl, forKey: .avatarUrl)
+        try container.encodeIfPresent(profilePictureUrl, forKey: .profilePictureUrl)
+        try container.encode(credits, forKey: .credits)
+        
+        // Convert Faction enum to string
+        if let faction = faction {
+            try container.encode(faction.name.lowercased(), forKey: .faction)
+        } else {
+            try container.encodeNil(forKey: .faction)
+        }
     }
 }
 
@@ -138,6 +179,7 @@ protocol UserDataServiceProtocol {
     func fetchUserAccountData() async -> Result<UserAccountData, UserDataError>
     func createProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String?, profilePictureUrl: String?) async -> Result<Void, Error>
     func updateProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String?, profilePictureUrl: String?) async -> Result<Void, Error>
+    func updateFaction(_ faction: Faction) async -> Result<Void, Error>
     func refreshUserData() async -> Result<UserAccountData, UserDataError>
     
     // Individual data fetching methods
@@ -249,7 +291,7 @@ class UserDataService: UserDataServiceProtocol {
     func createProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil) async -> Result<Void, Error> {
         do {
             let userId = try await client.auth.session.user.id
-            let newProfile = Profile(id: userId, firstName: firstName, lastName: lastName, avatarName: avatarName, avatarUrl: avatarUrl, profilePictureUrl: profilePictureUrl, credits: 0)
+            let newProfile = Profile(id: userId, firstName: firstName, lastName: lastName, avatarName: avatarName, avatarUrl: avatarUrl, profilePictureUrl: profilePictureUrl, credits: 0, faction: nil)
             
             try await client.from("profiles")
                 .upsert(newProfile)
@@ -273,10 +315,25 @@ class UserDataService: UserDataServiceProtocol {
                 .execute()
                 .value
             
-            let updatedProfile = Profile(id: userId, firstName: firstName, lastName: lastName, avatarName: avatarName, avatarUrl: avatarUrl ?? currentProfile.avatarUrl, profilePictureUrl: profilePictureUrl ?? currentProfile.profilePictureUrl, credits: currentProfile.credits)
+            let updatedProfile = Profile(id: userId, firstName: firstName, lastName: lastName, avatarName: avatarName, avatarUrl: avatarUrl ?? currentProfile.avatarUrl, profilePictureUrl: profilePictureUrl ?? currentProfile.profilePictureUrl, credits: currentProfile.credits, faction: currentProfile.faction)
             
             try await client.from("profiles")
                 .update(updatedProfile)
+                .eq("id", value: userId)
+                .execute()
+            
+            return .success(())
+        } catch {
+            return .failure(error)
+        }
+    }
+    
+    func updateFaction(_ faction: Faction) async -> Result<Void, Error> {
+        do {
+            let userId = try await client.auth.session.user.id
+            
+            try await client.from("profiles")
+                .update(["faction": faction.name.lowercased()])
                 .eq("id", value: userId)
                 .execute()
             
