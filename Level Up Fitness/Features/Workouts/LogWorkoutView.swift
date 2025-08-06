@@ -34,7 +34,8 @@ struct LogWorkoutView: View {
     @State private var totalMinutesToday: Int = 0
     @State private var showWorkoutSuccess: Bool = false
     @State private var latestLoggedWorkout: Workout?
-    
+    @State var tipManager = SequentialTipsManager.workoutTips()
+    @Namespace var namespace
     @State private var showHelp: Bool = false
     let durationOptions: [Int] = [20, 25, 30, 35, 40, 45, 50, 55, 60]
     
@@ -62,6 +63,7 @@ struct LogWorkoutView: View {
         .foregroundStyle(Color.white)
         .frame(maxWidth: .infinity)
         .mainBackground()
+        .messageOverlay(namespace: namespace, manager: tipManager)
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { viewModel.showError = false }
         } message: {
@@ -109,6 +111,9 @@ struct LogWorkoutView: View {
                 .disabled(!canLogSelectedWorkout)
                 helpSection
             }
+        }
+        .onAppear {
+            tipManager.showSingleTip(key: "workout_welcome")
         }
         .padding(.horizontal, 50)
         .foregroundStyle(Color.white)
@@ -221,26 +226,14 @@ struct LogWorkoutView: View {
                 .font(.system(size: 14))
                 .foregroundStyle(Color.textDetail)
             Button {
-                print("Tapped")
-                showHelp = true
+                tipManager.forceShowTip(key: "workout_guidelines")
             } label: {
                 Text("User Guidelines")
                     .font(.mainFont(size: 16))
                     .bold()
                     .foregroundStyle(.title)
             }
-            .popover(isPresented: $showHelp, attachmentAnchor: .point(.top), arrowEdge: .none) {
-                VStack {
-                    Text("Title")
-                        .font(.headline)
-                        .foregroundStyle(.title)
-                    Text("Explanation for what this tool tip is for")
-                        .font(.subheadline)
-                        .foregroundStyle(.minor)
-                }
-                .padding(.horizontal)
-                .presentationCompactAdaptation(.popover)
-            }
+            .messageSource(id: 1, nameSpace: namespace)
             
         }
     }

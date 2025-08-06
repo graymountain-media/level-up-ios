@@ -88,6 +88,19 @@ struct ProfileSettings: View {
                             .foregroundStyle(.green)
                     }
                 }
+                
+                VStack(spacing: 8) {
+                    Button("Reset Help Content") {
+                        resetHelpContent()
+                    }
+                    .font(.system(size: 14))
+                    .foregroundColor(.textOrange)
+                    
+                    Text("This will reset all tutorial tips and help bubbles.")
+                        .font(.caption2)
+                        .foregroundColor(.textDetail)
+                        .multilineTextAlignment(.center)
+                }
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
@@ -314,6 +327,16 @@ struct ProfileSettings: View {
                 }
             }
         }
+    }
+    
+    private func resetHelpContent() {
+        // Create a temporary manager to access the reset function
+        let tipManager = SequentialTipsManager(tips: [], storageKey: "temp")
+        tipManager.resetTips()
+        
+        // Show confirmation
+        alertMessage = "Help content has been reset. All tutorial tips will show again."
+        showingAlert = true
     }
     
     private func saveProfile() {

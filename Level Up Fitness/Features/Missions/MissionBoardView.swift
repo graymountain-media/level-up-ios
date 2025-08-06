@@ -8,7 +8,8 @@ struct MissionBoardView: View {
     @State var isLoading: Bool = false
     @State var startingMission: Mission?
     @State var selectedTab: MissionBoardTab = .available
-    
+    @State var tipManager = SequentialTipsManager.missionTips()
+    @Namespace var namespace
     var body: some View {
         VStack(spacing: 0) {
             FeatureHeader(title: "Mission Board")
@@ -53,10 +54,16 @@ struct MissionBoardView: View {
             }
         }
         .mainBackground()
+        .messageOverlay(namespace: namespace, manager: tipManager)
         .task {
             isLoading = true
             await missionManager.loadAllMissions(appState.userAccountData?.currentLevel ?? 1)
             isLoading = false
+            
+            // Show welcome tip
+            if !missionsForSelectedTab.isEmpty {
+                tipManager.showSingleTip(key: "welcome")
+            }
         }
         .overlay {
             // Mission Result Popup
@@ -85,6 +92,7 @@ struct MissionBoardView: View {
                     isActiveMission: selectedTab == .active,
                     isCompletedMission: selectedTab == .completed) {
                     print("Tapped")
+                    
                     if selectedMission == mission {
                         withAnimation {
                             selectedMission = nil
@@ -93,6 +101,10 @@ struct MissionBoardView: View {
                         withAnimation {
                             selectedMission = mission
                         }
+                        
+                        // Show first expansion tip
+                        tipManager.showSingleTip(key: "first_expansion")
+                        
                     }
                 } onSelect: {
                     Task {
@@ -111,6 +123,8 @@ struct MissionBoardView: View {
                 .id(mission.id)
                 .padding(.horizontal)
                 .transition(.opacity)
+                .messageSource(id: 0, nameSpace: namespace, anchorPoint: .bottom)
+                .messageSource(id: 1, nameSpace: namespace, anchorPoint: .top)
             }
         }
         .frame(maxWidth: .infinity)

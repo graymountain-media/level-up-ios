@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FactoryKit
+import TipKit
 
 enum GearType: Int, CaseIterable, Identifiable {
     case helmet
@@ -40,15 +41,21 @@ enum GearType: Int, CaseIterable, Identifiable {
 
 struct AvatarView: View {
     @InjectedObservable(\.appState) var appState
-    
+    @State var manager = SequentialTipsManager.avatarTips()
+    @Namespace var namespace
     var body: some View {
         VStack(spacing: 0) {
             if appState.isLoadingUserData {
                 loadingView
             } else {
                 heroInfo
+                    .onAppear {
+                        manager.startTips()
+                    }
+                    .messageOverlay(namespace: namespace, manager: manager)
             }
         }
+        
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
             Image("citiscape")
@@ -76,6 +83,8 @@ struct AvatarView: View {
                     Spacer()
                 }
                 ProgressBar()
+                    .messageSource(id: 0, nameSpace: namespace, anchorPoint: .bottom)
+                    .messageSource(id: 1, nameSpace: namespace, anchorPoint: .bottom )
                 .background(
                     ZStack {
                         RoundedRectangle(cornerRadius: 12)
@@ -98,6 +107,7 @@ struct AvatarView: View {
                         Spacer()
                     }
                 }
+                .messageSource(id: 3, nameSpace: namespace, anchorPoint: .bottom)
                 
                 
             }
@@ -109,6 +119,7 @@ struct AvatarView: View {
                     image
                         .resizable()
                         .aspectRatio(4/5, contentMode: .fit)
+                        .messageSource(id: 2, nameSpace: namespace)
                 } placeholder: {
                     Image("avatar_placeholder")
                         .resizable()
@@ -120,6 +131,7 @@ struct AvatarView: View {
                     .resizable()
                     .aspectRatio(4/5, contentMode: .fit)
                     .opacity(0.5)
+                    .messageSource(id: 2, nameSpace: namespace)
             }
         }
         .padding(.top, 32)

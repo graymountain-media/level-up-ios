@@ -7,13 +7,13 @@ class MockMissionService: MissionServiceProtocol {
         UserMission(
             userId: UUID(),
             missionId: Mission.testData.first?.id ?? UUID(),
-            completed: true,
+            completed: false,
             startedAt: Date(),
             finishAt: Calendar.current.date(byAdding: .hour, value: 4, to: Date()) ?? Date()
         ),
         UserMission(
             userId: UUID(),
-            missionId: Mission.testData.dropFirst().first?.id ?? UUID(),
+            missionId: Mission.testData[1].id,
             completed: true,
             startedAt: Date(),
             finishAt: Calendar.current.date(byAdding: .hour, value: 4, to: Date()) ?? Date()
