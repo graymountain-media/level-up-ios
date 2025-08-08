@@ -42,6 +42,7 @@ enum GearType: Int, CaseIterable, Identifiable {
 struct AvatarView: View {
     @InjectedObservable(\.appState) var appState
     @State var manager = SequentialTipsManager.avatarTips()
+    var mainNamespace: Namespace.ID
     @Namespace var namespace
     var body: some View {
         VStack(spacing: 0) {
@@ -71,23 +72,19 @@ struct AvatarView: View {
         }
     }
     
+    @State private var nameHeight: CGFloat = 0
+    @State private var pathHeight: CGFloat = 0
     var heroInfo: some View {
-        VStack {
-            VStack(alignment: .center, spacing: 16) {
-                HStack {
-                    Text(appState.userAccountData?.avatarName ?? "Unknown")
-                        .font(.mainFont(size: 38))
-                        .bold()
-                        .foregroundStyle(.textOrange)
-                        .shadow(radius: 4, y: 4)
-                    if let faction = appState.userAccountData?.profile.faction {
-                        Image(faction.iconName)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 45, height: 45)
-                    }
-                    Spacer()
+        VStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 4) {
+                    avatarNameView
+                        .layoutPriority(2)
+                    Spacer(minLength: 4)
+                    pathView
+                        .layoutPriority(1)
                 }
+                .frame(maxWidth: .infinity)
                 ProgressBar()
                     .tipSource(id: 0, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
                     .tipSource(id: 1, nameSpace: namespace, manager: manager, anchorPoint: .bottom )
@@ -100,17 +97,15 @@ struct AvatarView: View {
                     }
                 )
                 .padding(.horizontal, -16)
+                .zIndex(-11)
                 
                 VStack(alignment: .trailing) {
                     HStack {
                         Text("Streak:")
                             .bold()
+                            .foregroundStyle(.white)
                         Text("\(appState.userAccountData?.currentStreak ?? 0) days")
                             .foregroundStyle(.white)
-                        Image("fire-icon")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 18, height: 18)
                         Spacer()
                     }
                 }
@@ -121,27 +116,60 @@ struct AvatarView: View {
             .padding(.horizontal, 40)
             .foregroundStyle(.white)
             Spacer(minLength: 12)
-            if let avatarUrl = appState.userAccountData?.profile.avatarUrl {
-                AsyncImage(url: URL(string: avatarUrl)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(4/5, contentMode: .fit)
-                        .tipSource(id: 2, nameSpace: namespace, manager: manager)
-                } placeholder: {
-                    Image("avatar_placeholder")
-                        .resizable()
-                        .aspectRatio(4/5, contentMode: .fit)
-                        .opacity(0.5)
-                }
-            } else {
+            AsyncImage(url: URL(string: appState.userAccountData?.profile.avatarUrl ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(4/5, contentMode: .fit)
+                    .tipSource(id: 2, nameSpace: namespace, manager: manager)
+            } placeholder: {
                 Image("avatar_placeholder")
                     .resizable()
                     .aspectRatio(4/5, contentMode: .fit)
                     .opacity(0.5)
-                    .tipSource(id: 2, nameSpace: namespace, manager: manager)
             }
         }
         .padding(.top, 32)
+    }
+    
+    var avatarNameView: some View {
+        HStack(spacing: 4) {
+            Text(appState.userAccountData?.avatarName ?? "Unknown")
+                .font(.mainFont(size: 38))
+                .bold()
+                .lineLimit(1)
+                .foregroundStyle(.textOrange)
+                .minimumScaleFactor(0.8)
+                .shadow(radius: 4, y: 4)
+            if let faction = appState.userAccountData?.profile.faction {
+                Image(faction.iconName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxHeight: .infinity)
+            }
+        }
+        .frame(maxHeight: 42)
+    }
+    
+    @ViewBuilder
+    var pathView: some View {
+        if let path = appState.userAccountData?.profile.path {
+            HStack(spacing: 4) {
+                Image(path.iconName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .matchedGeometryEffect(id: "pathIcon", in: mainNamespace)
+                    .frame(maxHeight: .infinity)
+                    .zIndex(10)
+                Text(path.name.uppercased())
+                    .font(.system(size: 18))
+                
+                .minimumScaleFactor(0.5)
+                    .foregroundStyle(.textPath)
+                    .matchedGeometryEffect(id: "pathName", in: mainNamespace)
+                    .lineLimit(1)
+            }
+            .frame(minHeight: 10, maxHeight: 26)
+        }
     }
     
     var loadingView: some View {
@@ -178,6 +206,14 @@ struct AvatarView: View {
 }
 
 #Preview {
+    @Previewable @Namespace var namespace
     let _ = Container.shared.setupMocks()
-    AvatarView()
+    AvatarView(mainNamespace: namespace)
+}
+
+struct ViewHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
 }

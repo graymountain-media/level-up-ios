@@ -88,6 +88,9 @@ struct MainMenu: View {
                                 Task {
                                     let _ = await
                                     appState.userDataService.signOut()
+                                    let tipManager = SequentialTipsManager(tips: [], storageKey: "temp")
+                                    tipManager.resetTips()
+                                    appState.currentTab = .home
                                     appState.isShowingMenu = false
                                 }
                             }

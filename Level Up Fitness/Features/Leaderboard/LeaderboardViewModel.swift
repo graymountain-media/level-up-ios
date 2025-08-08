@@ -10,11 +10,11 @@ import Combine
 import Supabase
 import FactoryKit
 
-protocol LeaderboardEntry: Identifiable, Codable {
+protocol LeaderboardEntry: Identifiable, Decodable {
     var userId: UUID { get }
     var value: Int { get }
     var avatarName: String? { get }
-    var rank: Int64 { get }
+    var rank: Int { get }
     var id: UUID { get }
 }
 
@@ -23,7 +23,7 @@ struct XpLeaderboardEntry: LeaderboardEntry {
     let xp: Int
     let currentLevel: Int
     let avatarName: String?
-    let rank: Int64 // Changed to Int64 to match PostgreSQL bigint type
+    let rank: Int
     
     var id: UUID { userId }
     var value: Int { xp }
@@ -78,7 +78,7 @@ struct StreakLeaderboardEntry: LeaderboardEntry {
     let userId: UUID
     let currentStreak: Int
     let avatarName: String?
-    let rank: Int64 // Changed to Int64 to match PostgreSQL bigint type
+    let rank: Int
     
     var id: UUID { userId }
     var value: Int { currentStreak }
@@ -123,6 +123,54 @@ struct StreakLeaderboardEntry: LeaderboardEntry {
         )
     ]
 }
+
+struct FactionLeaderboardEntry: LeaderboardEntry {
+    let faction: Faction
+    let totalXp: Int
+    let memberCount: Int
+    let topPlayerName: String
+    let topPlayerXp: Int
+    let rank: Int
+    
+    // Conform to LeaderboardEntry protocol
+    var userId: UUID { UUID() } // Not applicable for factions, but required
+    var value: Int { totalXp }
+    var avatarName: String? { topPlayerName }
+    var id: UUID { UUID() }
+    
+    enum CodingKeys: String, CodingKey {
+        case faction
+        case totalXp = "total_xp"
+        case memberCount = "member_count"
+        case topPlayerName = "top_player_name"
+        case topPlayerXp = "top_player_xp"
+        case rank
+    }
+    
+    init(faction: Faction, totalXp: Int, memberCount: Int, topPlayerName: String, topPlayerXp: Int, rank: Int) {
+        self.faction = faction
+        self.totalXp = totalXp
+        self.memberCount = memberCount
+        self.topPlayerName = topPlayerName
+        self.topPlayerXp = topPlayerXp
+        self.rank = rank
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        totalXp = try container.decode(Int.self, forKey: .totalXp)
+        memberCount = try container.decode(Int.self, forKey: .memberCount)
+        topPlayerName = try container.decode(String.self, forKey: .topPlayerName)
+        topPlayerXp = try container.decode(Int.self, forKey: .topPlayerXp)
+        rank = try container.decode(Int.self, forKey: .rank)
+        
+        // Convert string to Faction enum
+        let factionString = try container.decode(String.self, forKey: .faction)
+        faction = Faction.fromString(factionString) ?? .echoreach
+    }
+
+}
+
 @MainActor
 @Observable
 class LeaderboardViewModel {
@@ -151,7 +199,7 @@ class LeaderboardViewModel {
         case .streaks:
             result = await leaderboardService.fetchStreakLeaderboard()
         case .factions:
-            result = await leaderboardService.fetchLeaderboard()
+            result = await leaderboardService.fetchFactionLeaderboard()
         }
         
         switch result {

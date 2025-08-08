@@ -1,5 +1,5 @@
 {
-  "originHash" : "590f875ac92d3bb6b0b3ef9461f2ac6a0ffbd8f878cc69b9cb2cd231b5e770d3",
+  "originHash" : "72d61fefaa3f4dc922f7e48135f8819603b128dd1e42b8af9c29088107e25f91",
   "pins" : [
     {
       "identity" : "cropimage",
@@ -11,12 +11,30 @@
       }
     },
     {
+      "identity" : "dotlottie-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/LottieFiles/dotlottie-ios",
+      "state" : {
+        "branch" : "main",
+        "revision" : "31f2b1a4737459503286b239e8335ae3ce9dc42f"
+      }
+    },
+    {
       "identity" : "factory",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/hmlongco/Factory",
       "state" : {
         "revision" : "ccc898f21992ebc130bc04cc197460a5ae230bcf",
         "version" : "2.5.3"
+      }
+    },
+    {
+      "identity" : "lottie-spm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/airbnb/lottie-spm.git",
+      "state" : {
+        "revision" : "04f2fd18cc9404a0a0917265a449002674f24ec9",
+        "version" : "4.5.2"
       }
     },
     {

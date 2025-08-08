@@ -33,6 +33,7 @@ enum LeaderboardError: LocalizedError {
 protocol LeaderboardServiceProtocol {
     func fetchLeaderboard() async -> Result<[any LeaderboardEntry], LeaderboardError>
     func fetchStreakLeaderboard() async -> Result<[any LeaderboardEntry], LeaderboardError>
+    func fetchFactionLeaderboard() async -> Result<[any LeaderboardEntry], LeaderboardError>
     func getCurrentUserRank() async -> Result<Int?, LeaderboardError>
 }
 
@@ -88,6 +89,25 @@ class LeaderboardService: LeaderboardServiceProtocol {
         }
     }
     
+    func fetchFactionLeaderboard() async -> Result<[any LeaderboardEntry], LeaderboardError> {
+        guard isAuthenticated else {
+            return .failure(.notAuthenticated)
+        }
+        
+        do {
+            let entries: [FactionLeaderboardEntry] = try await client
+                .rpc("get_faction_leaderboard")
+                .limit(100)
+                .execute()
+                .value
+            
+            return .success(entries)
+        } catch {
+            print("Faction leaderboard error: \(error)")
+            return .failure(.databaseError(error.localizedDescription))
+        }
+    }
+    
     func getCurrentUserRank() async -> Result<Int?, LeaderboardError> {
         guard isAuthenticated, let userId = currentUserId else {
             return .failure(.notAuthenticated)
@@ -132,6 +152,25 @@ class MockLeaderboardService: LeaderboardServiceProtocol {
         try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
         
         return .success(mockEntries)
+    }
+    
+    func fetchFactionLeaderboard() async -> Result<[any LeaderboardEntry], LeaderboardError> {
+        if shouldFail {
+            return .failure(.unknownError("Mock faction leaderboard fetch failed"))
+        }
+        
+        // Mock faction leaderboard data
+        let mockFactionEntries: [FactionLeaderboardEntry] = [
+            FactionLeaderboardEntry(faction: .pulseforge, totalXp: 5000, memberCount: 847, topPlayerName: "MEGATRON", topPlayerXp: 1280, rank: 1),
+            FactionLeaderboardEntry(faction: .neurospire, totalXp: 4200, memberCount: 756, topPlayerName: "AVARII", topPlayerXp: 920, rank: 2),
+            FactionLeaderboardEntry(faction: .echoreach, totalXp: 4000, memberCount: 692, topPlayerName: "NYLA_X", topPlayerXp: 700, rank: 3),
+            FactionLeaderboardEntry(faction: .voidkind, totalXp: 2960, memberCount: 534, topPlayerName: "STRIKER", topPlayerXp: 500, rank: 4)
+        ]
+        
+        // Simulate network delay
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+        
+        return .success(mockFactionEntries)
     }
     
     func getCurrentUserRank() async -> Result<Int?, LeaderboardError> {

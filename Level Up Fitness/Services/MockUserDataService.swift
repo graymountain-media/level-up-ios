@@ -19,7 +19,8 @@ class MockUserDataService: UserDataServiceProtocol {
         lastName: "Vengeance",
         avatarName: "William Vengeance",
         credits: 150,
-        faction: .echoreach
+        faction: .echoreach,
+        path: .hunter
     )
     
     // Mock level info data that matches the screenshot
@@ -162,5 +163,87 @@ class MockUserDataService: UserDataServiceProtocol {
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
         print("Mock: Updated faction to \(faction.name)")
         return .success(())
+    }
+    
+    func fetchFactionLeaderboards() async throws -> [FactionLeaderboard] {
+        if shouldFail {
+            throw UserDataError.unknownError("Mock faction leaderboards fetch failed")
+        }
+        
+        // Mock faction leaderboard data
+        let mockLeaderboards: [FactionLeaderboard] = [
+            FactionLeaderboard(
+                faction: .echoreach,
+                memberCount: 847,
+                totalXp: 2847592,
+                avgXp: 3362.4,
+                topPlayer: FactionTopPlayer(
+                    id: UUID(),
+                    name: "Shadow Walker",
+                    xp: 18750,
+                    currentLevel: 28
+                )
+            ),
+            FactionLeaderboard(
+                faction: .pulseforge,
+                memberCount: 923,
+                totalXp: 2654321,
+                avgXp: 2876.2,
+                topPlayer: FactionTopPlayer(
+                    id: UUID(),
+                    name: "Iron Crusher",
+                    xp: 16890,
+                    currentLevel: 26
+                )
+            ),
+            FactionLeaderboard(
+                faction: .voidkind,
+                memberCount: 692,
+                totalXp: 2123456,
+                avgXp: 3068.9,
+                topPlayer: FactionTopPlayer(
+                    id: UUID(),
+                    name: "Dark Phantom",
+                    xp: 17234,
+                    currentLevel: 27
+                )
+            ),
+            FactionLeaderboard(
+                faction: .neurospire,
+                memberCount: 756,
+                totalXp: 2456789,
+                avgXp: 3251.3,
+                topPlayer: FactionTopPlayer(
+                    id: UUID(),
+                    name: "Mind Bender",
+                    xp: 19123,
+                    currentLevel: 29
+                )
+            )
+        ]
+        
+        try? await Task.sleep(nanoseconds: 800_000_000) // 0.8 second
+        return mockLeaderboards.sorted { $0.totalXp > $1.totalXp }
+    }
+    
+    func fetchWorkoutTypeStats(for userId: UUID) async throws -> WorkoutTypeStats {
+        if shouldFail {
+            throw UserDataError.unknownError("Mock workout type stats fetch failed")
+        }
+        
+        // Mock workout type statistics - simulate different user patterns
+        let patterns = [
+            // Strength dominant (Brute)
+            WorkoutTypeStats(strengthPercentage: 85.0, cardioPercentage: 10.0, functionalPercentage: 5.0, totalWorkouts: 20),
+            // Cardio dominant (Ranger) 
+            WorkoutTypeStats(strengthPercentage: 5.0, cardioPercentage: 80.0, functionalPercentage: 15.0, totalWorkouts: 25),
+            // Hybrid Strength/Cardio (Hunter)
+            WorkoutTypeStats(strengthPercentage: 55.0, cardioPercentage: 35.0, functionalPercentage: 10.0, totalWorkouts: 30),
+            // Champion (balanced)
+            WorkoutTypeStats(strengthPercentage: 33.5, cardioPercentage: 33.0, functionalPercentage: 33.5, totalWorkouts: 45),
+        ]
+        
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
+        return patterns.randomElement() ?? patterns[0]
     }
 }

@@ -16,7 +16,7 @@ struct ProgressBar: View {
                 Text("Level \(appState.userAccountData?.currentLevel ?? 1)")
                     .font(.system(size: 25, weight: .medium))
                 Spacer()
-                Text("\(appState.userAccountData?.xpToNextLevel ?? 100) XP to next Level")
+                Text("\(appState.userAccountData?.xpToNextLevel ?? 100) XP to next level")
                     .font(.system(size: 14))
             }
             .padding(.horizontal, 12)

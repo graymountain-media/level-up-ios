@@ -99,7 +99,7 @@ struct OnboardingView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color.textfieldBg)
-                            .aspectRatio(1, contentMode: .fit)
+                            .aspectRatio(4/5, contentMode: .fit)
                             .overlay {
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.textfieldBorder)
@@ -108,7 +108,7 @@ struct OnboardingView: View {
                         if let avatarImage {
                             avatarImage
                                 .resizable()
-                                .aspectRatio(contentMode: .fit)
+                                .aspectRatio(4/5, contentMode: .fit)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         } else {
                             VStack(spacing: 8) {

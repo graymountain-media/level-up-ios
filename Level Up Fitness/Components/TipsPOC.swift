@@ -80,7 +80,7 @@ struct TipSourceModifier: ViewModifier {
     var namespace: Namespace.ID
     var anchorPoint: UnitPoint
     var manager: SequentialTipsManager
-    
+     
     init(id: Int, namespace: Namespace.ID, manager: SequentialTipsManager, anchorPoint: UnitPoint) {
         self.id = id
         self.namespace = namespace
@@ -90,7 +90,7 @@ struct TipSourceModifier: ViewModifier {
     }
     func body(content: Content) -> some View {
         content
-            .matchedGeometryEffect(id: id, in: namespace, properties: .frame, anchor: anchorPoint)
+            .matchedGeometryEffect(id: id, in: namespace, properties: .frame, anchor: anchorPoint, isSource: true)
     }
 }
 

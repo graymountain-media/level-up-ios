@@ -10,13 +10,13 @@ import FactoryKit
 
 extension Container {
     var appState: Factory<AppState> {
-        self { @MainActor in AppState() }.singleton
+        self { @MainActor in AppState() }.cached
     }
     
     var missionManager: Factory<MissionManager> {
         self {
             @MainActor in MissionManager()
-        }.singleton
+        }.cached
     }
     
     var missionService: Factory<MissionServiceProtocol> {
@@ -45,6 +45,10 @@ extension Container {
     
     var levelManager: Factory<LevelManager> {
         self { @MainActor in LevelManager() }.singleton
+    }
+    
+    var pathCalculator: Factory<PathCalculator> {
+        self { @MainActor in PathCalculator() }
     }
 }
 

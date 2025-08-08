@@ -13,12 +13,16 @@ import Supabase
 @MainActor
 class LevelManager {
     @ObservationIgnored @Injected(\.userDataService) var userDataService
+    @ObservationIgnored @Injected(\.pathCalculator) var pathCalculator
     
     // Level up notification state
     private(set) var pendingLevelUpNotification: LevelUpNotification?
     
     // Faction selection state
     private(set) var pendingFactionSelection: Bool = false
+    
+    // Path assignment state
+    var pendingPathAssignment: HeroPath?
     
     // Content unlocking
     private var cachedLevelInfo: [LevelInfo]?
@@ -49,6 +53,20 @@ class LevelManager {
             // Check if user leveled up
             if newLevel > oldLevel {
                 let unlockedContent = getUnlockedContent(newLevel: newLevel)
+                
+                // Auto-assign/recalculate path at level 4 and every 5 levels after (9, 14, 19, etc.)
+                if shouldRecalculatePath(newLevel: newLevel) {
+                    do {
+                        let assignedPath = try await pathCalculator.calculatePath(for: currentUserData.profile.id)
+                        try await updateUserPath(assignedPath)
+                        
+                        // Store the assigned path for display after level up popup
+                        pendingPathAssignment = assignedPath
+                    } catch {
+                        print("Failed to calculate/assign path: \(error)")
+                    }
+                }
+                
                 let levelUpNotification = LevelUpNotification(
                     fromLevel: oldLevel,
                     toLevel: newLevel,
@@ -84,6 +102,11 @@ class LevelManager {
     /// Dismisses faction selection
     func dismissFactionSelection() {
         pendingFactionSelection = false
+    }
+    
+    /// Dismisses path assignment
+    func dismissPathAssignment() {
+        pendingPathAssignment = nil
     }
     
     /// Completes faction selection
@@ -136,6 +159,32 @@ class LevelManager {
     /// Clear cached level info (useful for testing or data refresh)
     func clearLevelInfoCache() {
         cachedLevelInfo = nil
+    }
+    
+    // MARK: - Path Management
+    
+    /// Update user's path in the database
+    private func updateUserPath(_ path: HeroPath) async throws {
+        try await client
+            .from("profiles")
+            .update(["path": path.rawValue])
+            .eq("id", value: try await client.auth.session.user.id)
+            .execute()
+    }
+    
+    /// Determine if path should be recalculated at the given level
+    private func shouldRecalculatePath(newLevel: Int) -> Bool {
+        // Initial path assignment at level 4
+        if newLevel == 4 {
+            return true
+        }
+        
+        // Recalculate every 5 levels after level 4 (9, 14, 19, 24, etc.)
+        if newLevel > 4 && (newLevel - 4) % 5 == 0 {
+            return true
+        }
+        
+        return false
     }
 }
 

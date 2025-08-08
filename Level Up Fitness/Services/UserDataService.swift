@@ -11,8 +11,9 @@ class Profile: Codable, Identifiable {
     var profilePictureUrl: String?
     var credits: Int
     var faction: Faction?
+    var path: HeroPath?
     
-    init(id: UUID, firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil, credits: Int = 0, faction: Faction? = nil) {
+    init(id: UUID, firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil, credits: Int = 0, faction: Faction? = nil, path: HeroPath? = nil) {
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
@@ -21,6 +22,7 @@ class Profile: Codable, Identifiable {
         self.profilePictureUrl = profilePictureUrl
         self.credits = credits
         self.faction = faction
+        self.path = path
     }
 
     enum CodingKeys: String, CodingKey {
@@ -32,6 +34,7 @@ class Profile: Codable, Identifiable {
         case profilePictureUrl = "profile_picture_url"
         case credits
         case faction
+        case path
     }
     
     // Custom decoding to convert string to Faction enum
@@ -51,6 +54,9 @@ class Profile: Codable, Identifiable {
         } else {
             faction = nil
         }
+        
+        // Decode Path directly (it's already Codable)
+        path = try container.decodeIfPresent(HeroPath.self, forKey: .path)
     }
     
     // Custom encoding to convert Faction enum to string
@@ -70,6 +76,9 @@ class Profile: Codable, Identifiable {
         } else {
             try container.encodeNil(forKey: .faction)
         }
+        
+        // Encode Path directly (it's already Codable)
+        try container.encodeIfPresent(path, forKey: .path)
     }
 }
 
@@ -164,6 +173,36 @@ struct UserAccountData {
     }
 }
 
+// MARK: - Faction Leaderboard Models
+
+struct FactionLeaderboard: Decodable {
+    let faction: Faction
+    let memberCount: Int
+    let totalXp: Int
+    let avgXp: Double
+    let topPlayer: FactionTopPlayer?
+    
+    private enum CodingKeys: String, CodingKey {
+        case faction
+        case memberCount = "member_count"
+        case totalXp = "total_xp"
+        case avgXp = "avg_xp"
+        case topPlayer = "top_player"
+    }
+}
+
+struct FactionTopPlayer: Codable {
+    let id: UUID
+    let name: String
+    let xp: Int
+    let currentLevel: Int
+    
+    private enum CodingKeys: String, CodingKey {
+        case id, name, xp
+        case currentLevel = "current_level"
+    }
+}
+
 // MARK: - Protocol
 
 protocol UserDataServiceProtocol {
@@ -186,6 +225,12 @@ protocol UserDataServiceProtocol {
     func fetchXpInfo() async throws -> UserXPInfo
     func fetchCurrentStreak() async throws -> Int
     func fetchLevelInfo() async throws -> [LevelInfo]
+    
+    // Faction leaderboard methods
+    func fetchFactionLeaderboards() async throws -> [FactionLeaderboard]
+    
+    // Path methods
+    func fetchWorkoutTypeStats(for userId: UUID) async throws -> WorkoutTypeStats
 }
 
 class UserDataService: UserDataServiceProtocol {
@@ -458,6 +503,50 @@ class UserDataService: UserDataServiceProtocol {
             return -1
         }
         return levelInfo.level - 1
+    }
+    
+    // MARK: - Faction Leaderboard Methods
+    
+    func fetchFactionLeaderboards() async throws -> [FactionLeaderboard] {
+        let leaderboards: [FactionLeaderboard] = try await client
+            .from("faction_leaderboards")
+            .select()
+            .order("total_xp", ascending: false)
+            .execute()
+            .value
+        
+        return leaderboards
+    }
+    
+    // MARK: - Path Methods
+    
+    func fetchWorkoutTypeStats(for userId: UUID) async throws -> WorkoutTypeStats {
+        struct DatabaseStats: Codable {
+            let strengthPercentage: Double
+            let cardioPercentage: Double
+            let functionalPercentage: Double
+            let totalWorkouts: Int
+            
+            private enum CodingKeys: String, CodingKey {
+                case strengthPercentage = "strength_percentage"
+                case cardioPercentage = "cardio_percentage"
+                case functionalPercentage = "functional_percentage"
+                case totalWorkouts = "total_workouts"
+            }
+        }
+        
+        let result: DatabaseStats = try await client
+            .rpc("get_user_workout_type_stats", params: ["user_id_param": userId])
+            .single()
+            .execute()
+            .value
+        
+        return WorkoutTypeStats(
+            strengthPercentage: result.strengthPercentage,
+            cardioPercentage: result.cardioPercentage,
+            functionalPercentage: result.functionalPercentage,
+            totalWorkouts: result.totalWorkouts
+        )
     }
 }
 

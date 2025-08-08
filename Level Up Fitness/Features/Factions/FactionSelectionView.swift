@@ -174,7 +174,7 @@ struct FactionSelectionView: View {
 }
 
 // MARK: - Faction Model
-enum Faction: CaseIterable, Identifiable {
+enum Faction: CaseIterable, Identifiable, Codable {
     case echoreach
     case pulseforge
     case voidkind
@@ -249,6 +249,19 @@ enum Faction: CaseIterable, Identifiable {
             return .neurospire
         default:
             return nil
+        }
+    }
+    
+    var baseColor: Color {
+        switch self {
+        case .echoreach:
+            return .echoreach
+        case .pulseforge:
+            return .pulseforge
+        case .voidkind:
+            return .voidkind
+        case .neurospire:
+            return .neurospire
         }
     }
 }

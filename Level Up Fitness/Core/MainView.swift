@@ -36,29 +36,6 @@ struct MainView: View {
                 }
                 .tipSource(id: 99, nameSpace: mainViewNamespace, manager: tipManager, anchorPoint: .top)
             }
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        appState.isShowingMenu.toggle()
-                    } label: {
-                        Image(systemName: "line.3.horizontal")
-                            .bold()
-                    }
-                }
-                ToolbarItem(placement: .principal) {
-                    Image("logo")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        
-                    } label: {
-                        Image(systemName: "bell.fill")
-                    }
-                }
-            }
-            .toolbarBackground(Color.major, for: .navigationBar)
             .tint(Color.minor)
             .fullScreenCover(item: $appState.selectedMenuItem) { item in
                 switch item {
@@ -90,6 +67,19 @@ struct MainView: View {
                 LevelUpPopupView(notification: notification) {
                     appState.dismissLevelUpPopup()
                 }
+                .transition(.opacity)
+            }
+        }
+        .overlay {
+            // Path Assignment Overlay
+            if appState.showPathAssignment, let path = appState.pendingPathAssignment {
+                PathAssignmentOverlay(
+                    assignedPath: path,
+                    onDismiss: {
+                        appState.dismissPathAssignment()
+                    },
+                    pathIconNamespace: mainViewNamespace
+                )
                 .transition(.opacity)
             }
         }
@@ -157,7 +147,7 @@ struct MainView: View {
     var currentTabView: some View {
         switch appState.currentTab {
         case .home:
-            AvatarView()
+            AvatarView(mainNamespace: mainViewNamespace)
         case .missionBoard:
             MissionBoardView()
         case .logWorkout:

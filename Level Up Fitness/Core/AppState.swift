@@ -39,6 +39,7 @@ class AppState {
     var showLevelUpPopup: Bool = false
     
     func showLevelPopupIfNeeded() {
+        currentTab = .home
         showLevelUpPopup = levelManager.pendingLevelUpNotification != nil
     }
     
@@ -51,19 +52,37 @@ class AppState {
     
     var showFactionSelection: Bool {
         // Only show faction selection if no other popups are showing
-        shouldShowFactionSelection && !showLevelUpPopup
+        shouldShowFactionSelection && !showLevelUpPopup && !showPathAssignment
+    }
+    
+    // Path Assignment State
+    private var shouldShowPathAssignment: Bool = false
+    
+    var showPathAssignment: Bool {
+        // Only show path assignment if no other popups are showing
+        shouldShowPathAssignment && !showLevelUpPopup && !showFactionSelection
+    }
+    
+    var pendingPathAssignment: HeroPath? {
+        levelManager.pendingPathAssignment
     }
     
     func dismissLevelUpPopup() {
-        // Store unlocked content before dismissing
+        // Store unlocked content and path assignment before dismissing
         let unlockedContent = levelManager.pendingLevelUpNotification?.unlockedContent ?? []
         let hasFactionUnlock = unlockedContent.contains(.factions)
+        let hasPathAssignment = levelManager.pendingPathAssignment != nil
         
         levelManager.dismissLevelUpNotification()
         showLevelUpPopup = false
         
-        // If factions were unlocked, show faction selection after a delay
-        if hasFactionUnlock {
+        // If path was assigned, show path assignment first
+        if hasPathAssignment {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.shouldShowPathAssignment = true
+            }
+        } else if hasFactionUnlock {
+            // If factions were unlocked, show faction selection after a delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.shouldShowFactionSelection = true
             }
@@ -98,6 +117,19 @@ class AppState {
     func dismissFactionSelection() {
         shouldShowFactionSelection = false
         levelManager.dismissFactionSelection()
+    }
+    
+    func dismissPathAssignment() {
+        shouldShowPathAssignment = false
+        levelManager.dismissPathAssignment()
+        
+        // After path assignment, check if we need to show faction selection
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            // Check if faction selection should be shown (this would be from a previous level up)
+            if self.levelManager.pendingFactionSelection {
+                self.shouldShowFactionSelection = true
+            }
+        }
     }
     
     // Content Unlock Tips
@@ -356,4 +388,13 @@ class AppState {
             }
         }
     }
+    
+    // MARK: - Testing Helpers
+    
+    #if DEBUG
+    func testPathAssignment(_ path: HeroPath) {
+        levelManager.pendingPathAssignment = path
+        shouldShowPathAssignment = true
+    }
+    #endif
 }
