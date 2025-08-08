@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A12A2BB22E45DAEA00439392 /* DotLottie in Frameworks */ = {isa = PBXBuildFile; productRef = A12A2BB12E45DAEA00439392 /* DotLottie */; };
 		A13314EC2E4008F6000DDCC0 /* CropImage in Frameworks */ = {isa = PBXBuildFile; productRef = A13314EB2E4008F6000DDCC0 /* CropImage */; };
-		A193F6862E459AD7005AAB99 /* DotLottie in Frameworks */ = {isa = PBXBuildFile; productRef = A193F6852E459AD7005AAB99 /* DotLottie */; };
 		A1EFF8B42E1F661800C88FE5 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8B32E1F661800C88FE5 /* Auth */; };
 		A1EFF8B62E1F661800C88FE5 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8B52E1F661800C88FE5 /* PostgREST */; };
 		A1EFF8B82E1F661800C88FE5 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8B72E1F661800C88FE5 /* Storage */; };
@@ -64,11 +64,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1EFF8F52E2C9A2200C88FE5 /* FactoryKit in Frameworks */,
+				A12A2BB22E45DAEA00439392 /* DotLottie in Frameworks */,
 				A1EFF8F02E2C3B9000C88FE5 /* Vortex in Frameworks */,
 				A13314EC2E4008F6000DDCC0 /* CropImage in Frameworks */,
 				A1EFF8BB2E1F668500C88FE5 /* Supabase in Frameworks */,
 				A1EFF8B82E1F661800C88FE5 /* Storage in Frameworks */,
-				A193F6862E459AD7005AAB99 /* DotLottie in Frameworks */,
 				A1EFF8B62E1F661800C88FE5 /* PostgREST in Frameworks */,
 				A1EFF8B42E1F661800C88FE5 /* Auth in Frameworks */,
 			);
@@ -146,7 +146,7 @@
 				A1EFF8EF2E2C3B9000C88FE5 /* Vortex */,
 				A1EFF8F42E2C9A2200C88FE5 /* FactoryKit */,
 				A13314EB2E4008F6000DDCC0 /* CropImage */,
-				A193F6852E459AD7005AAB99 /* DotLottie */,
+				A12A2BB12E45DAEA00439392 /* DotLottie */,
 			);
 			productName = "Level Up Fitness";
 			productReference = A12533932E14CBD500C12FA3 /* Level Up.app */;
@@ -235,7 +235,7 @@
 				A1EFF8EE2E2C3B9000C88FE5 /* XCRemoteSwiftPackageReference "Vortex" */,
 				A1EFF8F32E2C9A2200C88FE5 /* XCRemoteSwiftPackageReference "Factory" */,
 				A13314EA2E4008F6000DDCC0 /* XCRemoteSwiftPackageReference "CropImage" */,
-				A193F6842E459AD7005AAB99 /* XCRemoteSwiftPackageReference "dotlottie-ios" */,
+				A12A2BB02E45DAEA00439392 /* XCRemoteSwiftPackageReference "dotlottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A12533942E14CBD500C12FA3 /* Products */;
@@ -616,20 +616,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		A12A2BB02E45DAEA00439392 /* XCRemoteSwiftPackageReference "dotlottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/LottieFiles/dotlottie-ios";
+			requirement = {
+				kind = exactVersion;
+				version = 0.8.3;
+			};
+		};
 		A13314EA2E4008F6000DDCC0 /* XCRemoteSwiftPackageReference "CropImage" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/laosb/CropImage.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 0.8.2;
-			};
-		};
-		A193F6842E459AD7005AAB99 /* XCRemoteSwiftPackageReference "dotlottie-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/LottieFiles/dotlottie-ios";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
 			};
 		};
 		A1EFF8B22E1F661800C88FE5 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
@@ -659,15 +659,15 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A12A2BB12E45DAEA00439392 /* DotLottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A12A2BB02E45DAEA00439392 /* XCRemoteSwiftPackageReference "dotlottie-ios" */;
+			productName = DotLottie;
+		};
 		A13314EB2E4008F6000DDCC0 /* CropImage */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A13314EA2E4008F6000DDCC0 /* XCRemoteSwiftPackageReference "CropImage" */;
 			productName = CropImage;
-		};
-		A193F6852E459AD7005AAB99 /* DotLottie */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A193F6842E459AD7005AAB99 /* XCRemoteSwiftPackageReference "dotlottie-ios" */;
-			productName = DotLottie;
 		};
 		A1EFF8B32E1F661800C88FE5 /* Auth */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -66,7 +66,7 @@ struct LeaderboardView: View {
         
         return HStack(spacing: 4) {
             ForEach(LeaderboardTab.allCases, id: \.rawValue) { tab in
-                let isDisabled = false // tab == .factions && !isFactionUnlocked
+                let isDisabled = tab == .factions && !isFactionUnlocked
                 
                 Button(action: {
                     guard !isDisabled else { return }

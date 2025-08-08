@@ -50,6 +50,10 @@ extension Container {
     var pathCalculator: Factory<PathCalculator> {
         self { @MainActor in PathCalculator() }
     }
+    
+    var itemService: Factory<ItemServiceProtocol> {
+        self { @MainActor in ItemService() }
+    }
 }
 
 extension Container {
@@ -59,6 +63,7 @@ extension Container {
         leaderboardService.register { @MainActor in MockLeaderboardService() }
         avatarService.register { @MainActor in MockAvatarService() }
         missionService.register { @MainActor in MockMissionService() }
+        itemService.register { @MainActor in MockItemService() }
         return EmptyView()
     }
 }
