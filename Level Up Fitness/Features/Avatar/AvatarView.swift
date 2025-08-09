@@ -75,60 +75,75 @@ struct AvatarView: View {
     @State private var nameHeight: CGFloat = 0
     @State private var pathHeight: CGFloat = 0
     var heroInfo: some View {
-        VStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 4) {
-                    avatarNameView
-                        .layoutPriority(2)
-                    Spacer(minLength: 4)
-                    pathView
-                        .layoutPriority(1)
-                }
-                .frame(maxWidth: .infinity)
-                ProgressBar()
-                    .tipSource(id: 0, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
-                    .tipSource(id: 1, nameSpace: namespace, manager: manager, anchorPoint: .bottom )
-                .background(
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(.textfieldBg.opacity(0.5))
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(.textfieldBorder, lineWidth: 4)
+        ZStack {
+            VStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(spacing: 4) {
+                        avatarNameView
+                            .layoutPriority(2)
+                        Spacer(minLength: 4)
+                        pathView
+                            .layoutPriority(1)
                     }
-                )
-                .padding(.horizontal, -16)
-                .zIndex(-11)
-                
-                VStack(alignment: .trailing) {
-                    HStack {
-                        Text("Streak:")
-                            .bold()
-                            .foregroundStyle(.white)
-                        Text("\(appState.userAccountData?.currentStreak ?? 0) days")
-                            .foregroundStyle(.white)
-                        Spacer()
+                    .frame(maxWidth: .infinity)
+                    ProgressBar()
+                        .tipSource(id: 0, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
+                        .tipSource(id: 1, nameSpace: namespace, manager: manager, anchorPoint: .bottom )
+                        .background(
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(.textfieldBg.opacity(0.5))
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(.textfieldBorder, lineWidth: 4)
+                            }
+                        )
+                        .padding(.horizontal, -16)
+                        .zIndex(-11)
+                    
+                    VStack(alignment: .trailing) {
+                        HStack {
+                            Text("Streak:")
+                                .bold()
+                                .foregroundStyle(.white)
+                            Text("\(appState.userAccountData?.currentStreak ?? 0) days")
+                                .foregroundStyle(.white)
+                            Spacer()
+                        }
                     }
+                    .tipSource(id: 3, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
+                    
+                    
                 }
-                .tipSource(id: 3, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
-                
-                
+                .padding(.horizontal, 40)
+                .foregroundStyle(.white)
+                Spacer(minLength: 12)
+                AsyncImage(url: URL(string: appState.userAccountData?.profile.avatarUrl ?? "")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(4/5, contentMode: .fit)
+                        .tipSource(id: 2, nameSpace: namespace, manager: manager)
+                } placeholder: {
+                    Image("avatar_placeholder")
+                        .resizable()
+                        .aspectRatio(4/5, contentMode: .fit)
+                        .opacity(0.5)
+                }
             }
-            .padding(.horizontal, 40)
-            .foregroundStyle(.white)
-            Spacer(minLength: 12)
-            AsyncImage(url: URL(string: appState.userAccountData?.profile.avatarUrl ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(4/5, contentMode: .fit)
-                    .tipSource(id: 2, nameSpace: namespace, manager: manager)
-            } placeholder: {
-                Image("avatar_placeholder")
-                    .resizable()
-                    .aspectRatio(4/5, contentMode: .fit)
-                    .opacity(0.5)
+            .padding(.top, 32)
+            VStack(alignment: .trailing) {
+                Spacer()
+                HStack {
+                    Spacer()
+                    WeaponSlotView(item: appState.userInventory?.equippedItem(for: .weapon)?.item)
+                        .frame(width: 90, height: 90)
+                }
+                Spacer()
+            }
+            .padding(.horizontal)
+            .onTapGesture {
+                appState.selectedMenuItem = .itemShop
             }
         }
-        .padding(.top, 32)
     }
     
     var avatarNameView: some View {

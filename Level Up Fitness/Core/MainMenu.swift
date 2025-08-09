@@ -72,14 +72,12 @@ struct MainMenu: View {
                         // Menu Items
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(MenuItem.allCases) { feature in
-                                if feature != .itemShop {
-                                    menuButton(for: feature)
-                                    
-                                    if [.accountSettings].contains(feature) {
-                                        Divider()
-                                            .background(Color.white)
-                                            .padding(.vertical, 8)
-                                    }
+                                menuButton(for: feature)
+                                
+                                if [.accountSettings].contains(feature) {
+                                    Divider()
+                                        .background(Color.white)
+                                        .padding(.vertical, 8)
                                 }
                                 
                             }

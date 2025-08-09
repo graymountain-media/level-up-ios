@@ -12,6 +12,7 @@ struct MissionCard: View {
     let onComplete: () -> Void
     
     @InjectedObservable(\.missionManager) var missionManager
+    @InjectedObservable(\.appState) var appState
     @State private var timerText: String = ""
     
     init(mission: Mission, isSelected: Bool = false, isLoading: Bool, isActiveMission: Bool = false, isCompletedMission: Bool = false, onTap: @escaping () -> Void, onSelect: @escaping () -> Void, onComplete: @escaping () -> Void) {
@@ -177,7 +178,7 @@ struct MissionCard: View {
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.green)
                             
-                            Text("Success Chance: \(mission.successChances.base ?? 50)%")
+                            Text("Success Chance: \(mission.successRate(for: appState.userAccountData?.profile.path))%")
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(.orange)
                                 .padding(.horizontal, 12)
@@ -211,7 +212,7 @@ struct MissionCard: View {
                     #if DEBUG
                     // Debug button to instantly complete mission
                     Button("🐛 DEBUG: Complete Now") {
-                        missionManager.debugCompleteMission(mission)
+                        missionManager.debugCompleteMission(mission, userPath: appState.userAccountData?.profile.path)
                     }
                     .font(.system(size: 12, weight: .medium))
                     .padding(.horizontal, 16)
@@ -249,7 +250,7 @@ struct MissionCard: View {
                                 Text("Success Chance: ")
                                     .font(.system(size: 13))
                                     .foregroundStyle(.white)
-                                Text("\(mission.successChances.display ?? 50)%")
+                                Text("\(mission.successRate(for: appState.userAccountData?.profile.path))%")
                                     .font(.system(size: 13))
                                     .foregroundStyle(.green)
                             }

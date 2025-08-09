@@ -7,6 +7,7 @@
 
 import Foundation
 import Supabase
+import FactoryKit
 
 enum ItemServiceError: LocalizedError {
     case notAuthenticated
@@ -41,6 +42,7 @@ protocol ItemServiceProtocol {
     func fetchAllItems() async throws -> [Item]
     func fetchUserInventory() async throws -> UserInventory
     func purchaseItem(_ itemId: UUID) async throws -> Void
+    func purchaseAndEquipItem(_ itemId: UUID) async throws -> Void
     func equipItem(_ itemId: UUID) async throws -> Void
     func unequipItem(slot: ItemSlot) async throws -> Void
 }
@@ -165,6 +167,14 @@ class ItemService: ItemServiceProtocol {
         try await client.rpc("purchase_item", params: params).execute()
     }
     
+    func purchaseAndEquipItem(_ itemId: UUID) async throws {
+        // First purchase the item
+        try await purchaseItem(itemId)
+        
+        // Then equip it immediately
+        try await equipItem(itemId)
+    }
+    
     func equipItem(_ itemId: UUID) async throws {
         let userId = try await client.auth.session.user.id
         
@@ -214,7 +224,6 @@ class ItemService: ItemServiceProtocol {
 
 // MARK: - Mock Service
 
-#if DEBUG
 class MockItemService: ItemServiceProtocol {
     private let mockItems: [Item] = [
         Item(
@@ -224,7 +233,8 @@ class MockItemService: ItemServiceProtocol {
             xpBonus: 1.5,
             price: 20,
             itemSlot: .weapon,
-            requiredPaths: []
+            requiredPaths: [],
+            requiredLevel: 1
         ),
         Item(
             id: UUID(),
@@ -233,7 +243,8 @@ class MockItemService: ItemServiceProtocol {
             xpBonus: 4.5,
             price: 84,
             itemSlot: .weapon,
-            requiredPaths: [.ranger, .hunter, .strider]
+            requiredPaths: [.ranger, .hunter, .strider],
+            requiredLevel: 5
         )
     ]
     
@@ -278,6 +289,11 @@ class MockItemService: ItemServiceProtocol {
         userOwnedItems.append(itemId)
     }
     
+    func purchaseAndEquipItem(_ itemId: UUID) async throws {
+        try await purchaseItem(itemId)
+        try await equipItem(itemId)
+    }
+    
     func equipItem(_ itemId: UUID) async throws {
         guard let item = mockItems.first(where: { $0.id == itemId }) else { return }
         userEquippedItems[item.itemSlot] = itemId
@@ -287,4 +303,3 @@ class MockItemService: ItemServiceProtocol {
         userEquippedItems.removeValue(forKey: slot)
     }
 }
-#endif

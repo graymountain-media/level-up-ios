@@ -68,7 +68,7 @@ struct MissionBoardView: View {
         .overlay {
             // Mission Result Popup
             if let result = missionManager.missionResult {
-                Color.black.opacity(0.4)
+                Color.black.opacity(0.5)
                     .ignoresSafeArea()
                     .onTapGesture {
                         missionManager.dismissMissionResult()
@@ -115,7 +115,7 @@ struct MissionBoardView: View {
                     }
                 } onComplete: {
                     Task {
-                        await missionManager.completeMission(mission)
+                        await missionManager.completeMission(mission, userPath: appState.userAccountData?.profile.path)
                         selectedMission = nil
                         selectedTab = .completed
                     }

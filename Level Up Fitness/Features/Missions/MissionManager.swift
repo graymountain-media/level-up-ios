@@ -237,9 +237,6 @@ class MissionManager {
         
         // Update available missions
         updateAvailableMissions()
-        
-        // TODO: Call backend to mark mission as completed
-        // This would be: await missionService.completeMission(mission.id)
     }
     
     func clearNewlyCompletedMissions() {
@@ -255,14 +252,13 @@ class MissionManager {
     }
     
     // Complete a mission with success/fail roll
-    func completeMission(_ mission: Mission, isDebug: Bool = false) async {
+    func completeMission(_ mission: Mission, isDebug: Bool = false, userPath: HeroPath?) async {
         guard isReadyToComplete(mission) || isDebug else {
             print("⚠️ Mission \(mission.title) is not ready to complete")
             return
         }
-        
-        // Roll for success based on mission success chances
-        let successChance = mission.successChances.base ?? 50
+    
+        let successChance = mission.successRate(for: userPath)
         let roll = Int.random(in: 1...100)
         let isSuccess = roll <= successChance
         
@@ -312,10 +308,10 @@ class MissionManager {
     
     #if DEBUG
     // Debug method to instantly complete a mission
-    func debugCompleteMission(_ mission: Mission) {
+    func debugCompleteMission(_ mission: Mission, userPath: HeroPath?) {
         print("🐛 DEBUG: debugCompleteMission called for: \(mission.title)")
         Task {
-            await completeMission(mission, isDebug: true)
+            await completeMission(mission, isDebug: true, userPath: userPath)
         }
     }
     #endif

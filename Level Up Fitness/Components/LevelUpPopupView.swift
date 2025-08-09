@@ -16,7 +16,7 @@ struct LevelUpPopupView: View {
     
     var body: some View {
         ZStack {
-            Color.black.opacity(0.6)
+            Color.black.opacity(0.5)
                 .ignoresSafeArea()
                 .onTapGesture {
                     onDismiss()

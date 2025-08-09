@@ -13,7 +13,7 @@ enum ItemSlot: String, CaseIterable, Identifiable, Codable {
     
     var displayName: String {
         switch self {
-        case .weapon: "Weapons"
+        case .weapon: "Weapon"
         case .chest: "Chest"
         case .helmet: "Helmet"
         }

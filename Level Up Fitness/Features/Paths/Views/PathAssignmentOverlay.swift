@@ -20,7 +20,7 @@ struct PathAssignmentOverlay: View {
     var body: some View {
         ZStack {
             // Dark overlay background
-            Color.black.opacity(0.85)
+            Color.black.opacity(0.7)
                 .ignoresSafeArea()
             
             ZStack {

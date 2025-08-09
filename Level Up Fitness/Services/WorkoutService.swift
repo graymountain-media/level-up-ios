@@ -65,7 +65,7 @@ class WorkoutService: WorkoutServiceProtocol {
                 duration: duration,
                 workoutTypes: types,
                 date: now,
-                xpEarned: calculateXP(duration: duration)
+                xpEarned: await calculateXP(duration: duration)
             )
             
             // Insert into the workouts table
@@ -98,7 +98,7 @@ class WorkoutService: WorkoutServiceProtocol {
                 duration: duration,
                 workoutTypes: types,
                 date: now,
-                xpEarned: calculateXP(duration: duration)
+                xpEarned: await calculateXP(duration: duration)
             )
             
             // Update the workout in the database
@@ -211,8 +211,18 @@ class WorkoutService: WorkoutServiceProtocol {
     
     // MARK: - Private Methods
     
-    private func calculateXP(duration: Int) -> Int {
-        return min(duration, 60)
+    private func calculateXP(duration: Int) async -> Int {
+        // Base XP: 1 XP per minute, capped at 60
+        let baseXP = min(duration, 60)
+        
+        // Get equipment bonus from AppState
+        let equipmentBonus = appState.userInventory?.totalXPBonus ?? 0.0
+        
+        // Apply equipment bonus: baseXP * (1 + bonus/100)
+        let bonusMultiplier = 1.0 + (equipmentBonus / 100.0)
+        let totalXP = Double(baseXP) * bonusMultiplier
+        
+        return Int(round(totalXP))
     }
     
     private func isFirstWorkoutOfDay(userId: UUID) async -> Bool {
@@ -361,7 +371,7 @@ class MockWorkoutService: WorkoutServiceProtocol {
             duration: duration,
             workoutTypes: types,
             date: Date(),
-            xpEarned: min(duration, 60)
+            xpEarned: duration // Mock service uses simple calculation
         )
         mockTodaysWorkouts.append(newWorkout)
         

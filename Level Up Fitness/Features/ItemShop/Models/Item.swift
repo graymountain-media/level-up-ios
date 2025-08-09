@@ -17,6 +17,7 @@ struct Item: Codable, Identifiable, Hashable {
     let price: Int
     let itemSlot: ItemSlot
     let requiredPaths: [HeroPath]
+    let requiredLevel: Int
     
     private enum CodingKeys: String, CodingKey {
         case id
@@ -26,6 +27,7 @@ struct Item: Codable, Identifiable, Hashable {
         case price
         case itemSlot = "item_slot"
         case requiredPaths = "required_paths"
+        case requiredLevel = "required_level"
     }
     
     /// Check if this item can be used by the given hero path
@@ -38,15 +40,28 @@ struct Item: Codable, Identifiable, Hashable {
         return requiredPaths.contains(userPath)
     }
     
+    /// Check if user meets the level requirement for this item
+    func meetsLevelRequirement(userLevel: Int) -> Bool {
+        return userLevel >= requiredLevel
+    }
+    
     /// Get the formatted price string
     var formattedPrice: String {
         return "\(price) gold"
     }
     
+    var shortXP: String {
+        let xp = String(format: "%.1f", xpBonus)
+        return "\(xp)%"
+    }
     /// Get the formatted XP bonus string
     var formattedXPBonus: String {
         let xp = String(format: "%.1f", xpBonus)
         return "+\(xp)% XP"
+    }
+    
+    var imageName: String? {
+        return "test_gloves"
     }
 }
 

@@ -34,7 +34,7 @@ class Profile: Codable, Identifiable {
         case profilePictureUrl = "profile_picture_url"
         case credits
         case faction
-        case path
+        case path = "hero_path"
     }
     
     // Custom decoding to convert string to Faction enum

@@ -128,4 +128,28 @@ struct Mission: Identifiable, Codable, Equatable {
         self.failMessage = failMessage
         self.reward = reward
     }
+    
+    /// Get the success rate for a specific hero path, falling back to base rate
+    func successRate(for path: HeroPath?) -> Int {
+        guard let path = path else {
+            return successChances.base ?? 50
+        }
+        
+        switch path {
+        case .brute:
+            return successChances.brute ?? successChances.base ?? 50
+        case .ranger:
+            return successChances.ranger ?? successChances.base ?? 50
+        case .sentinel:
+            return successChances.sentinel ?? successChances.base ?? 50
+        case .hunter:
+            return successChances.hunter ?? successChances.base ?? 50
+        case .juggernaut:
+            return successChances.juggernaut ?? successChances.base ?? 50
+        case .strider:
+            return successChances.strider ?? successChances.base ?? 50
+        case .champion:
+            return successChances.champion ?? successChances.base ?? 50
+        }
+    }
 }

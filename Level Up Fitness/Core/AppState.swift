@@ -21,6 +21,7 @@ class AppState {
     @ObservationIgnored @Injected(\.missionManager) var missionManager
     @ObservationIgnored @Injected(\.userDataService) var userDataService
     @ObservationIgnored @Injected(\.levelManager) var levelManager
+    @ObservationIgnored @Injected(\.itemService) var itemService
     // Navigation state
     var isShowingMenu: Bool = false
     var selectedMenuItem: MenuItem?
@@ -173,6 +174,7 @@ class AppState {
     // Centralized user data - AppState is the single source of truth
     var authState: AuthState = .loading
     var userAccountData: UserAccountData?
+    var userInventory: UserInventory?
     var isLoadingUserData: Bool = false
     var userDataError: String?
     
@@ -212,15 +214,19 @@ class AppState {
         
         let result = await userDataService.fetchUserAccountData()
         
-        await MainActor.run {
-            switch result {
-            case .success(let data):
+        switch result {
+        case .success(let data):
+            await MainActor.run {
+                
                 self.userAccountData = data
                 self.isLoadingUserData = false
                 self.userDataError = nil
-                
-            case .failure(let error):
+            }
+            await self.loadUserInventory()
+        case .failure(let error):
+            await MainActor.run {
                 self.userAccountData = nil
+                self.userInventory = nil
                 self.isLoadingUserData = false
                 self.userDataError = error.localizedDescription
                 print("Failed to load user data: \(error.localizedDescription)")
@@ -231,6 +237,26 @@ class AppState {
     /// Refreshes user data (useful after workouts or profile changes)
     func refreshUserData() async {
         await loadUserData()
+    }
+    
+    /// Loads user inventory data
+    private func loadUserInventory() async {
+        do {
+            let inventory = try await itemService.fetchUserInventory()
+            await MainActor.run {
+                self.userInventory = inventory
+            }
+        } catch {
+            print("Failed to load user inventory: \(error.localizedDescription)")
+            await MainActor.run {
+                self.userInventory = nil
+            }
+        }
+    }
+    
+    /// Refreshes user inventory (useful after item purchases)
+    func refreshUserInventory() async {
+        await loadUserInventory()
     }
     
     /// Updates user XP after a workout and checks for level up
