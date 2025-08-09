@@ -125,6 +125,14 @@ class MockUserDataService: UserDataServiceProtocol {
         return .success(())
     }
     
+    func updatePassword(newPassword: String) async -> Result<Void, Error> {
+        if shouldFail {
+            return .failure(NSError(domain: "MockUserDataService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Mock password update failed"]))
+        }
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
+        return .success(())
+    }
+    
     func checkExistingSession() async -> Result<Session?, UserDataError> {
         if shouldFail {
             return .failure(.unknownError("Mock session check failed"))

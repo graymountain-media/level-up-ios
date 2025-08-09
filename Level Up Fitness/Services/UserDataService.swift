@@ -211,6 +211,7 @@ protocol UserDataServiceProtocol {
     func signIn(email: String, password: String) async -> Result<Void, Error>
     func signOut() async -> Result<Void, Error>
     func resetPassword(email: String) async -> Result<Void, Error>
+    func updatePassword(newPassword: String) async -> Result<Void, Error>
     func checkExistingSession() async -> Result<Session?, UserDataError>
     func getAuthStateChanges() -> AsyncStream<(AuthChangeEvent, Session?)>
     
@@ -324,6 +325,16 @@ class UserDataService: UserDataServiceProtocol {
     func resetPassword(email: String) async -> Result<Void, Error> {
         do {
             try await client.auth.resetPasswordForEmail(email, redirectTo: URL(string: "level-up-fitness://reset-password"))
+            
+            return .success(())
+        } catch {
+            return .failure(error)
+        }
+    }
+    
+    func updatePassword(newPassword: String) async -> Result<Void, Error> {
+        do {
+            try await client.auth.update(user: UserAttributes(password: newPassword))
             
             return .success(())
         } catch {

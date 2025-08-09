@@ -201,6 +201,11 @@ class AvatarService: AvatarServiceProtocol {
                 }
             }
             
+            // Process image: downsize and compress
+            guard let processedImageData = processAvatarPictureImage(imageData) else {
+                return .failure(.unknownError("Failed to process avatar picture"))
+            }
+            
             let filePath = "avatars/\(userId.uuidString)/\(fileName)"
             
             // Upload image to avatar-images bucket
@@ -208,7 +213,7 @@ class AvatarService: AvatarServiceProtocol {
                 .from("avatar-images")
                 .upload(
                     filePath,
-                    data: imageData,
+                    data: processedImageData,
                     options: FileOptions(
                         cacheControl: "3600",
                         upsert: true
@@ -315,22 +320,16 @@ class AvatarService: AvatarServiceProtocol {
         }
     }
     
+    private func processAvatarPictureImage(_ imageData: Data) -> Data? {
+        guard let uiImage = UIImage(data: imageData) else { return nil }
+        
+        return uiImage.compress(to: 600)
+    }
+    
     private func processProfilePictureImage(_ imageData: Data) -> Data? {
         guard let uiImage = UIImage(data: imageData) else { return nil }
         
-        // Resize to appropriate profile picture size (e.g., 300x300)
-        let targetSize = CGSize(width: 300, height: 300)
-        let resizedImage = resizeImage(uiImage, to: targetSize)
-        
-        // Compress to JPEG with 0.8 quality to reduce file size
-        return resizedImage.jpegData(compressionQuality: 0.8)
-    }
-    
-    private func resizeImage(_ image: UIImage, to targetSize: CGSize) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: targetSize))
-        }
+        return uiImage.compress(to: 300)
     }
     
     private func extractFilePathFromAvatarUrl(_ url: String) -> String? {
@@ -444,5 +443,36 @@ class MockAvatarService: AvatarServiceProtocol {
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
         
         return .success(())
+    }
+}
+
+
+extension UIImage {
+    func resized(withPercentage percentage: CGFloat) -> UIImage? {
+        let newSize = CGSize(width: size.width * percentage, height: size.height * percentage)
+
+        return self.preparingThumbnail(of: newSize)
+    }
+
+    func compress(to kb: Int, allowedMargin: CGFloat = 0.2) -> Data? {
+        let bytes = kb * 1024
+        let threshold = Int(CGFloat(bytes) * (1 + allowedMargin))
+        var compression: CGFloat = 1.0
+        let step: CGFloat = 0.05
+        var holderImage = self
+        while let data = holderImage.pngData() {
+            let ratio = data.count / bytes
+            if data.count < threshold {
+                return data
+            } else {
+                let multiplier = CGFloat((ratio / 5) + 1)
+                compression -= (step * multiplier)
+
+                guard let newImage = self.resized(withPercentage: compression) else { break }
+                holderImage = newImage
+            }
+        }
+
+        return nil
     }
 }

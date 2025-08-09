@@ -32,8 +32,18 @@ struct RootView: View {
         ZStack {
             Group {
                 if showResetPassword {
-                    // Show ResetPasswordView (currently just a text placeholder)
-                    PasswordResetView()
+                    PasswordResetView() { didReset in
+                        if !didReset {
+                            Task {
+                                let _ = await appState.signOut()
+                                await MainActor.run {
+                                    showResetPassword = false
+                                }
+                            }
+                        } else {
+                            showResetPassword = false
+                        }
+                    }
                 } else {
                     switch appState.authState {
                     case .loading:

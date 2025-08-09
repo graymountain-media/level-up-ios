@@ -61,7 +61,7 @@ struct Item: Codable, Identifiable, Hashable {
     }
     
     var imageName: String? {
-        return "test_gloves"
+        return self.name
     }
 }
 

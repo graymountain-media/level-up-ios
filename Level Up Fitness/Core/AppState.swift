@@ -323,6 +323,10 @@ class AppState {
         return await userDataService.resetPassword(email: email)
     }
     
+    func updatePassword(newPassword: String) async -> Result<Void, Error> {
+        return await userDataService.updatePassword(newPassword: newPassword)
+    }
+    
     func createProfile(firstName: String, lastName: String, avatarName: String, avatarUrl: String? = nil, profilePictureUrl: String? = nil) async -> Result<Void, Error> {
         let result = await userDataService.createProfile(firstName: firstName, lastName: lastName, avatarName: avatarName, avatarUrl: avatarUrl, profilePictureUrl: profilePictureUrl)
         if case .success = result {

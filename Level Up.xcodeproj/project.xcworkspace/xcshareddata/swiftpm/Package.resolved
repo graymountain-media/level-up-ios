@@ -1,15 +1,6 @@
 {
-  "originHash" : "6b70205a9185d852a81978981dfdd02572581766fe307533210948bae43d9309",
+  "originHash" : "17142267ff5677f47d3e283f82c2dcc7eefe59a56451c232c918cd6a7537a6f0",
   "pins" : [
-    {
-      "identity" : "cropimage",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/laosb/CropImage.git",
-      "state" : {
-        "revision" : "481f59cf412f41641d4b737d8fbb51433031ce03",
-        "version" : "0.8.2"
-      }
-    },
     {
       "identity" : "dotlottie-ios",
       "kind" : "remoteSourceControl",
@@ -80,6 +71,15 @@
       "state" : {
         "revision" : "a0a57e949a8903563aba4615869310c0ebf14c03",
         "version" : "1.4.0"
+      }
+    },
+    {
+      "identity" : "swiftycrop",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/benedom/SwiftyCrop",
+      "state" : {
+        "revision" : "07311350f3f9eea3b2254da37341681f504cc01f",
+        "version" : "1.0.13"
       }
     },
     {

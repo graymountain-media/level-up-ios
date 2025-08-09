@@ -58,6 +58,15 @@ struct LUButtonStyle: ButtonStyle {
             4
         }
     }
+    
+    var height: CGFloat {
+        switch size {
+        case .regular:
+            46
+        case .small:
+            32
+        }
+    }
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(isLoading ? .clear : .major)
@@ -68,6 +77,7 @@ struct LUButtonStyle: ButtonStyle {
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
             .padding(.top, size == .regular ? 4 : 2)
+        
             .background(
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
@@ -79,8 +89,6 @@ struct LUButtonStyle: ButtonStyle {
                         .padding(2)
                 }
             )
-            .padding(1)
-            .drawingGroup()
             .opacity(isEnabled ? 1 : 0.5)
             .overlay {
                 if isLoading {
@@ -89,6 +97,9 @@ struct LUButtonStyle: ButtonStyle {
                         .tint(.major)
                 }
             }
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
     }
 }
 

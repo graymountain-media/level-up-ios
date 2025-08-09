@@ -71,16 +71,16 @@ struct LoginView: View {
     
     var fields: some View {
         VStack {
-            LUTextField(title: "Email", text: $viewModel.email, placeholder: "you@email.com")
+            LUTextField(title: "Email", text: $viewModel.email)
                 .keyboardType(.emailAddress)
                 .textContentType(.emailAddress)
                 .autocapitalization(.none)
             
-            LUTextField(title: "Password", text: $viewModel.password, placeholder: "Create a password", isSecure: true)
+            LUTextField(title: "Password", text: $viewModel.password, isSecure: true)
                 .textContentType(viewModel.isLogin ? .password : .newPassword)
             
             if !viewModel.isLogin {
-                LUTextField(title: "Confirm Password", text: $viewModel.confirmPassword,placeholder: "Re-enter your password", isSecure: true)
+                LUTextField(title: "Confirm Password", text: $viewModel.confirmPassword, isSecure: true)
                     .textContentType(.newPassword)
                     .autocapitalization(.none)
             }

@@ -46,8 +46,6 @@ struct MissionBoardView: View {
                         } else {
                             missionCards.transition(.move(edge: .bottom))
                         }
-                        Spacer()
-                            .frame(height: 20)
                     }
                     .padding(.vertical, 8)
                 }
@@ -85,13 +83,12 @@ struct MissionBoardView: View {
     var missionCards: some View {
         VStack(spacing: 20) {
             ForEach(missionsForSelectedTab) { mission in
-                MissionCard(
+                let card = MissionCard(
                     mission: mission,
                     isSelected: selectedMission?.id == mission.id,
                     isLoading: startingMission == mission,
                     isActiveMission: selectedTab == .active,
                     isCompletedMission: selectedTab == .completed) {
-                    print("Tapped")
                     
                     if selectedMission == mission {
                         withAnimation {
@@ -123,8 +120,14 @@ struct MissionBoardView: View {
                 .id(mission.id)
                 .padding(.horizontal)
                 .transition(.opacity)
-                .tipSource(id: 0, nameSpace: namespace, manager: tipManager, anchorPoint: .bottom)
-                .tipSource(id: 1, nameSpace: namespace, manager: tipManager, anchorPoint: .top)
+                
+                if missionsForSelectedTab.first == mission {
+                    card
+                    .tipSource(id: 0, nameSpace: namespace, manager: tipManager, anchorPoint: .bottom)
+                    .tipSource(id: 1, nameSpace: namespace, manager: tipManager, anchorPoint: .top)
+                } else {
+                    card
+                }
             }
         }
         .frame(maxWidth: .infinity)

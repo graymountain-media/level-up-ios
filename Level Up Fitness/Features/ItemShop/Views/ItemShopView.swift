@@ -288,13 +288,12 @@ struct ItemShopView: View {
                         .background(
                             RoundedRectangle(cornerRadius: 5)
                                 .fill(
-                                    isDisabled ? Color.textfieldBorder.opacity(0.3) :
+                                    isDisabled ? Color.gray.opacity(0.6) :
                                     selectedTab == tab ? Color.textInput : Color.textfieldBorder
                                 )
                         )
                 }
                 .disabled(isDisabled)
-                .opacity(isDisabled ? 0.5 : 1.0)
             }
         }
         .padding(.horizontal, 48)

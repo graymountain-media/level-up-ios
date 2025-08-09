@@ -62,6 +62,16 @@ struct Mission: Identifiable, Codable, Equatable {
             failMessage: "Extraction failed. The artifact destabilized and was lost.",
             reward: 40
         ),
+        Mission(
+            title: "Relic Extraction Protocol",
+            description: "Infiltrate the containment zone, neutralize security measures, and extract the relic before the next solar flare.",
+            levelRequirement: 1,
+            successChances: SuccessChances(base: 65, brute: 70, ranger: 60, sentinel: 65, hunter: 60, juggernaut: 75, strider: 60, champion: 80, display: 65),
+            duration: 96,
+            successMessage: "Artifact extracted! Your team gains valuable data.",
+            failMessage: "Extraction failed. The artifact destabilized and was lost.",
+            reward: 40
+        ),
 //        // DEBUG: Short missions for testing completion
 //        Mission(
 //            title: "DEBUG: Quick Test Mission",

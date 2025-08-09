@@ -19,7 +19,7 @@ enum LeaderboardTab: String, CaseIterable {
 struct LeaderboardView: View {
     // MARK: - Properties
     @State private var viewModel = LeaderboardViewModel()
-    @State private var selectedTab: LeaderboardTab = .factions
+    @State private var selectedTab: LeaderboardTab = .xp
     @InjectedObservable(\.appState) var appState
     
     // MARK: - Body
@@ -30,9 +30,10 @@ struct LeaderboardView: View {
             tabSelector
             
             // Content
-            VStack(spacing: 24) {
+            VStack(spacing: 0) {
                 // XP Leaders header
                 header
+                    .padding(.bottom, 24)
                 
                 // Content based on loading state
                 if viewModel.isLoading {
@@ -43,7 +44,7 @@ struct LeaderboardView: View {
                     leaderboardContent
                 }
                 
-                Spacer()
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, 20)
             .padding(.top, 42)
@@ -83,13 +84,12 @@ struct LeaderboardView: View {
                         .background(
                             RoundedRectangle(cornerRadius: 5)
                                 .fill(
-                                    isDisabled ? Color.textfieldBorder.opacity(0.3) :
+                                    isDisabled ? Color.gray.opacity(0.6) :
                                     selectedTab == tab ? Color.textInput : Color.textfieldBorder
                                 )
                         )
                 }
                 .disabled(isDisabled)
-                .opacity(isDisabled ? 0.5 : 1.0)
             }
         }
         .padding(.horizontal, 48)
@@ -221,15 +221,6 @@ struct LeaderboardView: View {
     
     // MARK: - Leaderboard Entry Row
     private func leaderboardEntryRow(entry: any LeaderboardEntry, rank: Int) -> some View {
-        func getRankDisplay(_ rank: Int) -> String {
-            switch rank {
-            case 1: return "1st"
-            case 2: return "2nd"
-            case 3: return "3rd"
-            default: return "\(rank)th"
-            }
-        }
-        
         var rankColor: Color {
             switch selectedTab {
             case .xp:
@@ -249,7 +240,7 @@ struct LeaderboardView: View {
                 .frame(width: 32)
             
             // Avatar
-            AsyncImage(url: URL(string: "https://via.placeholder.com/60x60")) { image in
+            AsyncImage(url: URL(string: entry.profilePictureURL ?? "")) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -268,11 +259,12 @@ struct LeaderboardView: View {
                             .font(.mainFont(size: 17.5))
                             .bold()
                             .foregroundColor(.title)
-                        
-//                        Text(getClassForEntry(entry))
-//                            .font(.system(size: 12))
-//                            .foregroundColor(.cyan)
-//                            .italic()
+                        if let faction = entry.faction {
+                            Text(faction.name)
+                                .font(.system(size: 12))
+                                .foregroundColor(faction.baseColor)
+                                .italic()
+                        }
                     }
                     
                     Spacer(minLength: 8)
@@ -299,83 +291,86 @@ struct LeaderboardView: View {
         return NumberFormatter.localizedString(from: NSNumber(value: score), number: .decimal)
     }
     
-    // MARK: - Faction Leaderboard Row
-    private func factionLeaderboardRow(entry: FactionLeaderboardEntry, rank: Int) -> some View {
-        func getRankDisplay(_ rank: Int) -> String {
-            switch rank {
-            case 1: return "1st"
-            case 2: return "2nd"
-            case 3: return "3rd"
-            default: return "\(rank)th"
-            }
+    func getRankDisplay(_ rank: Int) -> String {
+        switch rank {
+        case 1: return "1st"
+        case 2: return "2nd"
+        case 3: return "3rd"
+        default: return "\(rank)th"
         }
-        let factionColor = entry.faction.baseColor
-        let faction = entry.faction
+    }
+    // MARK: - Faction Leaderboard Row
+    @ViewBuilder
+    private func factionLeaderboardRow(entry: FactionLeaderboardEntry, rank: Int) -> some View {
         
-        return HStack(spacing: 30) {
-            // Left side - Rank and Total XP
-            VStack(alignment: .center, spacing: 4) {
-                Text(getRankDisplay(rank))
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.title)
-                Text(formatScore(entry.totalXp))
-                    .font(.system(size: 15))
-                    .foregroundColor(.title)
-            }
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .center, spacing: 13) {
-                    Image(faction.iconName)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(factionColor)
-                        .frame(width: 32, height: 32)
-                    Text(faction.name)
-                        .font(.system(size: 22))
-                        .foregroundColor(factionColor)
-                        .italic()
+        if let faction = entry.faction {
+            HStack(spacing: 30) {
+                // Left side - Rank and Total XP
+                VStack(alignment: .center, spacing: 4) {
+                    Text(getRankDisplay(rank))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.title)
+                    Text(formatScore(entry.totalXp))
+                        .font(.system(size: 15))
+                        .foregroundColor(.title)
                 }
-                Rectangle().fill(.white.opacity(0.3)).frame(height: 1)
-                HStack(alignment: .center, spacing: 12) {
-                    AsyncImage(url: URL(string: "https://via.placeholder.com/60x60")) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Image("profile_placeholder")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    }
-                    .frame(width: 35, height: 35)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Faction Leader")
-                            .font(.system(size: 10))
-                            .foregroundColor(.textDetail)
-                            .textCase(.uppercase)
-                        Text(entry.topPlayerName)
-                            .font(.mainFont(size: 16))
-                            .bold()
-                            .foregroundColor(.title)
-                    }
-                    Spacer()
-                    VStack(alignment: .center, spacing: 4) {
-                        Image("faction_icon")
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .center, spacing: 13) {
+                        Image(faction.iconName)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(width: 16, height: 16)
-                        Text("\(entry.topPlayerXp)")
-                            .font(.system(size: 14))
-                            .foregroundColor(.title)
+                            .foregroundColor(faction.baseColor)
+                            .frame(width: 32, height: 32)
+                        Text(faction.name)
+                            .font(.system(size: 22))
+                            .foregroundColor(faction.baseColor)
+                            .italic()
+                    }
+                    Rectangle().fill(.white.opacity(0.3)).frame(height: 1)
+                    HStack(alignment: .center, spacing: 12) {
+                        AsyncImage(url: URL(string: entry.topPlayerImage ?? "")) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Image("profile_placeholder")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        }
+                        .frame(width: 35, height: 35)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Faction Leader")
+                                .font(.system(size: 10))
+                                .foregroundColor(.textDetail)
+                                .textCase(.uppercase)
+                            Text(entry.topPlayerName)
+                                .font(.mainFont(size: 16))
+                                .bold()
+                                .foregroundColor(.title)
+                        }
+                        Spacer()
+                        VStack(alignment: .center, spacing: 4) {
+                            Image("faction_icon")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 16, height: 16)
+                            Text("\(entry.topPlayerXp)")
+                                .font(.system(size: 14))
+                                .foregroundColor(.title)
+                        }
                     }
                 }
             }
+            .padding(.horizontal, 30)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.white.opacity(0.1))
+            )
+        } else {
+            EmptyView()
         }
-        .padding(.horizontal, 30)
-        .padding(.vertical, 16)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.white.opacity(0.1))
-        )
     }
 }
 

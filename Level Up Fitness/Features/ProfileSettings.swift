@@ -8,8 +8,14 @@
 import SwiftUI
 import FactoryKit
 import PhotosUI
-import CropImage
+import SwiftyCrop
 
+struct ImageData: Identifiable {
+    var id: UUID = UUID()
+    var image: UIImage
+}
+
+@MainActor
 struct ProfileSettings: View {
     @InjectedObservable(\.appState) var appState
     @Injected(\.avatarService) var avatarService
@@ -26,11 +32,11 @@ struct ProfileSettings: View {
     @State private var showingAlert: Bool = false
     @State private var alertMessage: String = ""
     @State private var showingHelpReset: Bool = false
+    @State private var showingPasswordReset: Bool = false
     
     // Profile picture states
     @State private var selectedProfilePhotoItem: PhotosPickerItem?
-    @State private var showingImageCropper: Bool = false
-    @State private var imageForCropping: UIImage?
+    @State private var imageForCropping: ImageData?
     @State private var croppedProfileImage: UIImage?
     @State private var profileImageData: Data?
     @State private var didSave = false
@@ -60,7 +66,7 @@ struct ProfileSettings: View {
                                 .foregroundColor(.textOrange)
                             Spacer()
                             Button(action: {
-                                // Reset password action
+                                showingPasswordReset = true
                             }) {
                                 Text("Reset Password")
                                     .font(.system(size: 14))
@@ -137,11 +143,7 @@ struct ProfileSettings: View {
         }
         .onChange(of: selectedProfilePhotoItem) { _, newItem in
             Task {
-                print("🖼️ Profile photo selected, loading...")
-                
-                // Load the selected image for cropping
                 guard let data = try? await newItem?.loadTransferable(type: Data.self) else {
-                    print("❌ Failed to load image data")
                     await MainActor.run {
                         self.alertMessage = "Failed to load selected image"
                         self.showingAlert = true
@@ -150,10 +152,7 @@ struct ProfileSettings: View {
                     return
                 }
                 
-                print("📦 Image data loaded: \(data.count) bytes")
-                
                 guard let uiImage = UIImage(data: data) else {
-                    print("❌ Failed to create UIImage from data")
                     await MainActor.run {
                         self.alertMessage = "Invalid image format"
                         self.showingAlert = true
@@ -165,51 +164,18 @@ struct ProfileSettings: View {
                 print("✅ UIImage created: \(uiImage.size)")
                 
                 await MainActor.run {
-                    self.imageForCropping = uiImage
-                    self.showingImageCropper = true
-                    print("🎭 Showing image cropper")
+                    self.imageForCropping = ImageData(image: uiImage)
                 }
             }
         }
-        .fullScreenCover(isPresented: $showingImageCropper) {
-            if let imageForCropping {
-                CropImageView(image: imageForCropping, targetSize: .init(width: 300, height: 300), fulfillTargetFrame: true) { result in
-                    switch result {
-                    case .success(let image):
-                        self.croppedProfileImage = image
-                    case .failure(let failure):
-                        self.showingImageCropper = false
-                        self.selectedProfilePhotoItem = nil
-                    }
-                }
-                //                CropImageView(
-                //                    image: imageForCropping,
-                //                    cropShapeType: .square,
-                //                    presetFixedRatios: [.square],
-                //                    showAttemptsToReturn: false
-                //                ) { croppedImage in
-                //                    // Handle successful crop
-                //                    self.croppedProfileImage = croppedImage
-                //                    self.profileImageData = croppedImage.jpegData(compressionQuality: 0.9)
-                //                    self.showingImageCropper = false
-                //                } onCancel: {
-                //                    // Handle cancellation
-                //                    self.showingImageCropper = false
-                //                    self.selectedProfilePhotoItem = nil
-                //                }
-            } else {
-                // Fallback if image loading failed
-                VStack {
-                    Text("Failed to load image")
-                        .foregroundColor(.white)
-                    Button("Close") {
-                        self.showingImageCropper = false
-                        self.selectedProfilePhotoItem = nil
-                    }
-                    .foregroundColor(.orange)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black)
+        .fullScreenCover(item: $imageForCropping) { imageData in
+            SwiftyCropView(imageToCrop: imageData.image, maskShape: .square) {
+                self.imageForCropping = nil
+                self.selectedProfilePhotoItem = nil
+            } onComplete: { croppedImage in
+                self.croppedProfileImage = croppedImage
+                self.profileImageData = croppedImage?.pngData()
+                self.imageForCropping = nil
             }
         }
         .alert(isPresented: $showingAlert) {
@@ -226,54 +192,44 @@ struct ProfileSettings: View {
                 dismissButton: .default(Text("OK"))
             )
         }
+        .sheet(isPresented: $showingPasswordReset) {
+            PasswordResetView() { _ in
+                showingPasswordReset = false
+            }
+        }
         .mainBackground()
     }
     
     var profileImage: some View {
-        AsyncImage(url: URL(string: appState.userAccountData?.profile.profilePictureUrl ?? "")) { image in
-            image
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-        } placeholder: {
-            Image("profile_placeholder")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
+        PhotosPicker(
+            selection: $selectedProfilePhotoItem,
+            matching: .images,
+            photoLibrary: .shared()
+        ) {
+            Group {
+                if let croppedProfileImage {
+                    Image(uiImage: croppedProfileImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } else {
+                    AsyncImage(url: URL(string: appState.userAccountData?.profile.profilePictureUrl ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Image("profile_placeholder")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    }
+                }
+            }
+            .frame(width: 64, height: 64)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.textfieldBorder, lineWidth: 1)
+            }
         }
-        .frame(width: 64, height: 64)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.textfieldBorder, lineWidth: 1)
-        }
-//        PhotosPicker(
-//            selection: $selectedProfilePhotoItem,
-//            matching: .images,
-//            photoLibrary: .shared()
-//        ) {
-//            Group {
-//                if let croppedProfileImage {
-//                    Image(uiImage: croppedProfileImage)
-//                        .resizable()
-//                        .aspectRatio(contentMode: .fill)
-//                } else {
-//                    AsyncImage(url: URL(string: appState.userAccountData?.profile.profilePictureUrl ?? "")) { image in
-//                        image
-//                            .resizable()
-//                            .aspectRatio(contentMode: .fill)
-//                    } placeholder: {
-//                        Image("profile_placeholder")
-//                            .resizable()
-//                            .aspectRatio(contentMode: .fill)
-//                    }
-//                }
-//            }
-//            .frame(width: 64, height: 64)
-//            .clipShape(RoundedRectangle(cornerRadius: 12))
-//            .overlay {
-//                RoundedRectangle(cornerRadius: 12)
-//                    .stroke(Color.textfieldBorder, lineWidth: 1)
-//            }
-//        }
     }
     
     var avatarImageView: some View {
@@ -382,7 +338,7 @@ struct ProfileSettings: View {
             // Upload profile picture if image is selected
             var profilePictureUrl: String? = nil
             if let profileData = profileImageData {
-                let fileName = "\(UUID().uuidString).jpg"
+                let fileName = "\(UUID().uuidString).png"
                 let currentProfilePictureUrl = appState.userAccountData?.profile.profilePictureUrl
                 let uploadResult = await avatarService.uploadProfilePicture(imageData: profileData, fileName: fileName, currentProfilePictureUrl: currentProfilePictureUrl)
                 

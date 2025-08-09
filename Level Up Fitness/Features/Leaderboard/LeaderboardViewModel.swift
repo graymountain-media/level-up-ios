@@ -14,6 +14,8 @@ protocol LeaderboardEntry: Identifiable, Decodable {
     var userId: UUID { get }
     var value: Int { get }
     var avatarName: String? { get }
+    var profilePictureURL: String? { get }
+    var faction: Faction? { get }
     var rank: Int { get }
     var id: UUID { get }
 }
@@ -23,6 +25,8 @@ struct XpLeaderboardEntry: LeaderboardEntry {
     let xp: Int
     let currentLevel: Int
     let avatarName: String?
+    var profilePictureURL: String? = nil
+    var faction: Faction? = nil
     let rank: Int
     
     var id: UUID { userId }
@@ -32,6 +36,8 @@ struct XpLeaderboardEntry: LeaderboardEntry {
         case xp
         case currentLevel = "current_level"
         case avatarName = "avatar_name"
+        case profilePictureURL = "profile_picture_url"
+        case faction
         case rank
     }
     
@@ -78,6 +84,8 @@ struct StreakLeaderboardEntry: LeaderboardEntry {
     let userId: UUID
     let currentStreak: Int
     let avatarName: String?
+    var profilePictureURL: String? = nil
+    var faction: Faction? = nil
     let rank: Int
     
     var id: UUID { userId }
@@ -87,49 +95,69 @@ struct StreakLeaderboardEntry: LeaderboardEntry {
         case userId = "user_id"
         case currentStreak = "current_streak"
         case avatarName = "avatar_name"
+        case profilePictureURL = "profile_picture_url"
+        case faction
         case rank
     }
     
-    static let testData: [any LeaderboardEntry] = [
-        StreakLeaderboardEntry(
-            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
-            currentStreak: 10,
-            avatarName: "STRIKER",
-            rank: 1
-        ),
-        StreakLeaderboardEntry(
-            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
-            currentStreak: 9,
-            avatarName: "NYLA_X",
-            rank: 2
-        ),
-        StreakLeaderboardEntry(
-            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
-            currentStreak: 8,
-            avatarName: "FENRIR",
-            rank: 3
-        ),
-        StreakLeaderboardEntry(
-            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!,
-            currentStreak: 7,
-            avatarName: "KORVUS",
-            rank: 4
-        ),
-        StreakLeaderboardEntry(
-            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000005")!,
-            currentStreak: 6,
-            avatarName: "VIPER",
-            rank: 5
-        )
-    ]
+    static let testData: [any LeaderboardEntry] = []
+//    [
+//        StreakLeaderboardEntry(
+//            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+//            currentStreak: 10,
+//            avatarName: "STRIKER",
+//            rank: 1
+//        ),
+//        StreakLeaderboardEntry(
+//            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+//            currentStreak: 9,
+//            avatarName: "NYLA_X",
+//            rank: 2
+//        ),
+//        StreakLeaderboardEntry(
+//            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
+//            currentStreak: 8,
+//            avatarName: "FENRIR",
+//            rank: 3
+//        ),
+//        StreakLeaderboardEntry(
+//            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!,
+//            currentStreak: 7,
+//            avatarName: "KORVUS",
+//            rank: 4
+//        ),
+//        StreakLeaderboardEntry(
+//            userId: UUID(uuidString: "00000000-0000-0000-0000-000000000005")!,
+//            currentStreak: 6,
+//            avatarName: "VIPER",
+//            rank: 5
+//        )
+//    ]
+    
+    init(from decoder: any Decoder) throws {
+        let container: KeyedDecodingContainer<StreakLeaderboardEntry.CodingKeys> = try decoder.container(keyedBy: StreakLeaderboardEntry.CodingKeys.self)
+        
+        self.userId = try container.decode(UUID.self, forKey: StreakLeaderboardEntry.CodingKeys.userId)
+        self.currentStreak = try container.decode(Int.self, forKey: StreakLeaderboardEntry.CodingKeys.currentStreak)
+        self.avatarName = try container.decodeIfPresent(String.self, forKey: StreakLeaderboardEntry.CodingKeys.avatarName)
+        self.profilePictureURL = try container.decodeIfPresent(String.self, forKey: StreakLeaderboardEntry.CodingKeys.profilePictureURL)
+        self.faction = try container.decodeIfPresent(Faction.self, forKey: StreakLeaderboardEntry.CodingKeys.faction)
+        self.rank = try container.decode(Int.self, forKey: StreakLeaderboardEntry.CodingKeys.rank)
+        
+    }
 }
 
 struct FactionLeaderboardEntry: LeaderboardEntry {
-    let faction: Faction
+    var profilePictureURL: String? {
+        return topPlayerImage
+    }
+    
+    let faction: Faction?
     let totalXp: Int
     let memberCount: Int
     let topPlayerName: String
     let topPlayerXp: Int
+    var topPlayerImage: String? = nil
     let rank: Int
     
     // Conform to LeaderboardEntry protocol
@@ -144,6 +172,7 @@ struct FactionLeaderboardEntry: LeaderboardEntry {
         case memberCount = "member_count"
         case topPlayerName = "top_player_name"
         case topPlayerXp = "top_player_xp"
+        case topPlayerImage = "top_player_image"
         case rank
     }
     
@@ -156,18 +185,31 @@ struct FactionLeaderboardEntry: LeaderboardEntry {
         self.rank = rank
     }
     
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        totalXp = try container.decode(Int.self, forKey: .totalXp)
-        memberCount = try container.decode(Int.self, forKey: .memberCount)
-        topPlayerName = try container.decode(String.self, forKey: .topPlayerName)
-        topPlayerXp = try container.decode(Int.self, forKey: .topPlayerXp)
-        rank = try container.decode(Int.self, forKey: .rank)
+    init(from decoder: any Decoder) throws {
+        let container: KeyedDecodingContainer<FactionLeaderboardEntry.CodingKeys> = try decoder.container(keyedBy: FactionLeaderboardEntry.CodingKeys.self)
         
-        // Convert string to Faction enum
-        let factionString = try container.decode(String.self, forKey: .faction)
-        faction = Faction.fromString(factionString) ?? .echoreach
+        self.faction = try container.decodeIfPresent(Faction.self, forKey: FactionLeaderboardEntry.CodingKeys.faction)
+        self.totalXp = try container.decode(Int.self, forKey: FactionLeaderboardEntry.CodingKeys.totalXp)
+        self.memberCount = try container.decode(Int.self, forKey: FactionLeaderboardEntry.CodingKeys.memberCount)
+        self.topPlayerName = try container.decode(String.self, forKey: FactionLeaderboardEntry.CodingKeys.topPlayerName)
+        self.topPlayerXp = try container.decode(Int.self, forKey: FactionLeaderboardEntry.CodingKeys.topPlayerXp)
+        self.topPlayerImage = try container.decodeIfPresent(String.self, forKey: FactionLeaderboardEntry.CodingKeys.topPlayerImage)
+        self.rank = try container.decode(Int.self, forKey: FactionLeaderboardEntry.CodingKeys.rank)
+        
     }
+    
+//    init(from decoder: Decoder) throws {
+//        let container = try decoder.container(keyedBy: CodingKeys.self)
+//        totalXp = try container.decode(Int.self, forKey: .totalXp)
+//        memberCount = try container.decode(Int.self, forKey: .memberCount)
+//        topPlayerName = try container.decode(String.self, forKey: .topPlayerName)
+//        topPlayerXp = try container.decode(Int.self, forKey: .topPlayerXp)
+//        rank = try container.decode(Int.self, forKey: .rank)
+//        
+//        // Convert string to Faction enum
+//        let factionString = try container.decode(String.self, forKey: .faction)
+//        faction = Faction.fromString(factionString) ?? .echoreach
+//    }
 
 }
 

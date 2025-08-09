@@ -69,18 +69,17 @@ struct OnboardingView: View {
     var fields: some View {
         VStack(spacing: 10) {
             HStack(spacing: 10) {
-                LUTextField(title: "First Name", text: $firstName, placeholder: "John")
+                LUTextField(title: "First Name", text: $firstName)
                     .textContentType(.givenName)
                     .autocapitalization(.words)
                 
-                LUTextField(title: "Last Name", text: $lastName, placeholder: "Doe")
+                LUTextField(title: "Last Name", text: $lastName)
                     .textContentType(.familyName)
                     .autocapitalization(.words)
             }
             LUTextField(title: "Avatar Name",
                         detail: "\(avatarName.count)/\(avatarNameMaxLength)",
                         text: $avatarName,
-                        placeholder: "William Vengence",
                         maxLength: avatarNameMaxLength)
                 .autocapitalization(.words)
             

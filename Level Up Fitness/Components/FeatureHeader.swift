@@ -11,6 +11,7 @@ struct FeatureHeader: View {
     @Environment(\.dismiss) var dismiss
     var title: String
     var showCloseButton: Bool = false
+    var onDismiss: (() -> Void)? = nil
     var body: some View {
         ZStack(alignment: .topLeading) {
             HStack {
@@ -26,7 +27,11 @@ struct FeatureHeader: View {
             }
             if showCloseButton {
                 Button {
-                    dismiss()
+                    if let onDismiss {
+                        onDismiss()
+                    } else {
+                        dismiss()
+                    }
                 } label: {
                     Image(systemName: "xmark")
                         .resizable()
