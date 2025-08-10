@@ -22,6 +22,8 @@ class AppState {
     @ObservationIgnored @Injected(\.userDataService) var userDataService
     @ObservationIgnored @Injected(\.levelManager) var levelManager
     @ObservationIgnored @Injected(\.itemService) var itemService
+    @ObservationIgnored @Injected(\.appFlowManager) var flowManager
+    
     // Navigation state
     var isShowingMenu: Bool = false
     var selectedMenuItem: MenuItem?
@@ -37,60 +39,48 @@ class AppState {
         missionManager.dismissMissionReadyNotification()
     }
     
-    var showLevelUpPopup: Bool = false
+    // MARK: - Flow Management (Simplified)
     
-    func showLevelPopupIfNeeded() {
+    /// Start the next queued flow (called by workout completion)
+    func startNextFlow() {
         currentTab = .home
-        showLevelUpPopup = levelManager.pendingLevelUpNotification != nil
+        flowManager.nextFlow()
     }
     
-    var levelUpNotification: LevelUpNotification? {
-        levelManager.pendingLevelUpNotification
+    /// Progress to the next flow (called by popup dismissals)
+    func nextFlow() {
+        flowManager.nextFlow()
     }
     
-    // Faction Selection State
-    private var shouldShowFactionSelection: Bool = false
-    
-    var showFactionSelection: Bool {
-        // Only show faction selection if no other popups are showing
-        shouldShowFactionSelection && !showLevelUpPopup && !showPathAssignment
+    /// Get current flow data for UI display
+    var currentFlowNotification: LevelUpNotification? {
+        if case .levelUp(let notification) = flowManager.currentFlow {
+            return notification
+        }
+        return nil
     }
     
-    // Path Assignment State
-    private var shouldShowPathAssignment: Bool = false
-    
-    var showPathAssignment: Bool {
-        // Only show path assignment if no other popups are showing
-        shouldShowPathAssignment && !showLevelUpPopup && !showFactionSelection
-    }
-    
-    var pendingPathAssignment: HeroPath? {
-        levelManager.pendingPathAssignment
+    var currentFlowPath: HeroPath? {
+        if case .pathAssignment(let path) = flowManager.currentFlow {
+            return path
+        }
+        return nil
     }
     
     func dismissLevelUpPopup() {
-        // Store unlocked content and path assignment before dismissing
+        // Store unlocked content for tips before dismissing
         let unlockedContent = levelManager.pendingLevelUpNotification?.unlockedContent ?? []
-        let hasFactionUnlock = unlockedContent.contains(.factions)
-        let hasPathAssignment = levelManager.pendingPathAssignment != nil
         
-        levelManager.dismissLevelUpNotification()
-        showLevelUpPopup = false
+        // Move to next flow
+        nextFlow()
         
-        // If path was assigned, show path assignment first
-        if hasPathAssignment {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.shouldShowPathAssignment = true
-            }
-        } else if hasFactionUnlock {
-            // If factions were unlocked, show faction selection after a delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.shouldShowFactionSelection = true
-            }
-        } else {
-            // Otherwise, trigger content unlock tips
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.triggerUnlockedContentTips(unlockedContent)
+        // If no more flows, trigger content unlock tips
+        Task {
+            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+            if flowManager.currentFlow == nil {
+                await MainActor.run {
+                    self.triggerUnlockedContentTips(unlockedContent)
+                }
             }
         }
     }
@@ -102,13 +92,13 @@ class AppState {
             // Refresh user data to get updated faction
             await refreshUserData()
             
-            // Dismiss faction selection
+            // Move to next flow
             await MainActor.run {
-                self.shouldShowFactionSelection = false
                 self.currentTab = .home
-                // After faction selection, trigger any remaining content unlock tips
+                self.nextFlow()
+                
+                // Trigger faction-related content unlock tips
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    // Get the unlocked content that triggered faction selection
                     self.triggerUnlockedContentTips([.factions, .factionLeaderboards])
                 }
             }
@@ -116,21 +106,11 @@ class AppState {
     }
     
     func dismissFactionSelection() {
-        shouldShowFactionSelection = false
-        levelManager.dismissFactionSelection()
+        nextFlow()
     }
     
     func dismissPathAssignment() {
-        shouldShowPathAssignment = false
-        levelManager.dismissPathAssignment()
-        
-        // After path assignment, check if we need to show faction selection
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // Check if faction selection should be shown (this would be from a previous level up)
-            if self.levelManager.pendingFactionSelection {
-                self.shouldShowFactionSelection = true
-            }
-        }
+        nextFlow()
     }
     
     // Content Unlock Tips
@@ -212,17 +192,24 @@ class AppState {
             self.userDataError = nil
         }
         
-        let result = await userDataService.fetchUserAccountData()
+        // Fetch user data and inventory concurrently
+        async let userDataResult = userDataService.fetchUserAccountData()
+        async let inventoryResult = itemService.fetchUserInventory()
         
-        switch result {
+        // Await user data first since inventory depends on successful user data
+        let dataResult = await userDataResult
+        
+        switch dataResult {
         case .success(let data):
+            // Try to get inventory result, but don't fail if it fails
+            let inventory = try? await inventoryResult
+            
             await MainActor.run {
-                
                 self.userAccountData = data
+                self.userInventory = inventory
                 self.isLoadingUserData = false
                 self.userDataError = nil
             }
-            await self.loadUserInventory()
         case .failure(let error):
             await MainActor.run {
                 self.userAccountData = nil
@@ -239,8 +226,8 @@ class AppState {
         await loadUserData()
     }
     
-    /// Loads user inventory data
-    private func loadUserInventory() async {
+    /// Refreshes user inventory (useful after item purchases)
+    func refreshUserInventory() async {
         do {
             let inventory = try await itemService.fetchUserInventory()
             await MainActor.run {
@@ -252,11 +239,6 @@ class AppState {
                 self.userInventory = nil
             }
         }
-    }
-    
-    /// Refreshes user inventory (useful after item purchases)
-    func refreshUserInventory() async {
-        await loadUserInventory()
     }
     
     /// Updates user XP after a workout and checks for level up
@@ -418,13 +400,5 @@ class AppState {
             }
         }
     }
-    
-    // MARK: - Testing Helpers
-    
-    #if DEBUG
-    func testPathAssignment(_ path: HeroPath) {
-        levelManager.pendingPathAssignment = path
-        shouldShowPathAssignment = true
-    }
-    #endif
+
 }

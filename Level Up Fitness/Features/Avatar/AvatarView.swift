@@ -134,8 +134,16 @@ struct AvatarView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    WeaponSlotView(item: appState.userInventory?.equippedItem(for: .weapon)?.item)
-                        .frame(width: 90, height: 90)
+                    VStack(spacing: 2) {
+                        WeaponSlotView(item: appState.userInventory?.equippedItem(for: .weapon)?.item)
+                            .frame(width: 90, height: 90)
+                        if let xpBonus = appState.userInventory?.equippedItem(for: .weapon)?.item?.formattedXPBonus {
+                            Text(xpBonus)
+                                .font(.mainFont(size: 14))
+                                .bold()
+                                .foregroundStyle(.white)
+                        }
+                    }
                 }
                 Spacer()
             }

@@ -298,8 +298,8 @@ struct LogWorkoutView: View {
         withAnimation {
             latestLoggedWorkout = nil
         }
-        // Notify AppState that workout success is dismissed
-        appState.showLevelPopupIfNeeded()
+        // Start any queued flows (level up, path assignment, etc.)
+        appState.startNextFlow()
     }
 }
 

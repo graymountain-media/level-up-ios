@@ -464,17 +464,22 @@ class UserDataService: UserDataServiceProtocol {
             guard let profile else {
                 return .failure(.profileNotFound)
             }
-            // Fetch all required data in parallel
-            let xpInfo = try await fetchXpInfo()
-            let currentStreak =  try await fetchCurrentStreak()
-            let levelInfo = try await fetchLevelInfo()
-            let currentLevelInfo = UserDataService.calculateLevelInfo(xpInfo: xpInfo, levelInfo: levelInfo)
+            // Fetch all required data concurrently
+            async let xpInfo = fetchXpInfo()
+            async let currentStreak = fetchCurrentStreak()
+            async let levelInfo = fetchLevelInfo()
+            
+            // Await all concurrent operations
+            let xpResult = try await xpInfo
+            let streakResult = try await currentStreak
+            let levelResult = try await levelInfo
+            let currentLevelInfo = UserDataService.calculateLevelInfo(xpInfo: xpResult, levelInfo: levelResult)
             
             let userAccountData = await UserAccountData(
                 profile: profile,
-                totalXP: xpInfo.xp,
-                currentLevel: xpInfo.currentLevel,
-                currentStreak: currentStreak,
+                totalXP: xpResult.xp,
+                currentLevel: xpResult.currentLevel,
+                currentStreak: streakResult,
                 xpToNextLevel: currentLevelInfo.xpToNextLevel,
                 progressToNextLevel: currentLevelInfo.progressToNextLevel
             )

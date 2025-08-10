@@ -62,39 +62,39 @@ struct MainView: View {
             }
         }
         .overlay {
-            // Level Up Popup
-            if appState.showLevelUpPopup, let notification = appState.levelUpNotification {
-                LevelUpPopupView(notification: notification) {
-                    appState.dismissLevelUpPopup()
-                }
-                .transition(.opacity)
-            }
-        }
-        .overlay {
-            // Path Assignment Overlay
-            if appState.showPathAssignment, let path = appState.pendingPathAssignment {
-                PathAssignmentOverlay(
-                    assignedPath: path,
-                    onDismiss: {
-                        appState.dismissPathAssignment()
-                    },
-                    pathIconNamespace: mainViewNamespace
-                )
-                .transition(.opacity)
-            }
-        }
-        .overlay {
-            // Faction Selection
-            if appState.showFactionSelection {
-                FactionSelectionView(
-                    onFactionSelected: { faction in
-                        appState.selectFaction(faction)
-                    },
-                    onDismiss: {
-                        appState.dismissFactionSelection()
+            // Single Flow Overlay - observes appState.flowManager.currentFlow
+            Group {
+                switch appState.flowManager.currentFlow {
+                case .levelUp(let notification):
+                    LevelUpPopupView(notification: notification) {
+                        appState.dismissLevelUpPopup()
                     }
-                )
-                .transition(.opacity)
+                    .transition(.opacity)
+                    
+                case .pathAssignment(let path):
+                    PathAssignmentOverlay(
+                        assignedPath: path,
+                        onDismiss: {
+                            appState.dismissPathAssignment()
+                        },
+                        pathIconNamespace: mainViewNamespace
+                    )
+                    .transition(.opacity)
+                    
+                case .factionSelection:
+                    FactionSelectionView(
+                        onFactionSelected: { faction in
+                            appState.selectFaction(faction)
+                        },
+                        onDismiss: {
+                            appState.dismissFactionSelection()
+                        }
+                    )
+                    .transition(.opacity)
+                    
+                case nil:
+                    EmptyView()
+                }
             }
         }
         .task {

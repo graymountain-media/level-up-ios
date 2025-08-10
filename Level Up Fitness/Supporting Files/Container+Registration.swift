@@ -13,6 +13,10 @@ extension Container {
         self { @MainActor in AppState() }.cached
     }
     
+    var appFlowManager: Factory<AppFlowManagerProtocol> {
+        self { @MainActor in AppFlowManager() }.cached
+    }
+    
     var missionManager: Factory<MissionManager> {
         self {
             @MainActor in MissionManager()
@@ -64,6 +68,7 @@ extension Container {
         avatarService.register { @MainActor in MockAvatarService() }
         missionService.register { @MainActor in MockMissionService() }
         itemService.register { @MainActor in MockItemService() }
+        appFlowManager.register { @MainActor in MockAppFlowManager() }
         return EmptyView()
     }
 }

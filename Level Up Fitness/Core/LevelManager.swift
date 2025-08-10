@@ -14,15 +14,10 @@ import Supabase
 class LevelManager {
     @ObservationIgnored @Injected(\.userDataService) var userDataService
     @ObservationIgnored @Injected(\.pathCalculator) var pathCalculator
+    @ObservationIgnored @Injected(\.appFlowManager) var flowManager
     
     // Level up notification state
     private(set) var pendingLevelUpNotification: LevelUpNotification?
-    
-    // Faction selection state
-    private(set) var pendingFactionSelection: Bool = false
-    
-    // Path assignment state
-    var pendingPathAssignment: HeroPath?
     
     // Content unlocking
     private var cachedLevelInfo: [LevelInfo]?
@@ -54,14 +49,17 @@ class LevelManager {
             if newLevel > oldLevel {
                 let unlockedContent = getUnlockedContent(newLevel: newLevel)
                 
+                if newLevel == 3 {
+                    flowManager.queueFlow(.factionSelection)
+                }
+                
                 // Auto-assign/recalculate path at level 4 and every 5 levels after (9, 14, 19, etc.)
                 if shouldRecalculatePath(newLevel: newLevel) {
                     do {
                         let assignedPath = try await pathCalculator.calculatePath(for: currentUserData.profile.id)
                         try await updateUserPath(assignedPath)
                         
-                        // Store the assigned path for display after level up popup
-                        pendingPathAssignment = assignedPath
+                        flowManager.queueFlow(.pathAssignment(assignedPath))
                     } catch {
                         print("Failed to calculate/assign path: \(error)")
                     }
@@ -73,11 +71,9 @@ class LevelManager {
                     unlockedContent: unlockedContent
                 )
                 
-                // Store the notification to be shown
+                // Store the notification and queue it through flow manager
                 pendingLevelUpNotification = levelUpNotification
-                
-                // Faction selection timing will be handled by AppState
-                // No need to set pendingFactionSelection here anymore
+                flowManager.queueFlow(.levelUp(levelUpNotification))
                 
                 return .leveledUp(levelUpNotification)
             } else {
@@ -89,43 +85,18 @@ class LevelManager {
         }
     }
     
-    /// Dismisses the current level up notification
-    func dismissLevelUpNotification() {
-        pendingLevelUpNotification = nil
-    }
-    
-    /// Shows faction selection (called after level up popup is dismissed if factions were unlocked)
-    func showFactionSelectionIfNeeded() {
-        // Faction selection will be shown via pendingFactionSelection
-    }
-    
-    /// Dismisses faction selection
-    func dismissFactionSelection() {
-        pendingFactionSelection = false
-    }
-    
-    /// Dismisses path assignment
-    func dismissPathAssignment() {
-        pendingPathAssignment = nil
-    }
-    
     /// Completes faction selection
     func completeFactionSelection(_ faction: Faction) async {
         let result = await userDataService.updateFaction(faction)
         switch result {
         case .success:
-            pendingFactionSelection = false
+            return
         case .failure(let error):
             print("Failed to save faction: \(error)")
-            // Still dismiss to prevent UI blocking
-            pendingFactionSelection = false
+            return
         }
     }
-    
-    /// Shows the level up notification (useful for manual triggering)
-    func showLevelUpNotification(_ notification: LevelUpNotification) {
-        pendingLevelUpNotification = notification
-    }
+
     
     // MARK: - Content Unlocking
     
@@ -167,7 +138,7 @@ class LevelManager {
     private func updateUserPath(_ path: HeroPath) async throws {
         try await client
             .from("profiles")
-            .update(["path": path.rawValue])
+            .update(["hero_path": path.rawValue])
             .eq("id", value: try await client.auth.session.user.id)
             .execute()
     }

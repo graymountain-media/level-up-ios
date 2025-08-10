@@ -77,38 +77,78 @@ class MissionManager {
         isLoading = false
     }
     
-    // Only show first mission per level until completed, then unlock second
+    // Mission unlocking system: First two missions in order, then level-ordered completion
     func updateAvailableMissions() {
         let userLevel = currentUserLevel
-        // Identify the first two missions by title
         let firstMissionTitle = "Welcome to the Nexus"
         let secondMissionTitle = "Behind the Walls"
         let firstMission = allMissions.first(where: { $0.title == firstMissionTitle })
         let secondMission = allMissions.first(where: { $0.title == secondMissionTitle })
         
-        // Check if first mission exists in remaining available missions
+        // Step 1: Show first mission if available
         if let first = firstMission {
             availableMissions = [first]
             return
         }
         
-        // If first is not available, check if second exists and first is not in progress
+        // Step 2: Show second mission if first is not available and not in progress
         if let second = secondMission {
             guard activeMissions.contains(where: { $0.title == firstMissionTitle }) == false else {
-                // if active missions is not empty, then the first mission is in progress and we need to wait for that to be completed
                 availableMissions = []
                 return
             }
             availableMissions = [second]
             return
         }
-        // All other missions (not first two), unlocked by level and not completed
-        let remaining = allMissions.filter {
+        
+        // Step 3: Level-ordered completion for remaining missions
+        // Find the lowest level that has incomplete missions
+        let remainingMissions = allMissions.filter {
             $0.title != firstMissionTitle &&
             $0.title != secondMissionTitle &&
             $0.levelRequirement <= userLevel
         }
-        availableMissions = remaining
+        
+        // Group remaining missions by level requirement
+        let missionsByLevel = Dictionary(grouping: remainingMissions) { $0.levelRequirement }
+        
+        // Find the lowest level with incomplete missions
+        for level in 3...userLevel {
+            guard let missionsAtLevel = missionsByLevel[level] else {
+                continue 
+            }
+            
+            if activeMissions.contains(where: { $0.levelRequirement < level }) {
+                availableMissions = []
+                return
+            }
+            let incompleteMissionsAtLevel = missionsAtLevel.filter { mission in
+                // Mission is incomplete if it's not completed AND not currently active
+                !completedMissions.contains(where: { $0.id == mission.id }) &&
+                !activeMissions.contains(where: { $0.id == mission.id })
+            }
+            
+            // If there are active missions at this level, don't show higher levels
+            let activeMissionsAtLevel = missionsAtLevel.filter { mission in
+                activeMissions.contains(where: { $0.id == mission.id })
+            }
+            
+            let completedAtLevel = missionsAtLevel.filter { mission in
+                completedMissions.contains(where: { $0.id == mission.id })
+            }
+            
+            
+            if !activeMissionsAtLevel.isEmpty || !incompleteMissionsAtLevel.isEmpty {
+                // Only show incomplete missions from this level (not active ones)
+                availableMissions = incompleteMissionsAtLevel
+                return
+            }
+            
+            print("🔍 DEBUG: Level \(level) fully completed, checking next level")
+        }
+        
+        // All missions up to current level are completed
+        availableMissions = []
     }
     
     // Start a mission
