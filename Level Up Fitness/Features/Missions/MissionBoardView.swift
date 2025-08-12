@@ -51,8 +51,9 @@ struct MissionBoardView: View {
                 }
             }
         }
-        .mainBackground()
+        
         .tipOverlay(namespace: namespace, manager: tipManager)
+        .mainBackground()
         .task {
             isLoading = true
             await missionManager.loadAllMissions(appState.userAccountData?.currentLevel ?? 1)
@@ -100,7 +101,7 @@ struct MissionBoardView: View {
                         }
                         
                         // Show first expansion tip
-                        tipManager.showSingleTip(key: "first_expansion")
+                        tipManager.forceShowTip(key: "first_expansion")
                         
                     }
                 } onSelect: {
@@ -117,16 +118,14 @@ struct MissionBoardView: View {
                         selectedTab = .completed
                     }
                 }
-                .id(mission.id)
                 .padding(.horizontal)
                 .transition(.opacity)
-                
-                if missionsForSelectedTab.first == mission {
+                if selectedMission?.id == mission.id {
                     card
-                    .tipSource(id: 0, nameSpace: namespace, manager: tipManager, anchorPoint: .bottom)
-                    .tipSource(id: 1, nameSpace: namespace, manager: tipManager, anchorPoint: .top)
+                        .tipSource(id: 1, nameSpace: namespace, manager: tipManager, anchorPoint: .top)
                 } else {
                     card
+                        .tipSource(id: 0, nameSpace: namespace, manager: tipManager, anchorPoint: .bottom)
                 }
             }
         }
@@ -164,6 +163,9 @@ struct MissionBoardView: View {
             ForEach(MissionBoardTab.allCases) { tab in
                 Button(action: {
                     selectedTab = tab
+                    if tab == .active {
+                        tipManager.forceShowTip(key: "welcome")
+                    }
                 }) {
                     Text(tab.displayName)
                         .font(.system(size: 16, weight: .medium))

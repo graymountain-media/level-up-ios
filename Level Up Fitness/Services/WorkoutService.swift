@@ -271,8 +271,8 @@ class WorkoutService: WorkoutServiceProtocol {
             let today = Date()
             
             // Get current streak record or create if it doesn't exist
-            var currentStreak = 1 // Default to 1 for today's workout
-            var longestStreak = 1
+            var currentStreak = 0
+            var longestStreak = 0
             var lastWorkoutDate: Date? = nil
             
             // Try to get existing streak record
@@ -292,21 +292,27 @@ class WorkoutService: WorkoutServiceProtocol {
                 if let lastDate = lastWorkoutDate, workouts.count > 0 {
                     let calendar = Calendar.current
                     
-                    // Calculate hours since last workout
-                    let hoursSinceLastWorkout = calendar.dateComponents([.hour], from: lastDate, to: today).hour ?? 0
+                    // Check if we already updated the streak today to prevent double counting
+                    let isLastUpdateToday = calendar.isDate(lastDate, inSameDayAs: today)
                     
-                    if hoursSinceLastWorkout <= 48 {
-                        // Within 48 hours - streak continues
-                        currentStreak += 1
+                    if !isLastUpdateToday {
+                        // Calculate hours since last workout
+                        let hoursSinceLastWorkout = calendar.dateComponents([.hour], from: lastDate, to: today).hour ?? 0
                         
-                        // Update longest streak if needed
-                        if currentStreak > longestStreak {
-                            longestStreak = currentStreak
+                        if hoursSinceLastWorkout <= 48 {
+                            // Within 48 hours - streak continues
+                            currentStreak += 1
+                            
+                            // Update longest streak if needed
+                            if currentStreak > longestStreak {
+                                longestStreak = currentStreak
+                            }
+                        } else {
+                            // More than 48 hours - streak resets to 1
+                            currentStreak = 1
                         }
-                    } else {
-                        // More than 48 hours - streak resets to 1
-                        currentStreak = 1
                     }
+                    // If last update was today, don't modify the streak (prevents double counting)
                 }
             } catch {
                 // No streak record exists yet, we'll create one

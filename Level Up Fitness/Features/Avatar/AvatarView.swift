@@ -8,6 +8,7 @@
 import SwiftUI
 import FactoryKit
 import TipKit
+import CachedAsyncImage
 
 enum GearType: Int, CaseIterable, Identifiable {
     case helmet
@@ -41,9 +42,9 @@ enum GearType: Int, CaseIterable, Identifiable {
 
 struct AvatarView: View {
     @InjectedObservable(\.appState) var appState
-    @State var manager = SequentialTipsManager.avatarTips()
+    var manager: SequentialTipsManager
     var mainNamespace: Namespace.ID
-    @Namespace var namespace
+    
     var body: some View {
         VStack(spacing: 0) {
             if appState.isLoadingUserData {
@@ -53,8 +54,10 @@ struct AvatarView: View {
                     .onAppear {
                         manager.startTips()
                     }
-                    .tipOverlay(namespace: namespace, manager: manager)
             }
+        }
+        .onAppear {
+            print("DATA SERVICE: \(type(of: appState.userDataService))")
         }
         
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -87,8 +90,8 @@ struct AvatarView: View {
                     }
                     .frame(maxWidth: .infinity)
                     ProgressBar()
-                        .tipSource(id: 0, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
-                        .tipSource(id: 1, nameSpace: namespace, manager: manager, anchorPoint: .bottom )
+                        .tipSource(id: 1, nameSpace: mainNamespace, manager: manager, anchorPoint: .bottom)
+                        .tipSource(id: 2, nameSpace: mainNamespace, manager: manager, anchorPoint: .bottom )
                         .background(
                             ZStack {
                                 RoundedRectangle(cornerRadius: 12)
@@ -110,23 +113,29 @@ struct AvatarView: View {
                             Spacer()
                         }
                     }
-                    .tipSource(id: 3, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
+                    .tipSource(id: 4, nameSpace: mainNamespace, manager: manager, anchorPoint: .bottom)
                     
                     
                 }
                 .padding(.horizontal, 40)
                 .foregroundStyle(.white)
                 Spacer(minLength: 12)
-                AsyncImage(url: URL(string: appState.userAccountData?.profile.avatarUrl ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(4/5, contentMode: .fit)
-                        .tipSource(id: 2, nameSpace: namespace, manager: manager)
+                CachedAsyncImage(url: URL(string: appState.userAccountData?.profile.avatarUrl ?? "")) { image in
+                    EquatableView(id: 3) {
+                        image
+                            .resizable()
+                            .aspectRatio(4/5, contentMode: .fit)
+                            .id(1)
+                    }
+                    .equatableTipSource(id: 3, nameSpace: mainNamespace, manager: manager)
                 } placeholder: {
-                    Image("avatar_placeholder")
-                        .resizable()
-                        .aspectRatio(4/5, contentMode: .fit)
-                        .opacity(0.5)
+                    EquatableView(id: 4) {
+                        Image("avatar_placeholder")
+                            .resizable()
+                            .aspectRatio(4/5, contentMode: .fit)
+                            .opacity(0.5)
+                    }
+                    .equatableTipSource(id: 3, nameSpace: mainNamespace, manager: manager)
                 }
             }
             .padding(.top, 32)
@@ -228,10 +237,28 @@ struct AvatarView: View {
     }
 }
 
+struct EquatableView<I: View>: View, Equatable {
+    var image: I
+    var id: Int
+    
+    init(id: Int, @ViewBuilder image: () -> I) {
+        self.id = id
+        self.image = image()
+    }
+    
+    var body: some View {
+        image
+    }
+    
+    static func == (lhs: EquatableView, rhs: EquatableView) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
 #Preview {
     @Previewable @Namespace var namespace
     let _ = Container.shared.setupMocks()
-    AvatarView(mainNamespace: namespace)
+    AvatarView(manager: .avatarTips(), mainNamespace: namespace)
 }
 
 struct ViewHeightKey: PreferenceKey {

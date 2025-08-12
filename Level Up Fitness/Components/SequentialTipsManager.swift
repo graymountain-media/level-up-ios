@@ -15,7 +15,7 @@ class SequentialTipsManager {
     private let storageKey: String
     private var singleTips: [String: TipContent] = [:]
     private var activeSingleTipKey: String?
-    var capturedViews: [Int: AnyView] = [:]
+    var capturedViews: [Int: any View] = [:]
     
     var currentTip: TipContent? {
         // Show active single tip if set, otherwise show sequential tip
@@ -32,7 +32,17 @@ class SequentialTipsManager {
         }
         
         print("DEBUG: View captured for tip \(id)")
-        capturedViews[id] = AnyView(view)
+        capturedViews[id] = view
+    }
+    
+    func captureEquatableView<V: View & Equatable>(id: Int, view: V) {
+        print(view)
+        if let capturedView = capturedViews[id] as? V, capturedView == view {
+            print("DEBUG: View NOT CAPTURED for tip \(id)")
+            return
+        }
+        print("DEBUG: View captured for tip \(id)")
+        capturedViews[id] = view
     }
     
     var hasMoreTips: Bool {

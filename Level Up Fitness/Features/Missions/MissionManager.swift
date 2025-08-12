@@ -52,12 +52,6 @@ class MissionManager {
         self.allMissions = missions
         self.userMissions = userMissions
         
-        print("🔍 DEBUG: Loaded \(missions.count) missions:")
-        for mission in missions {
-            print("🔍 DEBUG: - \(mission.title) (Level: \(mission.levelRequirement), Duration: \(mission.duration)h)")
-        }
-        print("🔍 DEBUG: Loaded \(userMissions.count) user missions")
-        
         // Clear existing timers
         clearAllTimers()
         
@@ -80,6 +74,7 @@ class MissionManager {
     // Mission unlocking system: First two missions in order, then level-ordered completion
     func updateAvailableMissions() {
         let userLevel = currentUserLevel
+        guard userLevel >= 2 else { return }
         let firstMissionTitle = "Welcome to the Nexus"
         let secondMissionTitle = "Behind the Walls"
         let firstMission = allMissions.first(where: { $0.title == firstMissionTitle })
@@ -113,7 +108,7 @@ class MissionManager {
         let missionsByLevel = Dictionary(grouping: remainingMissions) { $0.levelRequirement }
         
         // Find the lowest level with incomplete missions
-        for level in 3...userLevel {
+        for level in 2...userLevel {
             guard let missionsAtLevel = missionsByLevel[level] else {
                 continue 
             }

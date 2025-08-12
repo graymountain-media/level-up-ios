@@ -11,7 +11,7 @@ import FactoryKit
 struct MainView: View {
     @InjectedObservable(\.appState) var appState
     @Namespace var mainViewNamespace
-    let tipManager = SequentialTipsManager(tips: [], storageKey: "missions_unlocked_temp")
+    @State var tipManager = SequentialTipsManager.avatarTips()
     
     init() {
         tipManager.registerSingleTip(
@@ -20,6 +20,14 @@ struct MainView: View {
             title: "Missions Unlocked!",
             message: "You can now take on missions to earn bonus XP and exclusive rewards. Tap the Missions tab to get started!",
             position: .top
+        )
+        
+        tipManager.registerSingleTip(
+            key: "path_tip",
+            id: 98,
+            title: "Your Path",
+            message: "You’ve taken your first steps down your path. There are seven paths, and each represents how people train. Your path is your specialty and allows you to offer unique benefits to your faction and group content, as well as giving you bonuses on certain missions.",
+            position: .bottomLeading
         )
     }
     
@@ -31,10 +39,9 @@ struct MainView: View {
                 currentTabView
                     .frame(maxHeight: .infinity)
                 Spacer(minLength: 0)
-                LUTabBar { tab in
+                LUTabBar(tipsNamespace: mainViewNamespace, tipManager: tipManager) { tab in
                     appState.currentTab = tab
                 }
-                .tipSource(id: 99, nameSpace: mainViewNamespace, manager: tipManager, anchorPoint: .top)
             }
             .tint(Color.minor)
             .fullScreenCover(item: $appState.selectedMenuItem) { item in
@@ -52,6 +59,11 @@ struct MainView: View {
         .onReceive(NotificationCenter.default.publisher(for: .showMissionsUnlockedTip)) { _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 tipManager.showSingleTip(key: "missions_unlocked")
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showPathTip)) { _ in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                tipManager.showSingleTip(key: "path_tip")
             }
         }
         .tipOverlay(namespace: mainViewNamespace, manager: tipManager)
@@ -147,7 +159,7 @@ struct MainView: View {
     var currentTabView: some View {
         switch appState.currentTab {
         case .home:
-            AvatarView(mainNamespace: mainViewNamespace)
+            AvatarView(manager: tipManager, mainNamespace: mainViewNamespace)
         case .missionBoard:
             MissionBoardView()
         case .logWorkout:
@@ -160,6 +172,6 @@ struct MainView: View {
 }
 
 #Preview {
+    let _ = Container.shared.setupMocks()
     MainView()
-        .environment(AppState())
 }

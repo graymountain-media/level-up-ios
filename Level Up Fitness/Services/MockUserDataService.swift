@@ -17,7 +17,7 @@ class MockUserDataService: UserDataServiceProtocol {
         id: UUID(),
         firstName: "William",
         lastName: "Vengeance",
-        avatarName: "William Vengeance",
+        avatarName: "Striker",
         credits: 150,
         faction: .echoreach,
         path: .hunter
@@ -61,7 +61,7 @@ class MockUserDataService: UserDataServiceProtocol {
             currentLevel: mockXpInfo.currentLevel,
             currentStreak: mockStreak,
             xpToNextLevel: currentLevelInfo.xpToNextLevel,
-            progressToNextLevel: currentLevelInfo.progressToNextLevel
+            progressToNextLevel: currentLevelInfo.progressToNextLevel,
         )
         
         return .success(accountData)

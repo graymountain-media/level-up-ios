@@ -201,35 +201,50 @@ struct ProfileSettings: View {
     }
     
     var profileImage: some View {
-        PhotosPicker(
-            selection: $selectedProfilePhotoItem,
-            matching: .images,
-            photoLibrary: .shared()
-        ) {
-            Group {
-                if let croppedProfileImage {
-                    Image(uiImage: croppedProfileImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } else {
-                    AsyncImage(url: URL(string: appState.userAccountData?.profile.profilePictureUrl ?? "")) { image in
-                        image
+        ZStack {
+            PhotosPicker(
+                selection: $selectedProfilePhotoItem,
+                matching: .images,
+                photoLibrary: .shared()
+            ) {
+                ZStack {
+                    if let croppedProfileImage {
+                        Image(uiImage: croppedProfileImage)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Image("profile_placeholder")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
+                    } else {
+                        AsyncImage(url: URL(string: appState.userAccountData?.profile.profilePictureUrl ?? "")) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Image("profile_placeholder")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        }
                     }
                 }
+                
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.textfieldBorder, lineWidth: 1)
+                }
             }
-            .frame(width: 64, height: 64)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay {
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.textfieldBorder, lineWidth: 1)
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Image(systemName: "pencil.circle.fill")
+                        .resizable()
+                        .frame(width: 18, height: 18)
+                        .foregroundStyle(.white.opacity(0.8))
+                        .bold()
+                }
             }
+            .offset(x: 4, y: 4)
         }
+        .frame(width: 64, height: 64)
     }
     
     var avatarImageView: some View {

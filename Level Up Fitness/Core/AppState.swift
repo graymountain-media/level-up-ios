@@ -13,6 +13,7 @@ import FactoryKit
 // MARK: - Notification Names
 extension Notification.Name {
     static let showMissionsUnlockedTip = Notification.Name("showMissionsUnlockedTip")
+    static let showPathTip = Notification.Name("showPathTip")
 }
 
 @Observable

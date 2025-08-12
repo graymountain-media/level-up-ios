@@ -359,7 +359,7 @@ class MockAvatarService: AvatarServiceProtocol {
         id: UUID(),
         firstName: "William",
         lastName: "Vengeance", 
-        avatarName: "William Vengeance",
+        avatarName: "Striker",
         credits: 150
     )
     

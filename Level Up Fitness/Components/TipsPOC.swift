@@ -13,18 +13,53 @@ struct TipContent: Equatable {
     let title: String
     let message: String
     let position: UnitPoint
+    var requiresTap: Bool = false
 }
+
+
 
 struct TipsPOC: View {
     @Namespace var namespace
-    @State var manager = SequentialTipsManager.avatarTips()
+    
+    @State var manager = SequentialTipsManager(
+        tips: [
+            TipContent(
+                id: 0,
+                title: "Welcome to the Nexus",
+                message: "The Nexus is an elite academy that trains the next generation of warriors to fight the Invasion. Recruits like you are desperately needed!\n\nKeep reading to learn how your time at the Nexus will work.",
+                position: .bottom,
+                requiresTap: true
+            ),
+            TipContent(
+                id: 1,
+                title: "Experience Points (XP)",
+                message: "You gain experience points by logging training sessions. 1 minute of exercise = 1 XP. You must work out a minimum of 20 minutes and can only log a maximum of 60 minutes per day.",
+                position: .bottom
+            ),
+            TipContent(
+                id: 2,
+                title: "Your Level",
+                message: "Gaining XP levels you up. Leveling up grants you access to powerful rewards.",
+                position: .bottom
+            ),
+            TipContent(
+                id: 3,
+                title: "Your Avatar",
+                message: "This is you. It represents your progress toward becoming the elite soldier that the Nexus, and humanity, needs.",
+                position: .top
+            )
+        ],
+        storageKey: "tips_completed"
+    )
 
     var body: some View {
         VStack(spacing: 24) {
-            Rectangle()
-                .fill(.red)
-                .frame(width: 100, height: 40)
-                .tipSource(id: 0, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
+            HStack {
+                Spacer()
+                Rectangle()
+                    .fill(.red)
+                    .frame(width: 100, height: 40)
+            }
             Text("Second")
                 .foregroundStyle(.white)
                 .tipSource(id: 1, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
@@ -33,7 +68,7 @@ struct TipsPOC: View {
                 .tipSource(id: 2, nameSpace: namespace, manager: manager)
             Text("Fourth")
                 .foregroundStyle(.white)
-                .tipSource(id: 3, nameSpace: namespace, manager: manager, anchorPoint: .bottom)
+                .tipSource(id: 3, nameSpace: namespace, manager: manager)
                 
         }
         .padding(40)
@@ -60,10 +95,30 @@ extension View {
         id: Int,
         nameSpace: Namespace.ID,
         manager: SequentialTipsManager,
-        anchorPoint: UnitPoint = .top
+        anchorPoint: UnitPoint = .top,
+        override: Bool = false
     ) -> some View {
-        // Capture the view before applying the modifier
         manager.captureView(id: id, view: self)
+        return self.modifier(
+            TipSourceModifier(
+                id: id,
+                namespace: nameSpace,
+                manager: manager,
+                anchorPoint: anchorPoint
+            )
+        )
+    }
+}
+
+extension View where Self: Equatable {
+    func equatableTipSource(
+        id: Int,
+        nameSpace: Namespace.ID,
+        manager: SequentialTipsManager,
+        anchorPoint: UnitPoint = .top,
+        override: Bool = false
+    ) -> some View {
+        manager.captureEquatableView(id: id, view: self)
         return self.modifier(
             TipSourceModifier(
                 id: id,
@@ -91,6 +146,7 @@ struct TipSourceModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .matchedGeometryEffect(id: id, in: namespace, properties: .frame, anchor: anchorPoint, isSource: true)
+            .matchedGeometryEffect(id: id+1000, in: namespace, properties: .frame, anchor: .center, isSource: true)
     }
 }
 
@@ -104,6 +160,14 @@ struct TipOverlayModifier: ViewModifier {
             return .bottom
         case .bottom:
             return .top
+        case .bottomLeading:
+            return .topTrailing
+        case .bottomTrailing:
+            return .topLeading
+        case .topTrailing:
+            return .bottomLeading
+        case .topLeading:
+            return .bottomTrailing
         default:
             return anchor
         }
@@ -111,8 +175,7 @@ struct TipOverlayModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay {
-                if let tip = manager.currentTip,
-                    let view = manager.capturedViews.first(where: { $0.key == tip.id})?.value as? AnyView {
+                if let tip = manager.currentTip {
                     ZStack {
                         ZStack {
                             Color.black
@@ -126,15 +189,30 @@ struct TipOverlayModifier: ViewModifier {
                         }
                         .compositingGroup()
                         .onTapGesture {
-                            manager.nextTip()
-                        }
-                        view
-                            .matchedGeometryEffect(id: tip.id, in: namespace, properties: .frame, anchor: tip.position, isSource: false)
-                            .onTapGesture {
+                            if !tip.requiresTap {
                                 manager.nextTip()
                             }
-                        TipPopoverView(tip: tip, manager: manager)
-                            .matchedGeometryEffect(id: tip.id, in: namespace, properties: .position, anchor: oppositeAnchor(tip.position), isSource: false)
+                        }
+                        if let view = manager.capturedViews[tip.id] {
+                            AnyView(view)
+                                .matchedGeometryEffect(id: tip.id + 1000, in: namespace, properties: .frame, anchor: .center, isSource: false)
+                                .simultaneousGesture(TapGesture().onEnded {manager.nextTip()}
+                                )
+                        }
+                        if !tip.title.isEmpty {
+                            HStack {
+                                Spacer()
+                                TipPopoverView(tip: tip, manager: manager)
+                                    .matchedGeometryEffect(id: tip.id, in: namespace, properties: .position, anchor: oppositeAnchor(tip.position), isSource: false)
+                                    .onTapGesture {
+                                        if !tip.requiresTap {
+                                            manager.nextTip()
+                                        }
+                                    }
+                                Spacer()
+                            }
+                            .padding(16)
+                        }
                     }
                     
                 }

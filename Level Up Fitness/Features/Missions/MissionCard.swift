@@ -283,6 +283,7 @@ struct MissionCard: View {
             timerText = missionManager.getFormattedRemainingTime(for: mission) ?? "0:00:00"
         }
     }
+    
 }
 
 #Preview {

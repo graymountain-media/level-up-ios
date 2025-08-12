@@ -21,6 +21,9 @@ struct ItemShopView: View {
     @State private var equippingItemId: UUID?
     @State private var showWeaponUpgradePopup: Item?
     
+    @State private var tipManager =  SequentialTipsManager.itemShopTips()
+    @Namespace private var namespace
+    
     var body: some View {
         VStack(spacing: 25) {
             VStack {
@@ -69,8 +72,10 @@ struct ItemShopView: View {
         }
         .padding(.bottom, 32)
         .mainBackground()
+        .tipOverlay(namespace: namespace, manager: tipManager)
         .task {
             await loadData()
+            tipManager.startTips()
         }
         .overlay {
             // Weapon upgrade popup

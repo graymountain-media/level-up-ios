@@ -13,27 +13,40 @@ extension SequentialTipsManager {
         let tips = [
             TipContent(
                 id: 0,
-                title: "Experience Points (XP)",
-                message: "You gain experience points by logging workouts. 1 minute of working out = 1 XP. You must workout a minimum of 20 minutes and can only log a maximum of 60 minutes per day.",
-                position: .bottom
+                title: "Welcome to the Nexus",
+                message: "The Nexus is an elite academy that trains the next generation of warriors to fight the Invasion. Recruits like you are desperately needed!\n\nKeep reading to learn how your time at the Nexus will work.",
+                position: .center
             ),
             TipContent(
                 id: 1,
-                title: "Your Level",
-                message: "Gaining XP levels you up. Leveling up grants you and your avatar access to powerful rewards and features.",
+                title: "Experience Points (XP)",
+                message: "You gain experience points by logging training sessions. 1 minute of exercise = 1 XP. You must work out a minimum of 20 minutes and can only log a maximum of 60 minutes per day.",
                 position: .bottom
             ),
             TipContent(
                 id: 2,
-                title: "Your Avatar",
-                message: "Your avatar is you. It represents your progress at the gym. Earn gear and other rewards that you can equip on your avatar.",
-                position: .top
+                title: "Your Level",
+                message: "Gaining XP levels you up. Leveling up grants you access to powerful rewards.",
+                position: .bottom
             ),
             TipContent(
                 id: 3,
+                title: "Your Avatar",
+                message: "This is you. It represents your progress toward becoming the elite soldier that the Nexus, and humanity, needs.",
+                position: .top
+            ),
+            TipContent(
+                id: 4,
                 title: "Streak",
-                message: "Work out every day to increase your streak. One rest day between workouts is allowed to maintain your streak. At the end of the second day, your streak resets if you don't log a workout.",
+                message: "Work out every day to increase your streak. One rest day between workouts is allowed to maintain your streak. At the end of the second day, your streak resets if you don’t log a workout.",
                 position: .bottom
+            ),
+            TipContent(
+                id: 5,
+                title: "",
+                message: "",
+                position: .top,
+                requiresTap: true,
             )
         ]
         
@@ -50,8 +63,8 @@ extension SequentialTipsManager {
             tip: TipContent(
                 id: 0,
                 title: "Log Your Workouts",
-                message: "Be sure to log your workout after you finish!\n\nFor workout type, select all that apply. Don’t include warm up and cool down exercises. How you workout will define your place in this world. Now go enjoy your workout! ",
-                position: .bottom
+                message: "Be sure to log your training sessions after you finish!\n\nFor workout type, select all that apply. Don’t include warm up and cool down exercises. How you train will decide how you will help the Nexus defeat the Invasion. Now go train! ",
+                position: .top
             )
         )
         
@@ -87,10 +100,26 @@ extension SequentialTipsManager {
             key: "first_expansion",
             id: 1,
             title: "Duration & Success Chance",
-            message: "Missions auto-complete after its duration ends. Earn powerful items by completing missions, and learn more about the mystery surrounding Nova City, too.",
+            message: "Missions auto-complete after their duration ends. Earn gear by completing missions, and learn more about the mystery surrounding the Nexus and its neighboring city, Westhaven.",
             position: .top
         )
         
         return manager
+    }
+}
+
+// MARK: - Item Shop Tips
+extension SequentialTipsManager {
+    static func itemShopTips() -> SequentialTipsManager {
+        let tips = [
+            TipContent(
+                id: 0,
+                title: "Item Shop",
+                message: "Spend your gold on equipment for small XP bonuses. Higher level equipment provides higher bonuses.",
+                position: .center
+            )
+        ]
+        
+        return SequentialTipsManager(tips: tips, storageKey: "item_shop_onboarding_completed")
     }
 }

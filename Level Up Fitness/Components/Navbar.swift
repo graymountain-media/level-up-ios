@@ -56,6 +56,8 @@ enum MainTab: Int, CaseIterable, Identifiable {
 
 struct LUTabBar: View {
     @InjectedObservable(\.appState) var appState
+    var tipsNamespace: Namespace.ID
+    var tipManager: SequentialTipsManager
     var didSelectTab: (MainTab) -> Void
     
     
@@ -80,7 +82,7 @@ struct LUTabBar: View {
         if let content = tab.requiredContent {
             isUnlocked = appState.isContentUnlocked(content)
         }
-        return Button {
+        let button = Button {
             didSelectTab(tab)
         } label: {
             VStack(alignment: .center, spacing: 4) {
@@ -93,12 +95,25 @@ struct LUTabBar: View {
             }
             .opacity(isUnlocked ? 1 : 0.5)
         }
-        .disabled(!isUnlocked)
+            .disabled(!isUnlocked)
+        
+        return Group {
+            if tab == .missionBoard {
+                button
+                .tipSource(id: 99, nameSpace: tipsNamespace, manager: tipManager, anchorPoint: .top)
+            } else if tab == .logWorkout {
+                button
+                .tipSource(id: 5, nameSpace: tipsNamespace, manager: tipManager, anchorPoint: .top)
+            } else {
+                button
+            }
+        }
     }
 }
 
-#Preview {
-    LUTabBar { tab in
-        
-    }
-}
+
+//#Preview {
+//    LUTabBar { tab in
+//        
+//    }
+//}

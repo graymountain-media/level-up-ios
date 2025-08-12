@@ -69,6 +69,7 @@ extension Container {
         missionService.register { @MainActor in MockMissionService() }
         itemService.register { @MainActor in MockItemService() }
         appFlowManager.register { @MainActor in MockAppFlowManager() }
+        appState.register { @MainActor in MockAppState() }
         return EmptyView()
     }
 }

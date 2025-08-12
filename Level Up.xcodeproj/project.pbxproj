@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A11D423A2E4ADE5A008E4F1D /* CachedAsyncImage in Frameworks */ = {isa = PBXBuildFile; productRef = A11D42392E4ADE5A008E4F1D /* CachedAsyncImage */; };
 		A12A2BB22E45DAEA00439392 /* DotLottie in Frameworks */ = {isa = PBXBuildFile; productRef = A12A2BB12E45DAEA00439392 /* DotLottie */; };
 		A12A2BC82E47DF5F00439392 /* SwiftyCrop in Frameworks */ = {isa = PBXBuildFile; productRef = A12A2BC72E47DF5F00439392 /* SwiftyCrop */; };
 		A1EFF8B42E1F661800C88FE5 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = A1EFF8B32E1F661800C88FE5 /* Auth */; };
@@ -66,6 +67,7 @@
 				A1EFF8F52E2C9A2200C88FE5 /* FactoryKit in Frameworks */,
 				A12A2BB22E45DAEA00439392 /* DotLottie in Frameworks */,
 				A1EFF8F02E2C3B9000C88FE5 /* Vortex in Frameworks */,
+				A11D423A2E4ADE5A008E4F1D /* CachedAsyncImage in Frameworks */,
 				A1EFF8BB2E1F668500C88FE5 /* Supabase in Frameworks */,
 				A12A2BC82E47DF5F00439392 /* SwiftyCrop in Frameworks */,
 				A1EFF8B82E1F661800C88FE5 /* Storage in Frameworks */,
@@ -147,6 +149,7 @@
 				A1EFF8F42E2C9A2200C88FE5 /* FactoryKit */,
 				A12A2BB12E45DAEA00439392 /* DotLottie */,
 				A12A2BC72E47DF5F00439392 /* SwiftyCrop */,
+				A11D42392E4ADE5A008E4F1D /* CachedAsyncImage */,
 			);
 			productName = "Level Up Fitness";
 			productReference = A12533932E14CBD500C12FA3 /* Level Up.app */;
@@ -236,6 +239,7 @@
 				A1EFF8F32E2C9A2200C88FE5 /* XCRemoteSwiftPackageReference "Factory" */,
 				A12A2BB02E45DAEA00439392 /* XCRemoteSwiftPackageReference "dotlottie-ios" */,
 				A12A2BC62E47DF5F00439392 /* XCRemoteSwiftPackageReference "SwiftyCrop" */,
+				A11D42382E4ADE5A008E4F1D /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A12533942E14CBD500C12FA3 /* Products */;
@@ -438,7 +442,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = 3UK26G7UCA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -473,7 +477,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = 3UK26G7UCA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -616,6 +620,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		A11D42382E4ADE5A008E4F1D /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lorenzofiamingo/swiftui-cached-async-image";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.1;
+			};
+		};
 		A12A2BB02E45DAEA00439392 /* XCRemoteSwiftPackageReference "dotlottie-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/LottieFiles/dotlottie-ios";
@@ -659,6 +671,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A11D42392E4ADE5A008E4F1D /* CachedAsyncImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A11D42382E4ADE5A008E4F1D /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */;
+			productName = CachedAsyncImage;
+		};
 		A12A2BB12E45DAEA00439392 /* DotLottie */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A12A2BB02E45DAEA00439392 /* XCRemoteSwiftPackageReference "dotlottie-ios" */;
