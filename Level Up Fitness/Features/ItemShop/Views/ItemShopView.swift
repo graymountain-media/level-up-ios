@@ -230,10 +230,7 @@ struct ItemShopView: View {
     @ViewBuilder
     private func actionButton(for item: Item, userOwnsItem: Bool, itemIsEquipped: Bool, canUseItem: Bool, hasEnoughCredits: Bool, isUpgrade: Bool, meetsLevelRequirement: Bool) -> some View {
         if !meetsLevelRequirement {
-            Text("Level \(item.requiredLevel) Required")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.red)
-                .frame(height: 44)
+            EmptyView()
         } else if !canUseItem && !userOwnsItem {
             Text("Path Required")
                 .font(.system(size: 16, weight: .medium))

@@ -103,17 +103,7 @@ struct AvatarView: View {
                         .padding(.horizontal, -16)
                         .zIndex(-11)
                     
-                    VStack(alignment: .trailing) {
-                        HStack {
-                            Text("Streak:")
-                                .bold()
-                                .foregroundStyle(.white)
-                            Text("\(appState.userAccountData?.currentStreak ?? 0) days")
-                                .foregroundStyle(.white)
-                            Spacer()
-                        }
-                    }
-                    .tipSource(id: 4, nameSpace: mainNamespace, manager: manager, anchorPoint: .bottom)
+                    streakView
                     
                     
                 }
@@ -215,6 +205,22 @@ struct AvatarView: View {
                 .font(.headline)
         }
         .padding(.top, 100)
+    }
+    
+    var streakView: some View {
+        let streak = appState.userAccountData?.currentStreak ?? 0
+        let dayText = streak == 1 ? "day" : "days"
+        return VStack(alignment: .trailing) {
+            HStack {
+                Text("Streak:")
+                    .bold()
+                    .foregroundStyle(.white)
+                Text("\(streak) \(dayText)")
+                    .foregroundStyle(.white)
+                Spacer()
+            }
+        }
+        .tipSource(id: 4, nameSpace: mainNamespace, manager: manager, anchorPoint: .bottom)
     }
     
     var avatarView: some View {

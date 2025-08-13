@@ -289,7 +289,7 @@ class WorkoutService: WorkoutServiceProtocol {
                 lastWorkoutDate = streak.lastWorkoutDate
                 
                 // Check if we need to update the streak
-                if let lastDate = lastWorkoutDate, workouts.count > 0 {
+                if let lastDate = lastWorkoutDate {
                     let calendar = Calendar.current
                     
                     // Check if we already updated the streak today to prevent double counting
@@ -313,6 +313,8 @@ class WorkoutService: WorkoutServiceProtocol {
                         }
                     }
                     // If last update was today, don't modify the streak (prevents double counting)
+                } else {
+                    currentStreak += 1
                 }
             } catch {
                 // No streak record exists yet, we'll create one

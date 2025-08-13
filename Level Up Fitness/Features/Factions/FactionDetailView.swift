@@ -69,11 +69,6 @@ struct FactionDetailView: View {
             if let backgroundGradient {
                 backgroundGradient
                     .ignoresSafeArea()
-            } else {
-                Image("main_bg")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .ignoresSafeArea()
             }
             
             ScrollView {
@@ -110,6 +105,7 @@ struct FactionDetailView: View {
             }
             .scrollIndicators(.hidden)
         }
+        .mainBackground()
         .onAppear {
             withAnimation(.easeOut(duration: 0.8)) {
                 showContent = true

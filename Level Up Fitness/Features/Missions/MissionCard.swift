@@ -111,6 +111,8 @@ struct MissionCard: View {
                     RoundedRectangle(cornerRadius: 24)
                         .stroke(.textfieldBorder, lineWidth: 1)
                 )
+            
+                .shadow(color: .white.opacity(missionManager.isReadyToComplete(mission) ? 1 : 0), radius: 4)
         )
         .onAppear {
             updateTimer()
@@ -208,23 +210,6 @@ struct MissionCard: View {
                                 .foregroundColor(.textOrange)
                         }
                     }
-                    
-                    #if DEBUG
-                    // Debug button to instantly complete mission
-                    Button("🐛 DEBUG: Complete Now") {
-                        missionManager.debugCompleteMission(mission, userPath: appState.userAccountData?.profile.path)
-                    }
-                    .font(.system(size: 12, weight: .medium))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.red.opacity(0.2))
-                    .foregroundColor(.red)
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.red.opacity(0.5), lineWidth: 1)
-                    )
-                    #endif
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)

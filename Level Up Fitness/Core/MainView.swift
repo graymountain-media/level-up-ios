@@ -157,16 +157,13 @@ struct MainView: View {
     }
     @ViewBuilder
     var currentTabView: some View {
-        switch appState.currentTab {
-        case .home:
-            AvatarView(manager: tipManager, mainNamespace: mainViewNamespace)
-        case .missionBoard:
-            MissionBoardView()
-        case .logWorkout:
-            LogWorkoutView()
-        case .leaderboard:
-            LeaderboardView()
+        TabView(selection: $appState.currentTab) {
+            AvatarView(manager: tipManager, mainNamespace: mainViewNamespace).tag(MainTab.home)
+            MissionBoardView().tag(MainTab.missionBoard)
+            LogWorkoutView().tag(MainTab.logWorkout)
+            LeaderboardView().tag(MainTab.leaderboard)
         }
+        .tabViewStyle(.page(indexDisplayMode: .never))
     }
     
 }

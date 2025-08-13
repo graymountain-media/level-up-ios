@@ -51,12 +51,21 @@ struct MissionBoardView: View {
                 }
             }
         }
-        
+#if DEBUG
+        .task {
+            // Load user data if not already loaded
+            if appState.userAccountData == nil && appState.isAuthenticated {
+                print("Getting userdata")
+                await appState.loadUserData()
+            }
+        }
+        #endif
         .tipOverlay(namespace: namespace, manager: tipManager)
         .mainBackground()
         .task {
             isLoading = true
-            await missionManager.loadAllMissions(appState.userAccountData?.currentLevel ?? 1)
+            print("Getting missions for level: \(appState.userAccountData?.currentLevel)")
+            await missionManager.loadAllMissions(appState.userAccountData?.currentLevel ?? 17)
             isLoading = false
             
             // Show welcome tip
@@ -101,7 +110,7 @@ struct MissionBoardView: View {
                         }
                         
                         // Show first expansion tip
-                        tipManager.forceShowTip(key: "first_expansion")
+                        tipManager.showSingleTip(key: "first_expansion")
                         
                     }
                 } onSelect: {
@@ -120,12 +129,16 @@ struct MissionBoardView: View {
                 }
                 .padding(.horizontal)
                 .transition(.opacity)
-                if selectedMission?.id == mission.id {
-                    card
-                        .tipSource(id: 1, nameSpace: namespace, manager: tipManager, anchorPoint: .top)
+                if selectedTab == .available {
+                    if selectedMission?.id == mission.id {
+                        card
+                            .tipSource(id: 1, nameSpace: namespace, manager: tipManager, anchorPoint: .top)
+                    } else {
+                        card
+                            .tipSource(id: 0, nameSpace: namespace, manager: tipManager, anchorPoint: .bottom)
+                    }
                 } else {
                     card
-                        .tipSource(id: 0, nameSpace: namespace, manager: tipManager, anchorPoint: .bottom)
                 }
             }
         }
@@ -163,9 +176,6 @@ struct MissionBoardView: View {
             ForEach(MissionBoardTab.allCases) { tab in
                 Button(action: {
                     selectedTab = tab
-                    if tab == .active {
-                        tipManager.forceShowTip(key: "welcome")
-                    }
                 }) {
                     Text(tab.displayName)
                         .font(.system(size: 16, weight: .medium))
