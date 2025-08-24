@@ -251,7 +251,7 @@ class MissionManager {
         guard let userMission = userMissions.first(where: { $0.missionId == mission.id }) else {
             return false
         }
-        return Date() >= userMission.finishAt
+        return Date() >= userMission.finishAt && !userMission.completed
     }
     
     private func handleMissionCompletion(_ mission: Mission) {

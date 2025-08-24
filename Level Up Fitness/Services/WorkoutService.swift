@@ -60,6 +60,12 @@ class WorkoutService: WorkoutServiceProtocol {
         }
         do {
             let now = Date()
+            
+            print("DEUG: Saving workout")
+            // Check if this is the first workout today BEFORE inserting the workout
+            let isFirstWorkoutToday = await isFirstWorkoutOfDay(userId: userId)
+            print("DEUG: Is first workout of day: \(isFirstWorkoutToday)")
+            
             let workout = Workout(
                 userId: userId.uuidString,
                 duration: duration,
@@ -73,8 +79,7 @@ class WorkoutService: WorkoutServiceProtocol {
                 .insert(workout)
                 .execute()
             
-            // Update the user's streak only if this is the first workout today
-            let isFirstWorkoutToday = await isFirstWorkoutOfDay(userId: userId)
+            // Update the user's streak only if this was the first workout today
             if isFirstWorkoutToday {
                 _ = await updateStreak(userId: userId)
             }
@@ -194,10 +199,10 @@ class WorkoutService: WorkoutServiceProtocol {
             if let lastWorkoutDate = streak.lastWorkoutDate {
                 let calendar = Calendar.current
                 let now = Date()
-                let hoursSinceLastWorkout = calendar.dateComponents([.hour], from: lastWorkoutDate, to: now).hour ?? 0
+                let daysSinceLastWorkout = calendar.dateComponents([.day], from: lastWorkoutDate, to: now).day ?? 0
                 
-                if hoursSinceLastWorkout > 48 {
-                    // It's been more than 48 hours, streak is broken
+                if daysSinceLastWorkout > 2 {
+                    // It's been more than 2 days, streak is broken
                     return .success(0)
                 }
             }
@@ -259,14 +264,8 @@ class WorkoutService: WorkoutServiceProtocol {
     
     private func updateStreak(userId: UUID) async -> Int {
         do {
-            // Get the most recent workouts to determine streak status
-            let workouts: [Workout] = try await client.from("workouts")
-                .select()
-                .eq("user_id", value: userId.uuidString)
-                .order("date", ascending: false)
-                .limit(2)
-                .execute()
-                .value
+            
+            print("DEBUGW: Updating streak")
             
             let today = Date()
             
@@ -284,23 +283,28 @@ class WorkoutService: WorkoutServiceProtocol {
                     .execute()
                     .value
     
+                print("DEBUGW: Fetching current streak")
                 currentStreak = streak.currentStreak
                 longestStreak = streak.longestStreak
                 lastWorkoutDate = streak.lastWorkoutDate
                 
                 // Check if we need to update the streak
                 if let lastDate = lastWorkoutDate {
+                    print("DEBUGW: Last date: \(lastDate)")
                     let calendar = Calendar.current
                     
                     // Check if we already updated the streak today to prevent double counting
+                    print("DebugW: Checking if last update was today: \(today)")
                     let isLastUpdateToday = calendar.isDate(lastDate, inSameDayAs: today)
+                    print("DEBUGW: Is last update today: \(isLastUpdateToday)")
                     
                     if !isLastUpdateToday {
-                        // Calculate hours since last workout
-                        let hoursSinceLastWorkout = calendar.dateComponents([.hour], from: lastDate, to: today).hour ?? 0
+                        // Calculate days since last workout
+                        let daysSinceLastWorkout = calendar.dateComponents([.day], from: lastDate, to: today).day ?? 0
                         
-                        if hoursSinceLastWorkout <= 48 {
-                            // Within 48 hours - streak continues
+                        if daysSinceLastWorkout <= 2 {
+                            print("DEBUGW: Streak within 2 days, incrementing current streak")
+                            // Within 2 days - streak continues
                             currentStreak += 1
                             
                             // Update longest streak if needed
@@ -308,17 +312,27 @@ class WorkoutService: WorkoutServiceProtocol {
                                 longestStreak = currentStreak
                             }
                         } else {
-                            // More than 48 hours - streak resets to 1
+                            print("DEBUGW: Streak not within 2 days, setting streak to 1")
+                            // More than 2 days - streak resets to 1
                             currentStreak = 1
                         }
                     }
                     // If last update was today, don't modify the streak (prevents double counting)
                 } else {
-                    currentStreak += 1
+                    print("DEBUGW: No streak found, setting current streak to 1")
+                    currentStreak = 1
                 }
-            } catch {
+            } catch let error as PostgrestError {
+                switch error.code {
+                case "429":
+                    return currentStreak
+                default:
+                    break
+                }
                 // No streak record exists yet, we'll create one
-                print("No existing streak record: \(error.localizedDescription)")
+                print("DEBUGW: No existing streak record: \(error.localizedDescription)")
+                currentStreak = 1
+                longestStreak = 1
             }
             
             // Update or create streak record
@@ -326,17 +340,17 @@ class WorkoutService: WorkoutServiceProtocol {
                 "user_id": .string(userId.uuidString),
                 "current_streak": .integer(currentStreak),
                 "longest_streak": .integer(longestStreak),
-                "last_workout_date": .string(ISO8601DateFormatter().string(from: today))
+                "last_workout_date": .string(DateFormatter.lastWorkoutFormatter.string(from: today))
             ]
             
             // Try to upsert the streak record
             try await client.from("streaks")
                 .upsert(streakData)
                 .execute()
-            
+            print("DEBUGW: Saved current streak: \(streakData)")
             return currentStreak
         } catch {
-            print("Failed to update streak: \(error.localizedDescription)")
+            print("DEBUGW: Failed to update streak: \(error.localizedDescription)")
             return 0
         }
     }

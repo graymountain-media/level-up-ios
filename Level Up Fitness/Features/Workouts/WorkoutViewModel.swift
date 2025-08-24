@@ -232,7 +232,8 @@ struct UserStreak: Codable {
         self.currentStreak = try container.decode(Int.self, forKey: UserStreak.CodingKeys.currentStreak)
         self.longestStreak = try container.decode(Int.self, forKey: UserStreak.CodingKeys.longestStreak)
         let dateString = try container.decodeIfPresent(String.self, forKey: UserStreak.CodingKeys.lastWorkoutDate)
-        self.lastWorkoutDate = ISO8601DateFormatter().date(from: dateString ?? "") ?? Date()
+        let date = DateFormatter.lastWorkoutFormatter.date(from: dateString ?? "")
+        self.lastWorkoutDate = date
         self.createdAt = try container.decode(Date.self, forKey: UserStreak.CodingKeys.createdAt)
         self.updatedAt = try container.decode(Date.self, forKey: UserStreak.CodingKeys.updatedAt)
         
@@ -244,9 +245,16 @@ struct UserStreak: Codable {
         try container.encode(self.userId, forKey: UserStreak.CodingKeys.userId)
         try container.encode(self.currentStreak, forKey: UserStreak.CodingKeys.currentStreak)
         try container.encode(self.longestStreak, forKey: UserStreak.CodingKeys.longestStreak)
-        let dateString = ISO8601DateFormatter().string(from: self.lastWorkoutDate ?? Date())
-        try container.encodeIfPresent(dateString, forKey: UserStreak.CodingKeys.lastWorkoutDate)
+        try container.encodeIfPresent(lastWorkoutDate, forKey: UserStreak.CodingKeys.lastWorkoutDate)
         try container.encode(self.createdAt, forKey: UserStreak.CodingKeys.createdAt)
         try container.encode(self.updatedAt, forKey: UserStreak.CodingKeys.updatedAt)
+    }
+}
+
+extension DateFormatter {
+    static var lastWorkoutFormatter: DateFormatter {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        return dateFormatter
     }
 }

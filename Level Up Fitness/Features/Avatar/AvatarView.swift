@@ -217,10 +217,31 @@ struct AvatarView: View {
                     .foregroundStyle(.white)
                 Text("\(streak) \(dayText)")
                     .foregroundStyle(.white)
+                HStack(spacing: 0) {
+                    if streak >= 3 {
+                        Image("fire_icon")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 16, height: 16)
+                    }
+                    if streak >= 7 {
+                        Image("fire_icon")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 16, height: 16)
+                    }
+                    if streak >= 14 {
+                        Image("fire_icon")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 16, height: 16)
+                    }
+                }
                 Spacer()
             }
+            .tipSource(id: 4, nameSpace: mainNamespace, manager: manager, anchorPoint: .bottom)
         }
-        .tipSource(id: 4, nameSpace: mainNamespace, manager: manager, anchorPoint: .bottom)
+        
     }
     
     var avatarView: some View {

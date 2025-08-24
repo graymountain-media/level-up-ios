@@ -428,10 +428,10 @@ class UserDataService: UserDataServiceProtocol {
         if let lastWorkoutDate = streak.lastWorkoutDate {
             let calendar = Calendar.current
             let now = Date()
-            let hoursSinceLastWorkout = calendar.dateComponents([.hour], from: lastWorkoutDate, to: now).hour ?? 0
+            let daysSinceLastWorkout = calendar.dateComponents([.day], from: lastWorkoutDate, to: now).day ?? 0
             
-            if hoursSinceLastWorkout > 48 {
-                // It's been more than 48 hours, streak is broken
+            if daysSinceLastWorkout > 2 {
+                // It's been more than 2 days, streak is broken
                 return 0
             }
         }

@@ -64,7 +64,6 @@ struct MissionBoardView: View {
         .mainBackground()
         .task {
             isLoading = true
-            print("Getting missions for level: \(appState.userAccountData?.currentLevel)")
             await missionManager.loadAllMissions(appState.userAccountData?.currentLevel ?? 17)
             isLoading = false
             
@@ -84,6 +83,11 @@ struct MissionBoardView: View {
                 
                 MissionResultPopupView(result: result) {
                     missionManager.dismissMissionResult()
+                    if result.isSuccess {
+                        Task {
+                            await appState.refreshUserData()
+                        }
+                    }
                 }
                 .transition(.scale)
             }
