@@ -240,16 +240,7 @@ struct LeaderboardView: View {
                 .frame(width: 32)
             
             // Avatar
-            AsyncImage(url: URL(string: entry.profilePictureURL ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Image("profile_placeholder")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            }
-            .frame(width: 52, height: 52)
+            ProfilePicture(url: entry.profilePictureURL)
             
             VStack {
                 HStack {
@@ -328,7 +319,7 @@ struct LeaderboardView: View {
                     }
                     Rectangle().fill(.white.opacity(0.3)).frame(height: 1)
                     HStack(alignment: .center, spacing: 12) {
-                        AsyncImage(url: URL(string: entry.topPlayerImage ?? "")) { image in
+                        CachedAsyncImage(url: URL(string: entry.topPlayerImage ?? "")) { image in
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)

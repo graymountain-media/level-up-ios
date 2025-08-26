@@ -50,36 +50,6 @@
             endingLineNumber = "199"
             landmarkName = "fetchCurrentStreak()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "59AE6463-861F-4A33-B4DF-86F7A18B7C1D - c0b560f29d280313"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(3) suspend resume partial function for Level_Up.WorkoutService.fetchCurrentStreak() async -&gt; Swift.Result&lt;Swift.Int, Level_Up.WorkoutError&gt;"
-                  moduleName = "Level Up.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/jakegray/development/Level%20Up%20Fitness/Level%20Up%20Fitness/Services/WorkoutService.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "199"
-                  endingLineNumber = "199">
-               </Location>
-               <Location
-                  uuid = "59AE6463-861F-4A33-B4DF-86F7A18B7C1D - c0b560f29d280313"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(3) suspend resume partial function for Level_Up.WorkoutService.fetchCurrentStreak() async -&gt; Swift.Result&lt;Swift.Int, Level_Up.WorkoutError&gt;"
-                  moduleName = "Level Up.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/jakegray/development/Level%20Up%20Fitness/Level%20Up%20Fitness/Services/WorkoutService.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "199"
-                  endingLineNumber = "199">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy

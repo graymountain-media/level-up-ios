@@ -15,7 +15,6 @@ struct ImageData: Identifiable {
     var image: UIImage
 }
 
-@MainActor
 struct ProfileSettings: View {
     @InjectedObservable(\.appState) var appState
     @Injected(\.avatarService) var avatarService
@@ -213,7 +212,7 @@ struct ProfileSettings: View {
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     } else {
-                        AsyncImage(url: URL(string: appState.userAccountData?.profile.profilePictureUrl ?? "")) { image in
+                        CachedAsyncImage(url: URL(string: appState.userAccountData?.profile.profilePictureUrl ?? "")) { image in
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
@@ -276,7 +275,7 @@ struct ProfileSettings: View {
                             .aspectRatio(contentMode: .fill)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     } else if let currentAvatarUrl = appState.userAccountData?.profile.avatarUrl, !currentAvatarUrl.isEmpty {
-                        AsyncImage(url: URL(string: currentAvatarUrl)) { image in
+                        CachedAsyncImage(url: URL(string: currentAvatarUrl)) { image in
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
