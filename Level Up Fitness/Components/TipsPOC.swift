@@ -96,9 +96,11 @@ extension View {
         nameSpace: Namespace.ID,
         manager: SequentialTipsManager,
         anchorPoint: UnitPoint = .top,
-        override: Bool = false
+        captureView: Bool = true
     ) -> some View {
-        manager.captureView(id: id, view: self)
+        if captureView {
+            manager.captureView(id: id, view: self)
+        }
         return self.modifier(
             TipSourceModifier(
                 id: id,
@@ -115,8 +117,7 @@ extension View where Self: Equatable {
         id: Int,
         nameSpace: Namespace.ID,
         manager: SequentialTipsManager,
-        anchorPoint: UnitPoint = .top,
-        override: Bool = false
+        anchorPoint: UnitPoint = .top
     ) -> some View {
         manager.captureEquatableView(id: id, view: self)
         return self.modifier(

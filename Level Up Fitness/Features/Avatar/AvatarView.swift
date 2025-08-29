@@ -8,7 +8,7 @@
 import SwiftUI
 import FactoryKit
 import TipKit
-import CachedAsyncImage
+import DotLottie
 
 enum GearType: Int, CaseIterable, Identifiable {
     case helmet
@@ -143,13 +143,45 @@ struct AvatarView: View {
                                 .foregroundStyle(.white)
                         }
                     }
+                    .onTapGesture {
+                        appState.selectedMenuItem = .itemShop
+                    }
+                    .padding(.horizontal, 24)
                 }
+                
                 Spacer()
             }
-            .padding(.horizontal)
-            .onTapGesture {
-                appState.selectedMenuItem = .itemShop
+            if appState.shouldShowFactionButton {
+                VStack {
+                    Spacer()
+                    DotLottieAnimation(
+                        fileName: "arrow",
+                        config: AnimationConfig(autoplay: true, loop: true, speed: 1)
+                    ).view()
+                        .frame(width: 80, height: 80)
+                    HStack(spacing: 0) {
+                        Spacer()
+                        Button {
+                            appState.flowManager.queueFlow(.factionSelection)
+                            appState.flowManager.nextFlow()
+                        } label: {
+                            Text("Choose\nFaction")
+                                .foregroundStyle(.white)
+                                .bold()
+                                .lineSpacing(0)
+                                .padding(.horizontal)
+                                .padding(.vertical, 4)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(.textOrange)
+                                )
+                        }
+                        Spacer()
+                    }
+                }
+                .padding(.bottom, 36)
             }
+            
         }
     }
     

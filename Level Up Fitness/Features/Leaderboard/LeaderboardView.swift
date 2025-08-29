@@ -219,25 +219,23 @@ struct LeaderboardView: View {
         }
     }
     
+    var rankColor: Color {
+        switch selectedTab {
+        case .xp:
+            .cyan
+        case .streaks:
+            .textOrange
+        case .factions:
+            .textDetail
+        }
+    }
+    
     // MARK: - Leaderboard Entry Row
     private func leaderboardEntryRow(entry: any LeaderboardEntry, rank: Int) -> some View {
-        var rankColor: Color {
-            switch selectedTab {
-            case .xp:
-                .cyan
-            case .streaks:
-                .textOrange
-            case .factions:
-                .textDetail
-            }
-        }
+        
         return HStack(alignment: .bottom, spacing: 16) {
-            // Rank
-            Text("\(getRankDisplay(rank))")
-                .font(.system(size: 13))
-                .foregroundColor(rankColor)
-                .padding(.bottom, 12)
-                .frame(width: 32)
+            
+            rankView(entry, rank: rank)
             
             // Avatar
             ProfilePicture(url: entry.profilePictureURL)
@@ -246,10 +244,18 @@ struct LeaderboardView: View {
                 HStack {
                     // Name and Class
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(entry.avatarName?.uppercased() ?? "UNKNOWN")
-                            .font(.mainFont(size: 17.5))
-                            .bold()
-                            .foregroundColor(.title)
+                        HStack(spacing: 6) {
+                            Text(entry.avatarName?.uppercased() ?? "UNKNOWN")
+                                .font(.mainFont(size: 17.5))
+                                .bold()
+                                .foregroundColor(.title)
+                            if let path = entry.heroPath {
+                                Image(path.iconName)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 16, height: 16)
+                            }
+                        }
                         if let faction = entry.faction {
                             Text(faction.name)
                                 .font(.system(size: 12))
@@ -280,6 +286,24 @@ struct LeaderboardView: View {
     
     private func formatScore(_ score: Int) -> String {
         return NumberFormatter.localizedString(from: NSNumber(value: score), number: .decimal)
+    }
+    
+    func rankView(_ entry: any LeaderboardEntry, rank: Int) -> some View {
+        var isUnranked: Bool {
+            if let _ = entry as? XpLeaderboardEntry {
+                return entry.value == 0
+            } else if let _ = entry as? StreakLeaderboardEntry {
+                return entry.value == 0
+            } else {
+                return false
+            }
+        }
+        let rankText = isUnranked ? "-" : getRankDisplay(rank)
+        return Text(rankText)
+            .font(.system(size: 13))
+            .foregroundColor(rankColor)
+            .padding(.bottom, 12)
+            .frame(width: 32)
     }
     
     func getRankDisplay(_ rank: Int) -> String {

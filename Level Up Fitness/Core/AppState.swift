@@ -106,6 +106,12 @@ class AppState {
         }
     }
     
+    var shouldShowFactionButton: Bool {
+        userAccountData?.profile.faction == nil &&
+        flowManager.currentFlow == nil &&
+        levelManager.isContentUnlocked(.factions, userLevel: userAccountData?.currentLevel ?? 0)
+    }
+    
     func dismissFactionSelection() {
         nextFlow()
     }

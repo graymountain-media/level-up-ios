@@ -21,7 +21,7 @@ class MissionManager {
     
     var errorMessage: String? = nil
     
-    private var allMissions: [Mission] = []
+    var allMissions: [Mission] = []
     private var missionTimers: [UUID: Timer] = [:]
     private var userMissions: [UserMission] = []
     private var lastReadyCheck: [UUID: Bool] = [:]

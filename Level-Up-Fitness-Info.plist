@@ -16,8 +16,6 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>/Cinzel-VariableFont_wght.ttf</string>
-		<string>/TrajanPro-Regular.ttf</string>
-		<string>/TrajanPro-Bold.otf</string>
 	</array>
 </dict>
 </plist>

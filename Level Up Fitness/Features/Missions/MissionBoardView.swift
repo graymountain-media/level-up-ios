@@ -97,52 +97,79 @@ struct MissionBoardView: View {
     var missionCards: some View {
         VStack(spacing: 20) {
             ForEach(missionsForSelectedTab) { mission in
-                let card = MissionCard(
-                    mission: mission,
-                    isSelected: selectedMission?.id == mission.id,
-                    isLoading: startingMission == mission,
-                    isActiveMission: selectedTab == .active,
-                    isCompletedMission: selectedTab == .completed) {
-                    
-                    if selectedMission == mission {
-                        withAnimation {
+                if mission.title == "Welcome to the Nexuss" {
+                    MissionCard(
+                        mission: mission,
+                        isSelected: selectedMission?.id == mission.id,
+                        isLoading: startingMission == mission,
+                        isActiveMission: selectedTab == .active,
+                        isCompletedMission: selectedTab == .completed) {
+                        
+                        if selectedMission == mission {
+                            withAnimation {
+                                selectedMission = nil
+                            }
+                        } else {
+                            withAnimation {
+                                selectedMission = mission
+                            }
+                            
+                            // Show first expansion tip
+                            tipManager.showSingleTip(key: "first_expansion")
+                            
+                        }
+                    } onSelect: {
+                        Task {
+                            startingMission = mission
+                            await missionManager.startMission(mission)
+                            startingMission = nil
+                            selectedTab = .active
+                        }
+                    } onComplete: {
+                        Task {
+                            await missionManager.completeMission(mission, userPath: appState.userAccountData?.profile.path)
                             selectedMission = nil
+                            selectedTab = .completed
                         }
-                    } else {
-                        withAnimation {
-                            selectedMission = mission
-                        }
-                        
-                        // Show first expansion tip
-                        tipManager.showSingleTip(key: "first_expansion")
-                        
                     }
-                } onSelect: {
-                    Task {
-                        startingMission = mission
-                        await missionManager.startMission(mission)
-                        startingMission = nil
-                        selectedTab = .active
-                    }
-                } onComplete: {
-                    Task {
-                        await missionManager.completeMission(mission, userPath: appState.userAccountData?.profile.path)
-                        selectedMission = nil
-                        selectedTab = .completed
-                    }
-                }
-                .padding(.horizontal)
-                .transition(.opacity)
-                if selectedTab == .available {
-                    if selectedMission?.id == mission.id {
-                        card
-                            .tipSource(id: 1, nameSpace: namespace, manager: tipManager, anchorPoint: .top)
-                    } else {
-                        card
-                            .tipSource(id: 0, nameSpace: namespace, manager: tipManager, anchorPoint: .bottom)
-                    }
+                    .padding(.horizontal)
+                    .transition(.opacity)
+                    .tipSource(id: 1, nameSpace: namespace, manager: tipManager, anchorPoint: .top, captureView: selectedMission == mission)
+                    .tipSource(id: 0, nameSpace: namespace, manager: tipManager, anchorPoint: .bottom)
                 } else {
-                    card
+                    MissionCard(
+                        mission: mission,
+                        isSelected: selectedMission?.id == mission.id,
+                        isLoading: startingMission == mission,
+                        isActiveMission: selectedTab == .active,
+                        isCompletedMission: selectedTab == .completed) {
+                        
+                        if selectedMission == mission {
+                            withAnimation {
+                                selectedMission = nil
+                            }
+                        } else {
+                            withAnimation {
+                                selectedMission = mission
+                            }
+                            
+                        }
+                    } onSelect: {
+                        Task {
+                            startingMission = mission
+                            await missionManager.startMission(mission)
+                            startingMission = nil
+                            selectedTab = .active
+                        }
+                    } onComplete: {
+                        Task {
+                            await missionManager.completeMission(mission, userPath: appState.userAccountData?.profile.path)
+                            selectedMission = nil
+                            selectedTab = .completed
+                        }
+                    }
+                    .padding(.horizontal)
+                    .transition(.opacity)
                 }
             }
         }
