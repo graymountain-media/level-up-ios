@@ -50,6 +50,8 @@ struct MainView: View {
                     ProfileSettings()
                 case .itemShop:
                     ItemShopView()
+                case .friends:
+                    FriendsListView()
                 case .help:
                     EmptyView()
                 }
