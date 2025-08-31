@@ -20,6 +20,8 @@ struct LeaderboardView: View {
     // MARK: - Properties
     @State private var viewModel = LeaderboardViewModel()
     @State private var selectedTab: LeaderboardTab = .xp
+    @State private var selectedEntry: (any LeaderboardEntry)?
+    
     @InjectedObservable(\.appState) var appState
     
     // MARK: - Body
@@ -50,6 +52,15 @@ struct LeaderboardView: View {
             .padding(.top, 42)
         }
         .mainBackground()
+        .overlay (
+            Group {
+                if let selectedEntry {
+                    UserInfoPopup()
+                }
+            }
+            
+            
+        )
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { viewModel.showError = false }
         } message: {
@@ -276,6 +287,12 @@ struct LeaderboardView: View {
             }
         }
         .padding(.horizontal, 20)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            withAnimation {
+                selectedEntry = entry
+            }
+        }
     }
     
     private func getClassForEntry(_ entry: any LeaderboardEntry) -> String {

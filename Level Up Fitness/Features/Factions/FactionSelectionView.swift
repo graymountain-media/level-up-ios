@@ -174,7 +174,7 @@ struct FactionSelectionView: View {
 }
 
 // MARK: - Faction Model
-enum Faction: String, CaseIterable, Identifiable, Codable {
+enum Faction: String, CaseIterable, Identifiable, Codable, Equatable {
     case echoreach
     case pulseforge
     case voidkind

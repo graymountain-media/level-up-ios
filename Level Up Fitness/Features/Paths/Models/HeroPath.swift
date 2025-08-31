@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - HeroPath Model
 
-enum HeroPath: String, CaseIterable, Identifiable, Codable {
+enum HeroPath: String, CaseIterable, Identifiable, Codable, Equatable {
     case brute = "brute"
     case ranger = "ranger"
     case sentinel = "sentinel"
