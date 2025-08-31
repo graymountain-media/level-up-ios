@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol LeaderboardEntry: Identifiable, Decodable {
+protocol LeaderboardEntry: Identifiable, Decodable, Equatable {
     var userId: UUID { get }
     var value: Int { get }
     var avatarName: String? { get }
