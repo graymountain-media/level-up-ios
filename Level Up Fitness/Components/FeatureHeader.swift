@@ -7,11 +7,27 @@
 
 import SwiftUI
 
-struct FeatureHeader: View {
-    @Environment(\.dismiss) var dismiss
+struct FeatureHeader<Right: View>: View {
+    @Environment(\.dismiss) private var dismiss
     var title: String
     var showCloseButton: Bool = false
+    var right: Right?
     var onDismiss: (() -> Void)? = nil
+    
+    init(title: String, showCloseButton: Bool = false, @ViewBuilder right: () -> Right, onDismiss: (() -> Void)? = nil) {
+        self.title = title
+        self.showCloseButton = showCloseButton
+        self.right = right()
+        self.onDismiss = onDismiss
+    }
+    
+    init(title: String, showCloseButton: Bool = false, onDismiss: (() -> Void)? = nil) where Right == EmptyView {
+        self.title = title
+        self.showCloseButton = showCloseButton
+        self.right = nil
+        self.onDismiss = onDismiss
+    }
+    
     var body: some View {
         ZStack(alignment: .topLeading) {
             HStack {
@@ -23,23 +39,32 @@ struct FeatureHeader: View {
                     LUDivider()
                         .frame(maxWidth: 200)
                 }
+                .padding(.top, 16)
                 Spacer()
             }
-            if showCloseButton {
-                Button {
-                    if let onDismiss {
-                        onDismiss()
-                    } else {
-                        dismiss()
+            HStack {
+                if showCloseButton {
+                    Button {
+                        if let onDismiss {
+                            onDismiss()
+                        } else {
+                            dismiss()
+                        }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 20, height: 20)
+                            .foregroundStyle(.textfieldBorder)
                     }
-                } label: {
-                    Image(systemName: "xmark")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(.textfieldBorder)
+                    .frame(width: 40, height: 40)
+                    Spacer()
                 }
-                .frame(width: 40, height: 40)
+                
+                if let right {
+                    Spacer()
+                    right
+                }
             }
         }
         .padding(.vertical, 20)

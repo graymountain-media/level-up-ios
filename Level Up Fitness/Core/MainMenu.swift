@@ -11,6 +11,7 @@ import FactoryKit
 enum MenuItem: Int, CaseIterable, Identifiable {
     case itemShop
     case accountSettings
+    case friends
     case help
     
     var id: Int {
@@ -23,6 +24,8 @@ enum MenuItem: Int, CaseIterable, Identifiable {
             "store_icon"
         case .accountSettings:
             "settings_icon"
+        case .friends:
+            "friends_icon"
         case .help:
             "help_icon"
         }
@@ -34,6 +37,8 @@ enum MenuItem: Int, CaseIterable, Identifiable {
             "Item Shop"
         case .accountSettings:
             "Account Settings"
+        case .friends:
+            "Friends List"
         case .help:
             "Help Center"
         }
@@ -72,13 +77,14 @@ struct MainMenu: View {
                         // Menu Items
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(MenuItem.allCases) { feature in
-                                menuButton(for: feature)
-                                
-                                if [.accountSettings].contains(feature) {
+                                if [.help].contains(feature) {
                                     Divider()
                                         .background(Color.white)
                                         .padding(.vertical, 8)
                                 }
+                                menuButton(for: feature)
+                                
+                                
                                 
                             }
                             Spacer()

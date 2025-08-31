@@ -49,9 +49,11 @@ struct ProfileSettings: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 32) {
-                FeatureHeader(title: "Account Details", showCloseButton: true)
+        VStack(spacing: 0) {
+            FeatureHeader(title: "Account Details", showCloseButton: true)
+                .padding(.horizontal, 24)
+            
+            ScrollView {
                 HStack(alignment: .center, spacing: 16) {
                     profileImage
                     VStack(alignment: .leading, spacing: 2) {
