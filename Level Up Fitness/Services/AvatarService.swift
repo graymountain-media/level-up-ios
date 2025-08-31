@@ -57,12 +57,51 @@ struct AvatarData {
     }
 }
 
+struct AvatarAsset: Codable, Identifiable {
+    let id: UUID
+    let styleNumber: Int
+    let typeAProfileImageUrl: String
+    let typeAFullBodyImageUrl: String
+    let typeBProfileImageUrl: String
+    let typeBFullBodyImageUrl: String
+    let createdAt: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case styleNumber = "style_number"
+        case typeAProfileImageUrl = "type_a_profile_image_url"
+        case typeAFullBodyImageUrl = "type_a_full_body_image_url"
+        case typeBProfileImageUrl = "type_b_profile_image_url"
+        case typeBFullBodyImageUrl = "type_b_full_body_image_url"
+        case createdAt = "created_at"
+    }
+    
+    func profileImageUrl(for type: AvatarType) -> String {
+        switch type {
+        case .typeA:
+            return typeAProfileImageUrl
+        case .typeB:
+            return typeBProfileImageUrl
+        }
+    }
+    
+    func fullBodyImageUrl(for type: AvatarType) -> String {
+        switch type {
+        case .typeA:
+            return typeAFullBodyImageUrl
+        case .typeB:
+            return typeBFullBodyImageUrl
+        }
+    }
+}
+
 // MARK: - Protocol
 
 protocol AvatarServiceProtocol {
     func fetchAvatarData() async -> Result<AvatarData, AvatarError>
     func fetchUserXP() async -> Result<Int, AvatarError>
     func fetchCurrentStreak() async -> Result<Int, AvatarError>
+    func fetchAvatarAssets() async -> Result<[AvatarAsset], AvatarError>
     func uploadAvatar(imageData: Data, fileName: String, currentAvatarUrl: String?) async -> Result<String, AvatarError>
     func deleteAvatar(avatarUrl: String) async -> Result<Void, AvatarError>
     func uploadProfilePicture(imageData: Data, fileName: String, currentProfilePictureUrl: String?) async -> Result<String, AvatarError>
@@ -171,6 +210,20 @@ class AvatarService: AvatarServiceProtocol {
         } catch {
             // If no streak record exists yet, return 0
             return .success(0)
+        }
+    }
+    
+    func fetchAvatarAssets() async -> Result<[AvatarAsset], AvatarError> {
+        do {
+            let avatarAssets: [AvatarAsset] = try await client.from("avatar_assets")
+                .select()
+                .order("style_number")
+                .execute()
+                .value
+            
+            return .success(avatarAssets)
+        } catch {
+            return .failure(.databaseError(error.localizedDescription))
         }
     }
     
@@ -397,6 +450,36 @@ class MockAvatarService: AvatarServiceProtocol {
             return .failure(.unknownError("Mock streak fetch failed"))
         }
         return .success(mockStreak)
+    }
+    
+    func fetchAvatarAssets() async -> Result<[AvatarAsset], AvatarError> {
+        if shouldFail {
+            return .failure(.unknownError("Mock avatar assets fetch failed"))
+        }
+        
+        // Return mock avatar assets
+        let mockAssets = [
+            AvatarAsset(
+                id: UUID(),
+                styleNumber: 1,
+                typeAProfileImageUrl: "https://mock-storage.com/avatars/profiles/style_1_A.png",
+                typeAFullBodyImageUrl: "https://mock-storage.com/avatars/full_body/style_1_A.png",
+                typeBProfileImageUrl: "https://mock-storage.com/avatars/profiles/style_1_B.png",
+                typeBFullBodyImageUrl: "https://mock-storage.com/avatars/full_body/style_1_B.png",
+                createdAt: Date()
+            ),
+            AvatarAsset(
+                id: UUID(),
+                styleNumber: 2,
+                typeAProfileImageUrl: "https://mock-storage.com/avatars/profiles/style_2_A.png",
+                typeAFullBodyImageUrl: "https://mock-storage.com/avatars/full_body/style_2_A.png",
+                typeBProfileImageUrl: "https://mock-storage.com/avatars/profiles/style_2_B.png",
+                typeBFullBodyImageUrl: "https://mock-storage.com/avatars/full_body/style_2_B.png",
+                createdAt: Date()
+            ),
+        ]
+        
+        return .success(mockAssets)
     }
     
     func uploadAvatar(imageData: Data, fileName: String, currentAvatarUrl: String? = nil) async -> Result<String, AvatarError> {

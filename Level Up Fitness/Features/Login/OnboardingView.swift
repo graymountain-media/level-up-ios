@@ -7,7 +7,18 @@
 
 import SwiftUI
 import FactoryKit
-import PhotosUI
+
+enum AvatarType: CaseIterable {
+    case typeA
+    case typeB
+    
+    var title: String {
+        switch self {
+        case .typeA: return "Type A"
+        case .typeB: return "Type B"
+        }
+    }
+}
 
 struct OnboardingView: View {
     @InjectedObservable(\.appState) var appState
@@ -18,11 +29,14 @@ struct OnboardingView: View {
     @State private var isLoading: Bool = false
     @State private var showingAlert: Bool = false
     @State private var alertMessage: String = ""
-    @State private var selectedPhotoItem: PhotosPickerItem?
-    @State private var avatarImage: Image?
-    @State private var avatarImageData: Data?
+    @State private var selectedAvatarType: AvatarType = .typeA
+    @State private var selectedAvatarIndex: Int = 0
+    @State private var avatarAssets: [AvatarAsset] = []
+    @State private var isLoadingAssets: Bool = false
+    @StateObject private var imageLoader = DynamicImageLoader()
     
     private let avatarNameMaxLength: Int = 16
+    
     var body: some View {
         GeometryReader { proxy in
             ScrollView {
@@ -64,6 +78,9 @@ struct OnboardingView: View {
             .scrollIndicators(.hidden)
         }
         .mainBackground()
+        .onAppear {
+            loadAvatarAssets()
+        }
     }
     
     var fields: some View {
@@ -83,71 +100,155 @@ struct OnboardingView: View {
                         maxLength: avatarNameMaxLength)
                 .autocapitalization(.words)
             
-            VStack {
-                HStack {
-                    Text("Avatar Photo")
-                        .font(.system(size: 20, weight: .regular))
-                        .foregroundStyle(Color.textDetail)
-                    Spacer()
-                }
-                PhotosPicker(
-                    selection: $selectedPhotoItem,
-                    matching: .images, // Filter for PNG images
-                    photoLibrary: .shared()
-                ) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.textfieldBg)
-                            .aspectRatio(4/5, contentMode: .fit)
-                            .overlay {
+            avatarSelection
+            
+        }
+    }
+    
+    func nextAvatar() {
+        let nextIndex = selectedAvatarIndex + 1
+        if nextIndex > avatarAssets.count - 1 {
+            selectedAvatarIndex = 0
+        } else {
+            selectedAvatarIndex = nextIndex
+        }
+    }
+    
+    func previousAvatar() {
+        let nextIndex = selectedAvatarIndex - 1
+        if nextIndex < 0 {
+            selectedAvatarIndex = avatarAssets.count - 1
+        } else {
+            selectedAvatarIndex = nextIndex
+        }
+    }
+    
+    private var selectedAvatarImageUrl: String? {
+        guard !isLoadingAssets, selectedAvatarIndex < avatarAssets.count else {
+            return nil
+        }
+        let currentAsset = avatarAssets[selectedAvatarIndex]
+        return currentAsset.profileImageUrl(for: selectedAvatarType)
+    }
+    
+    private var avatarSelection: some View {
+        VStack(alignment: .center, spacing: 16) {
+            // Avatar type selection buttons
+            HStack(spacing: 12) {
+                ForEach(AvatarType.allCases, id: \.self) { avatarType in
+                    Button(action: {
+                        selectedAvatarType = avatarType// Reset to first avatar of selected type
+                    }) {
+                        Text(avatarType.title)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(selectedAvatarType == avatarType ? .white : .gray)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.textfieldBorder)
-                            }
-                        
-                        if let avatarImage {
-                            avatarImage
-                                .resizable()
-                                .aspectRatio(4/5, contentMode: .fit)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        } else {
-                            VStack(spacing: 8) {
-                                Image(systemName: "square.and.arrow.up")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 40, height: 40)
-                                Text("800 x 1000 px (PNG only)\n(optional)")
-                                    .multilineTextAlignment(.center)
-                            }
-                            .foregroundStyle(.minor)
-                        }
-                    }
-                }
-                .onChange(of: selectedPhotoItem) { _, newItem in
-                    Task {
-                        // Reset image first
-                        self.avatarImage = nil
-                        
-                        // Load and validate the new item
-                        guard let data = try? await newItem?.loadTransferable(type: Data.self),
-                              let uiImage = UIImage(data: data) else {
-                            return
-                        }
-                        
-                        // Check dimensions
-                        if uiImage.size.width == 800 && uiImage.size.height == 1000 {
-                            self.avatarImage = Image(uiImage: uiImage)
-                            self.avatarImageData = data // Store the data for upload
-                        } else {
-                            // Trigger alert for wrong dimensions
-                            self.alertMessage = "Image must be a 800x1000 PNG."
-                            self.showingAlert = true
-                            self.selectedPhotoItem = nil // Reset selection
-                        }
+                                    .fill(selectedAvatarType == avatarType ? Color.textfieldBorder : Color.gray.opacity(0.3))
+                            )
                     }
                 }
             }
+            .padding(.horizontal, 16)
             
+            // Avatar carousel
+            HStack {
+                // Previous button
+                Button(action: {
+                    previousAvatar()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .foregroundColor(.white)
+                        .frame(width: 20, height: 50)
+                }
+                
+                // Avatar display
+                VStack {
+                    if isLoadingAssets {
+                        ProgressView()
+                        
+                        Text("Loading...")
+                            .font(.caption)
+                            .foregroundColor(.white)
+                    } else {
+                        avatarImage(selectedAvatarImageUrl ?? "")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .aspectRatio(1, contentMode : .fill)
+                .background(
+                    Color.white.opacity(0.2)
+                )
+                
+                // Next button
+                Button(action: {
+                    nextAvatar()
+                }) {
+                    Image(systemName: "chevron.right")
+                        .resizable()
+                        .foregroundColor(.white)
+                        .frame(width: 20, height: 50)
+                }
+            }
+            Text("Select Your Avatar")
+                .font(.system(size: 17))
+                .foregroundStyle(.textDetail)
         }
+        .padding(.top)
+    }
+    
+    private func avatarImage(_ urlString: String) -> some View {
+        AsyncImage(url: URL(string: urlString)) { image in
+            image
+                .resizable()
+                .aspectRatio(1, contentMode: .fit)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } placeholder: {
+            ProgressView()
+                .foregroundStyle(.red)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .aspectRatio(1, contentMode: .fit)
+        }
+    }
+    
+    private func loadAvatarAssets() {
+        guard !isLoadingAssets else { return }
+        isLoadingAssets = true
+        
+        Task {
+            let result = await avatarService.fetchAvatarAssets()
+            await MainActor.run {
+                isLoadingAssets = false
+                switch result {
+                case .success(let assets):
+                    avatarAssets = assets
+                    preloadProfileImages()
+                case .failure(let error):
+                    alertMessage = "Failed to load avatar options: \(error.localizedDescription)"
+                    showingAlert = true
+                }
+            }
+        }
+    }
+    
+    private func preloadProfileImages() {
+        guard !avatarAssets.isEmpty else { return }
+        
+        var urlsToPreload: [URL] = []
+        
+        for asset in avatarAssets {
+            if let profileA = URL(string: asset.typeAProfileImageUrl) {
+                urlsToPreload.append(profileA)
+            }
+            if let profileB = URL(string: asset.typeBProfileImageUrl) {
+                urlsToPreload.append(profileB)
+            }
+        }
+        
+        imageLoader.preloadImages(urls: urlsToPreload)
     }
     
     private func saveProfile() {
@@ -160,32 +261,18 @@ struct OnboardingView: View {
         isLoading = true
         
         Task {
-            var avatarUrl: String? = nil
+            // Get selected avatar URLs
+            let selectedAvatar = avatarAssets[selectedAvatarIndex]
+            let fullBody = selectedAvatar.fullBodyImageUrl(for: selectedAvatarType)
+            let profile = selectedAvatar.profileImageUrl(for: selectedAvatarType)
             
-            // Upload avatar if image is selected
-            if let imageData = avatarImageData {
-                let fileName = "\(UUID().uuidString).png"
-                let uploadResult = await avatarService.uploadAvatar(imageData: imageData, fileName: fileName, currentAvatarUrl: nil)
-                
-                switch uploadResult {
-                case .success(let url):
-                    avatarUrl = url
-                case .failure(let error):
-                    await MainActor.run {
-                        isLoading = false
-                        alertMessage = "Failed to upload avatar: \(error.localizedDescription)"
-                        showingAlert = true
-                    }
-                    return
-                }
-            }
-            
-            // Create profile with avatar URL
+            // Create profile with selected avatar URLs
             let result = await appState.createProfile(
                 firstName: firstName,
                 lastName: lastName,
                 avatarName: avatarName,
-                avatarUrl: avatarUrl
+                avatarUrl: fullBody,
+                profilePictureUrl: profile
             )
             
             await MainActor.run {

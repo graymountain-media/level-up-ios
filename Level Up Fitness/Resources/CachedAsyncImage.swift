@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct CachedAsyncImage<Content: View, Placeholder: View>: View {
-    @StateObject private var loader: OptionalImageLoader
+    @StateObject private var loader = DynamicImageLoader()
     
+    private let url: URL?
     private let content: (Image) -> Content
     private let placeholder: () -> Placeholder
     
@@ -18,7 +19,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         @ViewBuilder content: @escaping (Image) -> Content,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
-        self._loader = StateObject(wrappedValue: OptionalImageLoader(url: url))
+        self.url = url
         self.content = content
         self.placeholder = placeholder
     }
@@ -30,6 +31,12 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             } else {
                 placeholder()
             }
+        }
+        .onAppear {
+            loader.loadImage(from: url)
+        }
+        .onChange(of: url) { _, newURL in
+            loader.loadImage(from: newURL)
         }
     }
 }
