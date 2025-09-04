@@ -12,6 +12,7 @@ enum MenuItem: Int, CaseIterable, Identifiable {
     case itemShop
     case accountSettings
     case friends
+    case factionHome
     case help
     
     var id: Int {
@@ -26,6 +27,8 @@ enum MenuItem: Int, CaseIterable, Identifiable {
             "settings_icon"
         case .friends:
             "friends_icon"
+        case .factionHome:
+            "arrow"
         case .help:
             "help_icon"
         }
@@ -39,6 +42,8 @@ enum MenuItem: Int, CaseIterable, Identifiable {
             "Account Settings"
         case .friends:
             "Friends List"
+        case .factionHome:
+            "Faction"
         case .help:
             "Help Center"
         }
