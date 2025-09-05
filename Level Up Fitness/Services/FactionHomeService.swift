@@ -10,8 +10,8 @@ import Foundation
 // MARK: Data Models
 struct FactionDetails: Codable, Identifiable {
     let factionId: UUID
+    let factionType: Faction
     let name: String
-    let slogan: String
     let iconName: String
     let description: String
     let weeklyXP: Int
@@ -23,8 +23,8 @@ struct FactionDetails: Codable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case factionId = "faction_id"
+        case factionType = "faction_type"
         case name
-        case slogan
         case iconName = "icon_name"
         case description
         case weeklyXP = "weekly_xp"
@@ -87,21 +87,21 @@ class FactionHomeService: FactionHomeServiceProtocol {
     init() {}
     
     func fetchFactionDetails() async -> Result<FactionDetails, FactionHomeError> {
-        let echoFaction = FactionDetails(
+        let pulseforgeFaction = FactionDetails(
             factionId: UUID(uuidString: "7a1b9c4d-2e6f-4a8b-9e1c-3d5f7a9c2b8d")!,
-            name: "The Iron Guardians",
-            slogan: "Unbreakable. Unyielding. United.",
-            iconName: "faction_iron_guard",
-            description: "A faction forged in the fires of conflict, dedicated to protecting the innocent and upholding justice. Their members are known for their resilience and steadfast resolve in the face of adversity.",
-            weeklyXP: 58742,
-            memberCount: 345,
-            levelLine: 165,
+            factionType: .pulseforge,
+            name: "PULSEFORGE",
+            iconName: "pulseforge_icon",
+            description: "Pulseforge burn with a fire that refuses to be contained. Their drive ignites those around them and it turns obstacles into fuel. They are unstoppable.",
+            weeklyXP: 2500,
+            memberCount: 21,
+            levelLine: 120,
             topLeaders: [
                 Leader(rank: "Faction Leader", name: "WALLYG", avatarName: "avatar_wallyg", level: 9, points: 2080),
                 Leader(rank: "1st Officer", name: "EMBER", avatarName: "avatar_ember", level: 6, points: 900),
                 Leader(rank: "2nd Officer", name: "NYX", avatarName: "avatar_nyx", level: 5, points: 540)
             ]
         )
-        return .success(echoFaction)
+        return .success(pulseforgeFaction)
     }
 }

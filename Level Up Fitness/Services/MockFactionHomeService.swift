@@ -12,8 +12,8 @@ class MockFactionHomeService: FactionHomeServiceProtocol {
     // Mock data storage
     private var mockFactionDetails: FactionDetails = FactionDetails(
         factionId: UUID(uuidString: "7a1b9c4d-2e6f-4a8b-9e1c-3d5f7a9c2b8d")!,
+        factionType: Faction.echoreach,
         name: "The Iron Guardians",
-        slogan: "Unbreakable. Unyielding. United.",
         iconName: "faction_iron_guard",
         description: "A faction forged in the fires of conflict, dedicated to protecting the innocent and upholding justice. Their members are known for their resilience and steadfast resolve in the face of adversity.",
         weeklyXP: 58742,

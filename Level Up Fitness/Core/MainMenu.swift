@@ -28,7 +28,7 @@ enum MenuItem: Int, CaseIterable, Identifiable {
         case .friends:
             "friends_icon"
         case .factionHome:
-            "arrow"
+            "faction_home"
         case .help:
             "help_icon"
         }

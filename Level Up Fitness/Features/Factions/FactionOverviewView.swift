@@ -16,13 +16,20 @@ struct FactionOverviewView: View {
                     .padding(.bottom, 12)
                 FactionDivider()
                 
-                TopLeadersView(leaders: faction.topLeaders) // Use real data
+                TopLeadersView(
+                    leaders: faction.topLeaders,
+                    factionType: faction.factionType
+                )
                 FactionDivider()
                 
-                MemberTraitsView(description: faction.description, traits: ["Trait 1", "Trait 2"]) // Use real data
+                MemberTraitsView(
+                    description: faction.factionType.memberTraitsDescription,
+                    traits: faction.factionType.memberTraits,
+                    traitIcons: faction.factionType.traitIcons
+                )
                 FactionDivider()
                 
-                FactionStatsView(faction: faction) // Pass the entire model
+                FactionStatsView(faction: faction)
             }
             .padding(.horizontal, 24)
         }
@@ -47,7 +54,7 @@ struct FactionHeader: View {
             
             Spacer().frame(height: 12)
             
-            Text(faction.slogan) // Use data from the model
+            Text(faction.factionType.slogan)
                 .font(.body)
                 .foregroundStyle(.pulseforge)
                 .textCase(.uppercase)
@@ -57,6 +64,7 @@ struct FactionHeader: View {
 
 struct TopLeadersView: View {
     let leaders: [Leader]
+    let factionType: Faction
 
     var body: some View {
         VStack(alignment: .center, spacing: 16) { // Added spacing
@@ -68,7 +76,7 @@ struct TopLeadersView: View {
             
             HStack(alignment: .top, spacing: 12) { // Spacing between cards
                 ForEach(leaders) { leader in
-                    LeaderCardView(leader: leader)
+                    LeaderCardView(leader: leader, factionType: factionType)
                 }
             }
         }
@@ -78,6 +86,7 @@ struct TopLeadersView: View {
 // A sub-view for each leader's card
 struct LeaderCardView: View {
     let leader: Leader
+    let factionType: Faction
 
     var body: some View {
         VStack(alignment: .center, spacing: 8) {
@@ -125,6 +134,7 @@ struct LeaderCardView: View {
 struct MemberTraitsView: View {
     let description: String
     let traits: [String]
+    let traitIcons: [String]
 
     var body: some View {
         VStack(alignment: .center) {
@@ -141,9 +151,9 @@ struct MemberTraitsView: View {
                 .padding(.bottom, 8)
             
             HStack {
-                ForEach(traits, id: \.self) { trait in
+                ForEach(Array(traits.enumerated()), id: \.offset) { index, trait in
                     Spacer()
-                    MemberTraitView(trait: trait)
+                    MemberTraitView(trait: trait, iconName: traitIcons[index])
                 }
                 Spacer()
             }
@@ -153,10 +163,11 @@ struct MemberTraitsView: View {
 
 struct MemberTraitView: View {
     let trait: String
+    let iconName: String
     
     var body: some View {
         HStack {
-            Image("hunter_icon")
+            Image(iconName)
                 .resizable()
                 .frame(width: 16, height: 16)
             
