@@ -145,6 +145,7 @@ struct UserXPInfo: Codable {
     }
 }
 
+
 @MainActor
 struct UserAccountData {
     let profile: Profile
@@ -232,6 +233,7 @@ protocol UserDataServiceProtocol {
     
     // Path methods
     func fetchWorkoutTypeStats(for userId: UUID) async throws -> WorkoutTypeStats
+    
 }
 
 class UserDataService: UserDataServiceProtocol {
@@ -564,6 +566,7 @@ class UserDataService: UserDataServiceProtocol {
             totalWorkouts: result.totalWorkouts
         )
     }
+    
 }
 
 

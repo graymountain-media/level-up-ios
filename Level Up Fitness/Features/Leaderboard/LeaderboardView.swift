@@ -55,11 +55,22 @@ struct LeaderboardView: View {
         .overlay (
             Group {
                 if let selectedEntry {
-                    UserInfoPopup()
+                    UserInfoPopup(
+                        userId: selectedEntry.userId,
+                        viewProfile: {
+                            // Handle view profile action
+                            withAnimation {
+                                self.selectedEntry = nil
+                            }
+                        },
+                        dismiss: {
+                            withAnimation {
+                                self.selectedEntry = nil
+                            }
+                        }
+                    )
                 }
             }
-            
-            
         )
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { viewModel.showError = false }
