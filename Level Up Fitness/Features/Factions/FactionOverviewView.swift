@@ -70,7 +70,7 @@ struct TopLeadersView: View {
         VStack(alignment: .center, spacing: 16) { // Added spacing
             Text("Top Members")
                 .font(.headline)
-                .foregroundStyle(.textOrange)
+                .foregroundStyle(.factionHomeSectionTitle)
                 .padding(.bottom, 12)
                 .textCase(.uppercase)
             
@@ -92,7 +92,7 @@ struct LeaderCardView: View {
         VStack(alignment: .center, spacing: 8) {
             Text(leader.rank)
                 .font(.caption)
-                .foregroundStyle(.white)
+                .foregroundStyle(.generalText)
             
             VStack {
                 ZStack(alignment: .bottom) { // For the level badge
@@ -104,28 +104,28 @@ struct LeaderCardView: View {
                     Text("\(leader.level)")
                         .font(.caption2)
                         .bold()
-                        .foregroundColor(.white)
+                        .foregroundColor(.generalText)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.blue) // Or a specific level color
-                        .offset(x: 0, y: 5) // Position the badge
+                        .background(.factionCardBorder)
+                        .offset(x: 0, y: 5)
                 }
-                .padding(.bottom, 4) // Space between avatar and name
+                .padding(.bottom, 4)
                 
                 Text(leader.name)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.generalText)
                 
                 Text("\(leader.points)")
                     .font(.subheadline)
-                    .foregroundStyle(.blue) // The specific blue color
+                    .foregroundStyle(.numbers)
             }
-            .padding(12) // Padding inside the card
-            .frame(width: 100) // Fixed width for cards, adjust as necessary
+            .padding(12)
+            .frame(width: 100)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(red: 0.1, green: 0.2, blue: 0.25)) // Dark background color
-                    .stroke(leader.rank == "Faction Leader" ? Color.yellow : Color.blue, lineWidth: 2) // Border color
+                    .fill(.factionCardBg)
+                    .stroke(leader.rank == "Faction Leader" ? .factionHomeSectionTitle : .factionCardBorder, lineWidth: 2)
             )
         }
     }
@@ -140,14 +140,14 @@ struct MemberTraitsView: View {
         VStack(alignment: .center) {
             Text("Member Traits")
                 .font(.headline)
-                .foregroundStyle(.textOrange)
+                .foregroundStyle(.factionHomeSectionTitle)
                 .padding(.bottom, 12)
                 .textCase(.uppercase)
             
             Text(description)
                 .font(.body)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.textDetail)
+                .foregroundStyle(.generalText)
                 .padding(.bottom, 8)
             
             HStack {
@@ -173,7 +173,7 @@ struct MemberTraitView: View {
             
             Text(trait)
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.generalText)
         }
     }
 }
@@ -185,7 +185,7 @@ struct FactionStatsView: View {
         VStack(alignment: .center) {
             Text("Faction Stats")
                 .font(.headline)
-                .foregroundStyle(.textOrange)
+                .foregroundStyle(.factionHomeSectionTitle)
                 .textCase(.uppercase)
             
             HStack(alignment: .top) {
@@ -208,27 +208,27 @@ struct FactionStatView: View {
             VStack(spacing: 8) {
                 Text(statType.displayName)
                     .font(.subheadline)
-                    .foregroundStyle(.title)
+                    .foregroundStyle(.generalText)
                     .textCase(.uppercase)
                 
                 Text(String(value))
                     .font(.body)
-                    .foregroundStyle(.textInput)
+                    .foregroundStyle(.numbers)
             }
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(.textfieldBorder)
+                    .fill(.factionCardBg)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 6)
-                    .stroke(.minor, lineWidth: 2)
+                    .stroke(.factionCardBorder, lineWidth: 2)
             )
             
             if statType == .levelLine {
                 Text("*Average Weekly XP per Faction member")
                     .font(.mainFont(size: 8))
-                    .foregroundStyle(.title)
+                    .foregroundStyle(.generalText)
                     .multilineTextAlignment(.center)
             }
         }
