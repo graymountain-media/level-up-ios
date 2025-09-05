@@ -304,32 +304,6 @@ enum Faction: String, CaseIterable, Identifiable, Codable, Equatable {
             return ["eye_icon", "gear_icon", "brain_icon"]
         }
     }
-    
-    var badgeColors: [Color] {
-        switch self {
-        case .echoreach:
-            return [.green, .blue]
-        case .pulseforge:
-            return [.pink, .orange]
-        case .voidkind:
-            return [.purple, .indigo]
-        case .neurospire:
-            return [.cyan, .teal]
-        }
-    }
-    
-    var badgeLetters: [String] {
-        switch self {
-        case .echoreach:
-            return ["B", "C"]
-        case .pulseforge:
-            return ["J", "S"]
-        case .voidkind:
-            return ["D", "M"]
-        case .neurospire:
-            return ["P", "I"]
-        }
-    }
 
     var baseColor: Color {
         switch self {

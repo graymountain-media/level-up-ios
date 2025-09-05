@@ -42,13 +42,13 @@ struct FactionHeader: View {
 
     var body: some View {
         VStack(alignment: .center) {
-            Image(faction.iconName) // Use data from the model
+            Image(faction.iconName)
                 .resizable()
                 .frame(width: 48, height: 48)
             
             Spacer().frame(height: 20)
             
-            Text(faction.name) // Use data from the model
+            Text(faction.name)
                 .font(.largeTitle)
                 .foregroundStyle(.title)
             
@@ -67,14 +67,14 @@ struct TopLeadersView: View {
     let factionType: Faction
 
     var body: some View {
-        VStack(alignment: .center, spacing: 16) { // Added spacing
+        VStack(alignment: .center, spacing: 16) {
             Text("Top Members")
                 .font(.headline)
                 .foregroundStyle(.factionHomeSectionTitle)
                 .padding(.bottom, 12)
                 .textCase(.uppercase)
             
-            HStack(alignment: .top, spacing: 12) { // Spacing between cards
+            HStack(alignment: .top, spacing: 12) {
                 ForEach(leaders) { leader in
                     LeaderCardView(leader: leader, factionType: factionType)
                 }
@@ -83,7 +83,6 @@ struct TopLeadersView: View {
     }
 }
 
-// A sub-view for each leader's card
 struct LeaderCardView: View {
     let leader: Leader
     let factionType: Faction
@@ -95,7 +94,7 @@ struct LeaderCardView: View {
                 .foregroundStyle(.generalText)
             
             VStack {
-                ZStack(alignment: .bottom) { // For the level badge
+                ZStack(alignment: .bottom) {
                     Image(leader.avatarName)
                         .resizable()
                         .scaledToFill()
@@ -189,11 +188,11 @@ struct FactionStatsView: View {
                 .textCase(.uppercase)
             
             HStack(alignment: .top) {
-                FactionStatView(statType: .weeklyXP, value: faction.weeklyXP) // Pass real data
+                FactionStatView(statType: .weeklyXP, value: faction.weeklyXP)
                 Spacer()
-                FactionStatView(statType: .memberCount, value: faction.memberCount) // Pass real data
+                FactionStatView(statType: .memberCount, value: faction.memberCount)
                 Spacer()
-                FactionStatView(statType: .levelLine, value: faction.levelLine) // Pass real data
+                FactionStatView(statType: .levelLine, value: faction.levelLine)
             }
         }
     }
@@ -235,7 +234,6 @@ struct FactionStatView: View {
     }
 }
 
-// The enum can remain a top-level type or be nested inside FactionStatView if preferred.
 enum FactionStatType: String, CaseIterable {
     case weeklyXP, memberCount, levelLine
     

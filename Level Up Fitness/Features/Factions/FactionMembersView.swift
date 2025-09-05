@@ -11,9 +11,7 @@ struct FactionMembersView: View {
     let faction: FactionDetails? = nil
     
     var body: some View {
-        // Use a List or ScrollView to show members.
-        // For a full-featured view, you might pass a list of members
-        // to this view. For now, it's a simple placeholder.
+        // TODO: Do in another PR
         VStack {
             Text("Members List")
                 .font(.largeTitle)

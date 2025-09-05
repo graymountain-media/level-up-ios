@@ -11,14 +11,11 @@ struct FactionStrongholdsView: View {
     let faction: FactionDetails? = nil
 
     var body: some View {
+        // TODO: Do later when view and feature is available
         VStack {
-            Text("Strongholds Map")
+            Text("Strongholds Coming Soon!")
                 .font(.largeTitle)
                 .padding()
-            
-            Text("Showing strongholds for \(faction?.name ?? "Name").")
-                .font(.headline)
-            
             Spacer()
         }
     }
