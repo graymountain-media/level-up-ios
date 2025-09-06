@@ -65,11 +65,11 @@ struct FactionHomeView: View {
             ProgressView("Loading faction information...")
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if let faction = viewModel.factionDetails {
+        } else if let factionDetails = viewModel.factionDetails {
             ScrollView {
                 switch viewModel.selectedTab {
                 case .overview:
-                    FactionOverviewView(faction: faction)
+                    FactionOverviewView(factionDetails: factionDetails)
                 case .members:
                     FactionMembersView()
                 case .strongholds:

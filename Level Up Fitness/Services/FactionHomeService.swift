@@ -6,49 +6,47 @@
 //
 import SwiftUI
 import Foundation
+import FactoryKit
 
 // MARK: Data Models
 struct FactionDetails: Codable, Identifiable {
-    let factionId: UUID
-    let factionType: Faction
-    let name: String
-    let iconName: String
-    let description: String
+    let id: UUID = UUID()
+    let factionName: String
     let weeklyXP: Int
     let memberCount: Int
-    let levelLine: Int
     let topLeaders: [Leader]
-
-    var id: UUID { factionId }
+    
+    var faction: Faction? {
+        Faction(rawValue: factionName.rawValue)
+    }
+    
+    var levelLine: Int {
+        return Int(weeklyXP/memberCount)
+    }
 
     enum CodingKeys: String, CodingKey {
-        case factionId = "faction_id"
-        case factionType = "faction_type"
-        case name
-        case iconName = "icon_name"
-        case description
+        case factionName = "faction_name"
         case weeklyXP = "weekly_xp"
         case memberCount = "member_count"
-        case levelLine = "level_line"
         case topLeaders = "top_leaders"
     }
 }
 
 struct Leader: Identifiable, Codable {
-    let id = UUID() // Unique ID for SwiftUI
-    let rank: String
-    let name: String
-    let avatarName: String // Name of the image asset for the avatar
+    let id = UUID()
+    let rank: String? = nil
+    let avatarName: String
+    let avatarImageUrl: String
     let level: Int
-    let points: Int // Could be XP, contributions, etc.
+    let xpPoints: Int // Could be XP, contributions, etc.
 
     // For Codable if your backend uses snake_case
     enum CodingKeys: String, CodingKey {
         case rank
-        case name
         case avatarName = "avatar_name"
+        case avatarImageUrl = "avatar_image_url"
         case level
-        case points
+        case xpPoints = "xp_points"
     }
 }
 
@@ -82,26 +80,40 @@ protocol FactionHomeServiceProtocol {
     func fetchFactionDetails() async -> Result<FactionDetails, FactionHomeError>
 }
 
+@MainActor
 class FactionHomeService: FactionHomeServiceProtocol {
-    
+    @ObservationIgnored @Injected(\.appState) var appState
+
     init() {}
     
+    private var isAuthenticated: Bool {
+        return appState.isAuthenticated
+    }
+    
+    private var currentUserId: UUID? {
+        return client.auth.currentUser?.id
+    }
+    
     func fetchFactionDetails() async -> Result<FactionDetails, FactionHomeError> {
-        let pulseforgeFaction = FactionDetails(
-            factionId: UUID(uuidString: "7a1b9c4d-2e6f-4a8b-9e1c-3d5f7a9c2b8d")!,
-            factionType: .pulseforge,
-            name: "PULSEFORGE",
-            iconName: "pulseforge_icon",
-            description: "Pulseforge burn with a fire that refuses to be contained. Their drive ignites those around them and it turns obstacles into fuel. They are unstoppable.",
-            weeklyXP: 2500,
-            memberCount: 21,
-            levelLine: 120,
-            topLeaders: [
-                Leader(rank: "Faction Leader", name: "WALLYG", avatarName: "avatar_wallyg", level: 9, points: 2080),
-                Leader(rank: "1st Officer", name: "EMBER", avatarName: "avatar_ember", level: 6, points: 900),
-                Leader(rank: "2nd Officer", name: "NYX", avatarName: "avatar_nyx", level: 5, points: 540)
-            ]
-        )
-        return .success(pulseforgeFaction)
+        guard isAuthenticated else {
+            return .failure(.notAuthenticated)
+        }
+        
+        do {
+            let response = try await client
+                .rpc("get_faction_overview", params: ["user_id": currentUserId])
+                .execute()
+            
+            // Decode the data into your FactionDetails model
+            let factionDetails = try JSONDecoder().decode(FactionDetails.self, from: response.data)
+            
+            return .success(factionDetails)
+        } catch {
+            if let decodingError = error as? DecodingError {
+                return .failure(.unknownError(decodingError.localizedDescription))
+            } else {
+                return .failure(.databaseError(error.localizedDescription))
+            }
+        }
     }
 }
