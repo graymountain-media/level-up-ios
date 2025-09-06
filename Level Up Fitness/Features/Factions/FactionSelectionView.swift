@@ -253,16 +253,29 @@ enum Faction: String, CaseIterable, Identifiable, Codable, Equatable {
     }
     
     // MARK: - Overview Content
+    var main_image: String {
+        switch self {
+        case .echoreach:
+            return "echoreach_icon"
+        case .pulseforge:
+            return "pulseforge_faction"
+        case .voidkind:
+            return "voidkind_faction"
+        case .neurospire:
+            return "neurospire_faction"
+        }
+    }
+    
     var slogan: String {
         switch self {
         case .echoreach:
-            return "Bold. Creative. Unconventional."
+            return "The spark that lights the night"
         case .pulseforge:
-            return "The Flame That Defends The Wall"
+            return "The fire that breaks the stone"
         case .voidkind:
-            return "Deep. Calculating. Mysterious."
+            return "The shadow that hides the knife"
         case .neurospire:
-            return "Perceptive. Innovative. Cerebral."
+            return "The thought that pierces the veil"
         }
     }
     
@@ -295,13 +308,13 @@ enum Faction: String, CaseIterable, Identifiable, Codable, Equatable {
     var traitIcons: [String] {
         switch self {
         case .echoreach:
-            return ["lightbulb_icon", "palette_icon", "sparkles_icon"]
+            return ["bold", "creative", "unconventional"]
         case .pulseforge:
-            return ["lightbulb_icon", "flame_icon", "target_icon"]
+            return ["ambitious", "fiery", "determined"]
         case .voidkind:
-            return ["eye_icon", "brain_icon", "moon_icon"]
+            return ["deep", "calculating", "mysterious"]
         case .neurospire:
-            return ["eye_icon", "gear_icon", "brain_icon"]
+            return ["perceptive", "innovative", "cerebral"]
         }
     }
 
