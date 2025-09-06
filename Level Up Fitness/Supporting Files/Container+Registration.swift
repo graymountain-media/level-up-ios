@@ -66,6 +66,10 @@ extension Container {
     var otherUsersService: Factory<OtherUsersServiceProtocol> {
         self { @MainActor in OtherUsersService() }
     }
+    
+    var friendsManager: Factory<FriendsManagerProtocol> {
+        self { @MainActor in FriendsManager() }.cached
+    }
 }
 
 extension Container {
@@ -80,6 +84,7 @@ extension Container {
         appState.register { @MainActor in MockAppState() }
         friendsService.register { @MainActor in MockFriendsService() }
         otherUsersService.register { @MainActor in MockOtherUsersService() }
+        friendsManager.register { @MainActor in MockFriendsManager() }
         return EmptyView()
     }
 }

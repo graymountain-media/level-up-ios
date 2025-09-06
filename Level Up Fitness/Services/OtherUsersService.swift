@@ -75,6 +75,7 @@ class OtherUserProfile: Decodable {
     let equippedItemsJson: [String: EquippedItemData]
     
     var progressToNextLevel: Double = 0
+    var xpToNextLevel: Int = 0
     var equippedItems: [OtherUserEquippedItem] = []
     
     private enum CodingKeys: String, CodingKey {
@@ -202,6 +203,7 @@ class OtherUsersService: OtherUsersServiceProtocol {
         let currentLevelInfo = OtherUsersService.calculateLevelInfo(xpInfo: userXPInfo, levelInfo: levelInfo)
         
         profile.progressToNextLevel = currentLevelInfo.progressToNextLevel
+        profile.xpToNextLevel = currentLevelInfo.xpToNextLevel
         profile.equippedItems = equippedItems
         
         return profile
@@ -241,7 +243,7 @@ class MockOtherUsersService: OtherUsersServiceProtocol {
         // Create mock profile directly with new structure
         let mockProfile = OtherUserProfile(
             id: userId,
-            avatarName: "AVARII",
+            avatarName: "AVARII The Great",
             credits: 100,
             avatarImageUrl: nil,
             profilePictureUrl: nil,

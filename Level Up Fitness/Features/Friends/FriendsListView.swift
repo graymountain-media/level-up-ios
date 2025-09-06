@@ -9,14 +9,16 @@ import SwiftUI
 import FactoryKit
 
 struct FriendsListView: View {
-    @Injected(\.friendsService) var friendsService
-    @State private var allFriendships: AllFriendships?
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @Injected(\.friendsManager) var friendsManager
     @State private var showingAddFriends = false
+    @State private var selectedUser: SelectedUser?
+    
+    struct SelectedUser: Identifiable {
+        let id: UUID
+    }
     
     private var isAllEmpty: Bool {
-        guard let friendships = allFriendships else { return true }
+        guard let friendships = friendsManager.allFriendships else { return true }
         return friendships.friendships.isEmpty
     }
     
@@ -35,7 +37,7 @@ struct FriendsListView: View {
             
             ScrollView {
                 LazyVStack(spacing: 32) {
-                    if isAllEmpty && !isLoading {
+                    if isAllEmpty && !friendsManager.isLoading {
                         // Empty state
                         VStack(spacing: 24) {
                             Spacer()
@@ -61,7 +63,7 @@ struct FriendsListView: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .padding(.horizontal, 32)
-                    } else if let friendships = allFriendships {
+                    } else if let friendships = friendsManager.allFriendships {
                             // Incoming Friend Requests Section
                             if !friendships.incomingRequests.isEmpty {
                                 friendshipSection(
@@ -70,8 +72,14 @@ struct FriendsListView: View {
                                     content: { request in
                                         IncomingRequestRowView(
                                             friendship: request,
-                                            onAccept: { await acceptFriendRequest(request) },
-                                            onReject: { await rejectFriendRequest(request) }
+                                            onAccept: {
+                                                await acceptFriendRequest(request.otherUserId)
+                                            },
+                                            onReject: { await rejectFriendRequest(request.friendshipId)
+                                            },
+                                            onTap: { userId in
+                                                self.selectedUser = SelectedUser(id: userId)
+                                            }
                                         )
                                     }
                                 )
@@ -84,11 +92,15 @@ struct FriendsListView: View {
                                     items: friendships.acceptedAndPending,
                                     content: { friend in
                                         if friend.isOutgoing {
-                                            OutgoingRequestRowView(friendship: friend)
+                                            OutgoingRequestRowView(friendship: friend) { userId in
+                                                self.selectedUser = SelectedUser(id: userId)
+                                            }
                                         } else {
                                             AcceptedFriendRowView(
                                                 friendship: friend,
-                                                onBlock: { await blockFriend(friend) }
+                                                onTap: { userId in
+                                                    self.selectedUser = SelectedUser(id: userId)
+                                                }
                                             )
                                         }
                                     }
@@ -103,7 +115,7 @@ struct FriendsListView: View {
                                     content: { blockedUser in
                                         BlockedUserRowView(
                                             friendship: blockedUser,
-                                            onUnblock: { await unblockUser(blockedUser) }
+                                            onUnblock: { await unblockUser(blockedUser.otherUserId) }
                                         )
                                     }
                                 )
@@ -113,7 +125,7 @@ struct FriendsListView: View {
                 .padding(.horizontal, 32)
                 .padding(.vertical, 24)
             }
-            .refreshable(action: { await loadAllFriendships() })
+            .refreshable(action: { await friendsManager.loadFriendships() })
             .scrollIndicators(.hidden)
         }
         .background(
@@ -121,11 +133,16 @@ struct FriendsListView: View {
                 .ignoresSafeArea()
         )
         .task {
-            await loadAllFriendships()
+            await friendsManager.loadFriendships()
         }
         .fullScreenCover(isPresented: $showingAddFriends) {
             AddFriendsSearchView {
                 showingAddFriends = false
+            }
+        }
+        .fullScreenCover(item: $selectedUser) { user in
+            OtherUserProfileView(userId: user.id) {
+                selectedUser = nil
             }
         }
     }
@@ -152,80 +169,45 @@ struct FriendsListView: View {
 }
 
 extension FriendsListView {
-    private func loadAllFriendships() async {
-        isLoading = true
-        errorMessage = nil
+    private func acceptFriendRequest(_ userId: UUID) async {
+        let result = await friendsManager.acceptFriendRequest(from: userId)
         
-        let result = await friendsService.fetchAllFriendships()
-        
-        switch result {
-        case .success(let friendships):
-            allFriendships = friendships
-        case .failure(let error):
-            errorMessage = error.localizedDescription
-        }
-        
-        isLoading = false
-    }
-    
-    private func acceptFriendRequest(_ friendship: Friendship) async {
-        let result = await friendsService.acceptFriendRequest(friendshipId: friendship.friendshipId)
-        
-        switch result {
-        case .success:
-            // Reload all friendships to get updated state
-            await loadAllFriendships()
-        case .failure(let error):
-            errorMessage = error.localizedDescription
+        if case .failure(let error) = result {
+            // Error handling could be implemented here if needed
+            print("Failed to accept friend request: \(error)")
         }
     }
     
-    private func rejectFriendRequest(_ friendship: Friendship) async {
-        let result = await friendsService.rejectFriendRequest(friendshipId: friendship.friendshipId)
+    private func rejectFriendRequest(_ friendshipId: Int64) async {
+        let result = await friendsManager.rejectFriendRequest(friendshipId: friendshipId)
         
-        switch result {
-        case .success:
-            // Reload all friendships to get updated state
-            await loadAllFriendships()
-        case .failure(let error):
-            errorMessage = error.localizedDescription
+        if case .failure(let error) = result {
+            print("Failed to reject friend request: \(error)")
         }
     }
     
-    private func blockFriend(_ friendship: Friendship) async {
-        let result = await friendsService.blockUser(userId: friendship.otherUserId)
+    private func blockFriend(_ userId: UUID) async {
+        let result = await friendsManager.blockUser(userId)
         
-        switch result {
-        case .success:
-            // Reload all friendships to get updated state
-            await loadAllFriendships()
-        case .failure(let error):
-            errorMessage = error.localizedDescription
+        if case .failure(let error) = result {
+            print("Failed to block user: \(error)")
         }
     }
     
-    private func unblockUser(_ friendship: Friendship) async {
-        let result = await friendsService.removeFriend(userId: friendship.otherUserId)
+    private func unblockUser(_ userId: UUID) async {
+        let result = await friendsManager.removeFriend(userId)
         
-        switch result {
-        case .success:
-            // Reload all friendships to get updated state
-            await loadAllFriendships()
-        case .failure(let error):
-            errorMessage = error.localizedDescription
+        if case .failure(let error) = result {
+            print("Failed to unblock user: \(error)")
         }
     }
-    
-    
 }
 
 // MARK: - Row Views
 
 struct AcceptedFriendRowView: View {
     let friendship: Friendship
-    let onBlock: () async -> Void
-    @State private var isBlocking = false
-    
+    let onTap: (_ userId: UUID) -> Void
     var body: some View {
         HStack(spacing: 16) {
             // Avatar
@@ -283,6 +265,10 @@ struct AcceptedFriendRowView: View {
                 }
             }
         }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap(friendship.otherUserId)
+        }
     }
 }
 
@@ -290,6 +276,7 @@ struct IncomingRequestRowView: View {
     let friendship: Friendship
     let onAccept: () async -> Void
     let onReject: () async -> Void
+    let onTap: (_ userId: UUID) -> Void
     
     @State private var isAccepting = false
     @State private var isRejecting = false
@@ -335,6 +322,10 @@ struct IncomingRequestRowView: View {
                         }
                     }
                 }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTap(friendship.otherUserId)
             }
             
             Spacer(minLength: 0)
@@ -423,7 +414,7 @@ struct IncomingRequestRowView: View {
 
 struct OutgoingRequestRowView: View {
     let friendship: Friendship
-    
+    let onTap: (_ userId: UUID) -> Void
     var body: some View {
         HStack(spacing: 16) {
             // Avatar
@@ -486,6 +477,10 @@ struct OutgoingRequestRowView: View {
             }
         }
         .padding(.vertical, 8)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap(friendship.otherUserId)
+        }
     }
 }
 

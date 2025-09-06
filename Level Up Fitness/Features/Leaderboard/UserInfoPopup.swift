@@ -11,14 +11,17 @@ import FactoryKit
 struct UserInfoPopup: View {
     let userId: UUID
     @Injected(\.otherUsersService) var otherUsersService
-//    @Injected(\.friendsService) var friendsService
+    @Injected(\.friendsManager) var friendsManager
     
     @State private var userProfile: OtherUserProfile?
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var isPerformingFriendAction = false
     
     var viewProfile: () -> Void = {}
     var dismiss: () -> Void = {}
+    
+    @State private var showingDetailedProfile = false
     
     var body: some View {
         ZStack {
@@ -40,6 +43,12 @@ struct UserInfoPopup: View {
         }
         .task {
             await fetchUserProfile()
+        }
+        .fullScreenCover(isPresented: $showingDetailedProfile) {
+            OtherUserProfileView(userId: userId, userProfile: userProfile) {
+                showingDetailedProfile = false
+                dismiss() // Also dismiss the popup when coming back
+            }
         }
     }
     
@@ -144,7 +153,9 @@ struct UserInfoPopup: View {
             }
             
             VStack(spacing: 10) {
-                Button(action: viewProfile) {
+                Button(action: { 
+                    showingDetailedProfile = true
+                }) {
                     Text("View Profile")
                         .font(.headline)
                         .foregroundColor(.white)
@@ -155,27 +166,30 @@ struct UserInfoPopup: View {
                         .cornerRadius(10)
                 }
                 
-                Button(action: {}) {
-                    Text("Add Friend")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(height: 28)
-                        .padding(.horizontal, 15)
-                        .padding(.vertical, 7)
-                        .background(Color.green)
-                        .cornerRadius(10)
-                }
+                friendActionButton(for: friendsManager.getFriendStatus(for: userId))
                 
-                Button(action: {}) {
-                    Text("Block")
-                        .font(.headline)
-                        .foregroundColor(.black)
-                        .frame(height: 28)
-                        .padding(.horizontal, 15)
-                        .padding(.vertical, 7)
-                        .background(Color.red)
-                        .cornerRadius(10)
+                Button(action: { 
+                    Task {
+                        await blockUser()
+                    }
+                }) {
+                    if isPerformingFriendAction {
+                        ProgressView()
+                            .scaleEffect(0.6)
+                            .tint(.white)
+                            .frame(height: 28)
+                    } else {
+                        Text("Block")
+                            .font(.headline)
+                            .foregroundColor(.black)
+                            .frame(height: 28)
+                            .padding(.horizontal, 15)
+                            .padding(.vertical, 7)
+                            .background(Color.red)
+                            .cornerRadius(10)
+                    }
                 }
+                .disabled(isPerformingFriendAction)
             }
             .padding(.top, 4)
         }
@@ -192,7 +206,48 @@ struct UserInfoPopup: View {
         .transition(.opacity.combined(with: .scale))
     }
     
-    // MARK: - Data Fetching
+    // MARK: - Friend Action Button
+    
+    @ViewBuilder
+    private func friendActionButton(for status: FriendStatus) -> some View {
+        Button(action: { 
+            Task {
+                await handleFriendAction(status)
+            }
+        }) {
+            if isPerformingFriendAction {
+                ProgressView()
+                    .scaleEffect(0.6)
+                    .tint(.white)
+                    .frame(height: 28)
+            } else {
+                Text(status.displayText)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(height: 28)
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 7)
+                    .background(backgroundColorForStatus(status))
+                    .cornerRadius(10)
+            }
+        }
+        .disabled(isPerformingFriendAction || !status.isActionable)
+    }
+    
+    private func backgroundColorForStatus(_ status: FriendStatus) -> Color {
+        switch status {
+        case .notFriend:
+            return .green
+        case .pendingIncoming:
+            return .blue
+        case .pendingOutgoing, .accepted:
+            return .gray
+        case .blocked, .blockedBy:
+            return .red
+        }
+    }
+    
+    // MARK: - Data Fetching & Actions
     
     private func fetchUserProfile() async {
         do {
@@ -210,6 +265,48 @@ struct UserInfoPopup: View {
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
             }
+        }
+    }
+    
+    private func handleFriendAction(_ status: FriendStatus) async {
+        isPerformingFriendAction = true
+        
+        let result: Result<Void, FriendsError>
+        
+        switch status {
+        case .notFriend:
+            result = await friendsManager.sendFriendRequest(to: userId)
+        case .pendingIncoming:
+            result = await friendsManager.acceptFriendRequest(from: userId)
+        default:
+            isPerformingFriendAction = false
+            return // No action for other states
+        }
+        
+        await MainActor.run {
+            switch result {
+            case .success:
+                break // Success - UI will update automatically via @Published properties
+            case .failure(let error):
+                errorMessage = error.localizedDescription
+            }
+            isPerformingFriendAction = false
+        }
+    }
+    
+    private func blockUser() async {
+        isPerformingFriendAction = true
+        
+        let result = await friendsManager.blockUser(userId)
+        
+        await MainActor.run {
+            switch result {
+            case .success:
+                break // Success - UI will update automatically
+            case .failure(let error):
+                errorMessage = error.localizedDescription
+            }
+            isPerformingFriendAction = false
         }
     }
 }
