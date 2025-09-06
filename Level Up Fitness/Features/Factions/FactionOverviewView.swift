@@ -42,9 +42,9 @@ struct FactionHeader: View {
 
     var body: some View {
         VStack(alignment: .center) {
-            Image(faction.iconName)
+            Image(faction.factionType.main_image)
                 .resizable()
-                .frame(width: 48, height: 48)
+                .frame(width: 66, height: 66)
             
             Spacer().frame(height: 20)
             
