@@ -252,6 +252,59 @@ enum Faction: String, CaseIterable, Identifiable, Codable, Equatable {
         }
     }
     
+    // MARK: - Overview Content
+    var slogan: String {
+        switch self {
+        case .echoreach:
+            return "Bold. Creative. Unconventional."
+        case .pulseforge:
+            return "The Flame That Defends The Wall"
+        case .voidkind:
+            return "Deep. Calculating. Mysterious."
+        case .neurospire:
+            return "Perceptive. Innovative. Cerebral."
+        }
+    }
+    
+    var memberTraits: [String] {
+        switch self {
+        case .echoreach:
+            return ["Bold", "Creative", "Unconventional"]
+        case .pulseforge:
+            return ["Ambitious", "Fiery", "Determined"]
+        case .voidkind:
+            return ["Deep", "Calculating", "Mysterious"]
+        case .neurospire:
+            return ["Perceptive", "Innovative", "Cerebral"]
+        }
+    }
+    
+    var memberTraitsDescription: String {
+        switch self {
+        case .echoreach:
+            return "Echoreach turns chaos into opportunity. Their weapon is their ability to find flaws that no one else can see. They are artists in motion."
+        case .pulseforge:
+            return "Pulseforge burn with a fire that refuses to be contained. Their drive ignites those around them and it turns obstacles into fuel. They are unstoppable."
+        case .voidkind:
+            return "Voidkind move like shadows given purpose. They are silent, steady, and watchful. Their every action hides a lethal precision."
+        case .neurospire:
+            return "Neurospire see the world as patterns waiting to be unraveled. They forge their curiosity into power, but it also drives them toward secrets best left alone."
+        }
+    }
+    
+    var traitIcons: [String] {
+        switch self {
+        case .echoreach:
+            return ["lightbulb_icon", "palette_icon", "sparkles_icon"]
+        case .pulseforge:
+            return ["lightbulb_icon", "flame_icon", "target_icon"]
+        case .voidkind:
+            return ["eye_icon", "brain_icon", "moon_icon"]
+        case .neurospire:
+            return ["eye_icon", "gear_icon", "brain_icon"]
+        }
+    }
+
     var baseColor: Color {
         switch self {
         case .echoreach:

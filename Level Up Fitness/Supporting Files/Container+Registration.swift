@@ -62,6 +62,10 @@ extension Container {
     var friendsService: Factory<FriendsServiceProtocol> {
         self { @MainActor in FriendsService() }
     }
+    
+    var factionHomeService: Factory<FactionHomeServiceProtocol> {
+        self { @MainActor in FactionHomeService() }
+    }
 }
 
 extension Container {
@@ -75,6 +79,7 @@ extension Container {
         appFlowManager.register { @MainActor in MockAppFlowManager() }
         appState.register { @MainActor in MockAppState() }
         friendsService.register { @MainActor in MockFriendsService() }
+        factionHomeService.register { @MainActor in MockFactionHomeService() }
         return EmptyView()
     }
 }
