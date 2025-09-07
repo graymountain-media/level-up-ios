@@ -31,11 +31,11 @@ struct FactionDetails: Codable, Identifiable {
 
 struct Leader: Identifiable, Codable {
     let id = UUID()
-    let rank: String? = nil
     let avatarName: String
     let avatarImageUrl: String
     let level: Int
     let xpPoints: Int // Could be XP, contributions, etc.
+    var rank: String? = nil
 
     // For Codable if your backend uses snake_case
     enum CodingKeys: String, CodingKey {
@@ -110,8 +110,9 @@ class FactionHomeService: FactionHomeServiceProtocol {
                 .single()
                 .execute()
                 .value
-                
-            return .success(response)
+            let updatedResponse: FactionDetails = configureTopLeaders(response)
+            
+            return .success(updatedResponse)
         } catch {
             // Handle database errors
             if let apiError = error as? PostgrestError {
@@ -127,4 +128,30 @@ class FactionHomeService: FactionHomeServiceProtocol {
             return .failure(.unknownError(error.localizedDescription))
         }
     }
+    
+    private func configureTopLeaders(_ details: FactionDetails) -> FactionDetails {
+        let sortedLeaders = details.topLeaders.sorted { $0.xpPoints > $1.xpPoints }
+        let rankedLeaders = sortedLeaders.enumerated().map { (index, leader) -> Leader in
+            var newLeader = leader
+            switch index {
+            case 0:
+                newLeader.rank = "Faction Leader"
+            case 1:
+                newLeader.rank = "1st Officer"
+            case 2:
+                newLeader.rank = "2nd Officer"
+            default:
+                newLeader.rank = nil
+            }
+            return newLeader
+        }
+        let updatedResponse = FactionDetails(
+            faction: details.faction,
+            weeklyXP: details.weeklyXP,
+            memberCount: details.memberCount,
+            topLeaders: rankedLeaders
+        )
+        return updatedResponse
+    }
+
 }

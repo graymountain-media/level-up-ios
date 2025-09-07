@@ -95,9 +95,7 @@ struct LeaderCardView: View {
             
             VStack {
                 ZStack(alignment: .bottom) {
-                    Image(leader.avatarImageUrl)
-                        .resizable()
-                        .scaledToFill()
+                    ProfilePicture(url: leader.avatarImageUrl)
                         .frame(width: 60, height: 60)
                     
                     Text("\(leader.level)")
