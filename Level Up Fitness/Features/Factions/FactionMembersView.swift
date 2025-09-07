@@ -19,6 +19,7 @@ struct FactionMembersView: View {
 
 struct ProfileRowView: View {
     let member: FactionMember
+    @State private var showingDetailedProfile = false
 
     var body: some View {
         HStack(spacing: 16) {
@@ -72,8 +73,7 @@ struct ProfileRowView: View {
 
             // "View Profile" button
             Button(action: {
-                // TODO: navigate to viewing profile
-                print("0")
+                showingDetailedProfile = true
             }) {
                 Text("VIEW PROFILE")
                     .font(.system(size: 12, weight: .bold))
@@ -94,6 +94,11 @@ struct ProfileRowView: View {
                 .stroke(.factionCardBorder, lineWidth: 2)
                 .opacity(0.6)
         )
+        .fullScreenCover(isPresented: $showingDetailedProfile) {
+            OtherUserProfileView(userId: member.id) {
+                showingDetailedProfile = false
+            }
+        }
     }
 }
 
