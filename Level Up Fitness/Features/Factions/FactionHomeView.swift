@@ -25,7 +25,7 @@ struct FactionHomeView: View {
             }
         }
         .padding(.bottom, 32)
-        .mainBackground()
+        .factionBackground(faction: viewModel.factionDetails?.faction)
         .task {
             await viewModel.fetchFactionDetails()
         }
