@@ -21,6 +21,41 @@ class MockFactionHomeService: FactionHomeServiceProtocol {
         ]
     )
     
+    private let mockFactionMembers: [FactionMember] = [
+        FactionMember(
+                id: UUID(uuidString: "123e4567-e89b-12d3-a456-426614174000")!,
+                avatarName: "Phoenix",
+                avatarImageUrl: "https://placehold.co/128x128/FF5733/ffffff?text=L1",
+                level: 35,
+                xpPoints: 50000,
+                heroPath: HeroPath.brute
+            ),
+            FactionMember(
+                id: UUID(uuidString: "423e4567-e89b-12d3-a456-426614174001")!,
+                avatarName: "Seraphina",
+                avatarImageUrl: "https://placehold.co/128x128/33FF57/ffffff?text=L2",
+                level: 30,
+                xpPoints: 45000,
+                heroPath: HeroPath.champion
+            ),
+            FactionMember(
+                id: UUID(uuidString: "723e4567-e89b-12d3-a456-426614174002")!,
+                avatarName: "Triton",
+                avatarImageUrl: "https://placehold.co/128x128/33A2FF/ffffff?text=L3",
+                level: 28,
+                xpPoints: 42000,
+                heroPath: HeroPath.hunter
+            ),
+            FactionMember(
+                id: UUID(uuidString: "a23e4567-e89b-12d3-a456-426614174003")!,
+                avatarName: "Nyx",
+                avatarImageUrl: "https://placehold.co/128x128/9933FF/ffffff?text=L4",
+                level: 25,
+                xpPoints: 38000,
+                heroPath: HeroPath.ranger
+            )
+    ]
+    
     init() {
         setupMockData()
     }
@@ -33,5 +68,11 @@ class MockFactionHomeService: FactionHomeServiceProtocol {
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
         
         return .success(mockFactionDetails)
+    }
+    
+    func getFactionMembers() async -> Result<[FactionMember], FactionHomeError> {
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        
+        return .success(mockFactionMembers)
     }
 }

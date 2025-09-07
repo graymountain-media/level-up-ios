@@ -27,7 +27,7 @@ struct FactionHomeView: View {
         .padding(.bottom, 32)
         .factionBackground(faction: viewModel.factionDetails?.faction)
         .task {
-            await viewModel.fetchFactionDetails()
+            await viewModel.loadInitialData()
         }
     }
     
@@ -71,7 +71,7 @@ struct FactionHomeView: View {
                 case .overview:
                     FactionOverviewView(factionDetails: factionDetails)
                 case .members:
-                    FactionMembersView()
+                    FactionMembersView(factionMembers: viewModel.factionMembers)
                 case .strongholds:
                     FactionStrongholdsView()
                 }

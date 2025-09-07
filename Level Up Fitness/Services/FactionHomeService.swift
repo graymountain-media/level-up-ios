@@ -34,16 +34,34 @@ struct Leader: Identifiable, Codable {
     let avatarName: String
     let avatarImageUrl: String
     let level: Int
-    let xpPoints: Int // Could be XP, contributions, etc.
+    let xpPoints: Int
     var rank: String? = nil
 
-    // For Codable if your backend uses snake_case
     enum CodingKeys: String, CodingKey {
         case rank
         case avatarName = "avatar_name"
         case avatarImageUrl = "avatar_image_url"
         case level
         case xpPoints = "xp_points"
+    }
+}
+
+struct FactionMember: Codable, Identifiable {
+    let id: UUID
+    let avatarName: String
+    let avatarImageUrl: String?
+    let level: Int
+    let xpPoints: Int
+    let heroPath: HeroPath?
+    var rank: String? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case id = "user_id"
+        case avatarName = "avatar_name"
+        case avatarImageUrl = "avatar_image_url"
+        case level = "current_level"
+        case xpPoints = "xp_points"
+        case heroPath = "hero_path"
     }
 }
 
@@ -75,6 +93,7 @@ enum FactionHomeError: LocalizedError {
 
 protocol FactionHomeServiceProtocol {
     func fetchFactionDetails() async -> Result<FactionDetails, FactionHomeError>
+    func getFactionMembers() async -> Result<[FactionMember], FactionHomeError>
 }
 
 @MainActor
@@ -152,6 +171,23 @@ class FactionHomeService: FactionHomeServiceProtocol {
             topLeaders: rankedLeaders
         )
         return updatedResponse
+    }
+    
+    func getFactionMembers() async -> Result<[FactionMember], FactionHomeError> {
+        guard (currentUserFaction != nil) else {
+            return .failure(.unknownError("Has no faction"))
+        }
+        
+        do {
+            let response: [FactionMember] = try await client
+                .rpc("get_faction_members", params: ["target_faction": currentUserFaction])
+                .execute()
+                .value
+            
+            return .success(response)
+        } catch {
+            return .failure(.unknownError(error.localizedDescription))
+        }
     }
 
 }
