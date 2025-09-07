@@ -184,7 +184,18 @@ class FactionHomeService: FactionHomeServiceProtocol {
                 .execute()
                 .value
             
-            return .success(response)
+            let rankedResponse = response.enumerated().map { index, member in
+                var updated = member
+                switch index {
+                case 0: updated.rank = "Faction Leader"
+                case 1: updated.rank = "1st Officer"
+                case 2: updated.rank = "2nd Officer"
+                default: break
+                }
+                return updated
+            }
+            
+            return .success(rankedResponse)
         } catch {
             return .failure(.unknownError(error.localizedDescription))
         }

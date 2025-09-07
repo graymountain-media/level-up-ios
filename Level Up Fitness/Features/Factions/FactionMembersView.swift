@@ -11,7 +11,7 @@ struct FactionMembersView: View {
     let factionMembers: [FactionMember]
     
     var body: some View {
-        ForEach(factionMembers) { member in
+        ForEach(Array(factionMembers.enumerated()), id: \.element.id) { index, member in
             ProfileRowView(member: member)
         }.padding(.horizontal, 16)
     }
@@ -48,8 +48,7 @@ struct ProfileRowView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(member.avatarName)
-                        .font(.title3)
-                        .fontWeight(.bold)
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.generalText)
                     if let icon = member.heroPath?.iconName {
                         Image(icon)
@@ -61,13 +60,12 @@ struct ProfileRowView: View {
 
                 if let rank = member.rank {
                     Text(rank)
-                        .font(.subheadline)
-                        .foregroundColor(Color(white: 0.7))
+                        .font(.system(size: 12))
+                        .foregroundColor(.factionRank)
                 }
 
                 Text("\(member.xpPoints)")
-                    .font(.body)
-                    .fontWeight(.bold)
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.numbers)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -81,7 +79,11 @@ struct ProfileRowView: View {
                     .font(.system(size: 12, weight: .bold))
                     .padding(.vertical, 6)
                     .padding(.horizontal, 6)
-                    .background(.factionHomeSectionTitle)
+                    .background(
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(.factionHomeSectionTitle)
+                        
+                    )
                     .foregroundColor(.black)
             }
         }
