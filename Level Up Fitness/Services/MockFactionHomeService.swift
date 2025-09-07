@@ -11,7 +11,7 @@ class MockFactionHomeService: FactionHomeServiceProtocol {
     
     // Mock data storage
     private var mockFactionDetails: FactionDetails = FactionDetails(
-        factionName: "Phoenix",
+        faction: Faction.echoreach,
         weeklyXP: 12500,
         memberCount: 45,
         topLeaders: [

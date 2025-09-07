@@ -7,25 +7,22 @@
 import SwiftUI
 import Foundation
 import FactoryKit
+import Helpers
 
 // MARK: Data Models
 struct FactionDetails: Codable, Identifiable {
     let id: UUID = UUID()
-    let factionName: String
+    let faction: Faction
     let weeklyXP: Int
     let memberCount: Int
     let topLeaders: [Leader]
-    
-    var faction: Faction? {
-        Faction(rawValue: factionName.rawValue)
-    }
     
     var levelLine: Int {
         return Int(weeklyXP/memberCount)
     }
 
     enum CodingKeys: String, CodingKey {
-        case factionName = "faction_name"
+        case faction
         case weeklyXP = "weekly_xp"
         case memberCount = "member_count"
         case topLeaders = "top_leaders"
@@ -94,26 +91,40 @@ class FactionHomeService: FactionHomeServiceProtocol {
         return client.auth.currentUser?.id
     }
     
+    private var currentUserFaction: Faction? {
+        return appState.userAccountData?.profile.faction
+    }
+    
     func fetchFactionDetails() async -> Result<FactionDetails, FactionHomeError> {
         guard isAuthenticated else {
             return .failure(.notAuthenticated)
         }
         
+        guard (currentUserFaction != nil) else {
+            return .failure(.unknownError("Has no faction"))
+        }
+        
         do {
-            let response = try await client
-                .rpc("get_faction_overview", params: ["user_id": currentUserId])
+            let response: FactionDetails = try await client
+                .rpc("get_faction_overview", params: ["target_faction": currentUserFaction])
+                .single()
                 .execute()
-            
-            // Decode the data into your FactionDetails model
-            let factionDetails = try JSONDecoder().decode(FactionDetails.self, from: response.data)
-            
-            return .success(factionDetails)
+                .value
+                
+            return .success(response)
         } catch {
-            if let decodingError = error as? DecodingError {
-                return .failure(.unknownError(decodingError.localizedDescription))
-            } else {
-                return .failure(.databaseError(error.localizedDescription))
+            // Handle database errors
+            if let apiError = error as? PostgrestError {
+                return .failure(.databaseError(apiError.message))
             }
+            
+            // Handle the specific decoding error for a null or empty response
+            if let decodingError = error as? DecodingError, case .valueNotFound(_, _) = decodingError {
+                return .failure(.unknownError("No Data Returned"))
+            }
+            
+            // Fallback for any other unexpected errors
+            return .failure(.unknownError(error.localizedDescription))
         }
     }
 }

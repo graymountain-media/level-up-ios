@@ -12,28 +12,24 @@ struct FactionOverviewView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .center) {
-                if let faction = factionDetails.faction {
-                    FactionHeader(faction: faction)
-                        .padding(.bottom, 12)
-                    FactionDivider()
-                    
-                    TopLeadersView(
-                        leaders: factionDetails.topLeaders,
-                        faction: faction
-                    )
-                    FactionDivider()
-                    
-                    MemberTraitsView(
-                        description: faction.memberTraitsDescription,
-                        traits: faction.memberTraits,
-                        traitIcons: faction.traitIcons
-                    )
-                    FactionDivider()
-                    
-                    FactionStatsView(faction: factionDetails)
-                } else {
-                    // TODO: show error view
-                }
+                FactionHeader(faction: factionDetails.faction)
+                    .padding(.bottom, 12)
+                FactionDivider()
+                
+                TopLeadersView(
+                    leaders: factionDetails.topLeaders,
+                    faction: factionDetails.faction
+                )
+                FactionDivider()
+                
+                MemberTraitsView(
+                    description: factionDetails.faction.memberTraitsDescription,
+                    traits: factionDetails.faction.memberTraits,
+                    traitIcons: factionDetails.faction.traitIcons
+                )
+                FactionDivider()
+                
+                FactionStatsView(faction: factionDetails)
             }
             .padding(.horizontal, 24)
         }
