@@ -11,7 +11,7 @@ struct FactionMembersView: View {
     let factionMembers: [FactionMember]
     
     var body: some View {
-        ForEach(Array(factionMembers.enumerated()), id: \.element.id) { index, member in
+        ForEach(factionMembers) { member in
             ProfileRowView(member: member)
         }.padding(.horizontal, 16)
     }
