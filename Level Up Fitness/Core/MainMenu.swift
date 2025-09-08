@@ -10,9 +10,10 @@ import FactoryKit
 
 enum MenuItem: Int, CaseIterable, Identifiable {
     case itemShop
-    case accountSettings
-    case friends
     case factionHome
+    case memberFeed
+    case friends
+    case accountSettings
     case help
     
     var id: Int {
@@ -29,6 +30,8 @@ enum MenuItem: Int, CaseIterable, Identifiable {
             "friends_icon"
         case .factionHome:
             "faction_home"
+        case .memberFeed:
+            "member_feed"
         case .help:
             "help_icon"
         }
@@ -44,6 +47,8 @@ enum MenuItem: Int, CaseIterable, Identifiable {
             "Friends List"
         case .factionHome:
             "Faction"
+        case .memberFeed:
+            "Member Feed"
         case .help:
             "Help Center"
         }

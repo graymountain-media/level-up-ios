@@ -190,14 +190,7 @@ struct SearchResultRowView: View {
     var body: some View {
         HStack(spacing: 16) {
             // Avatar
-            ZStack(alignment: .bottom) {
-                ProfilePicture(url: user.profilePictureUrl)
-                Text("\(user.currentLevel)")
-                    .font(.system(size: 14))
-                    .foregroundColor(.white)
-                    .bold()
-                    .offset(y: 7)
-            }
+            ProfilePicture(url: user.profilePictureUrl, level: user.currentLevel)
             
             VStack(alignment: .leading, spacing: 4) {
                 // Display Name

@@ -73,6 +73,10 @@ extension Container {
     var factionHomeService: Factory<FactionHomeServiceProtocol> {
         self { @MainActor in FactionHomeService() }
     }
+    
+    var messageBoardService: Factory<MessageBoardServiceProtocol> {
+        self { @MainActor in MessageBoardService() }
+    }
 }
 
 extension Container {
@@ -89,6 +93,7 @@ extension Container {
         otherUsersService.register { @MainActor in MockOtherUsersService() }
         friendsManager.register { @MainActor in MockFriendsManager() }
         factionHomeService.register { @MainActor in MockFactionHomeService() }
+        messageBoardService.register { @MainActor in MockMessageBoardService() }
         return EmptyView()
     }
 }

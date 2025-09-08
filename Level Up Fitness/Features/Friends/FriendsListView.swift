@@ -211,16 +211,7 @@ struct AcceptedFriendRowView: View {
     var body: some View {
         HStack(spacing: 16) {
             // Avatar
-            ZStack(alignment: .bottom) {
-                ProfilePicture(url: friendship.otherProfilePictureUrl)
-                if let level = friendship.otherCurrentLevel {
-                    Text("\(level)")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white)
-                        .bold()
-                        .offset(y: 7)
-                }
-            }
+            ProfilePicture(url: friendship.otherProfilePictureUrl, level: friendship.otherCurrentLevel)
             
             VStack(alignment: .leading, spacing: 4) {
                 // Username
@@ -285,7 +276,7 @@ struct IncomingRequestRowView: View {
     var body: some View {
         HStack(spacing: 16) {
             // Avatar
-            ProfilePicture(url: friendship.otherProfilePictureUrl)
+            ProfilePicture(url: friendship.otherProfilePictureUrl, level: friendship.otherCurrentLevel)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(friendship.otherAvatarName.uppercased())
@@ -418,7 +409,7 @@ struct OutgoingRequestRowView: View {
     var body: some View {
         HStack(spacing: 16) {
             // Avatar
-            ProfilePicture(url: friendship.otherProfilePictureUrl)
+            ProfilePicture(url: friendship.otherProfilePictureUrl, level: friendship.otherCurrentLevel)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(friendship.otherAvatarName.uppercased())
