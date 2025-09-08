@@ -25,6 +25,27 @@ struct MainBackgroundModifier: ViewModifier {
             )
     }
 }
+
+struct FactionBackgroundModifier: ViewModifier {
+    let faction: Faction?
+    
+    func body(content: Content) -> some View {
+        let bg = switch(faction) {
+        case .echoreach: "main_bg" // TODO: add faction bg once we have the image asset
+        case .neurospire: "neurospire_bg"
+        case .pulseforge: "pulseforge_bg"
+        case .voidkind: "voidkind_bg"
+        default: "main_bg"
+        }
+        content
+            .background(
+                Image(bg)
+                    .resizable()
+                    .ignoresSafeArea()
+            )
+    }
+}
+
 extension View {
     func borderShadow() -> some View {
         self.modifier(BoderShadowModifier())
@@ -32,5 +53,9 @@ extension View {
     
     func mainBackground() -> some View {
         self.modifier(MainBackgroundModifier())
+    }
+    
+    func factionBackground(faction: Faction?) -> some View {
+        self.modifier(FactionBackgroundModifier(faction: faction))
     }
 }

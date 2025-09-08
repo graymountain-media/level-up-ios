@@ -20,22 +20,36 @@ class FactionHomeViewModel {
     var showError = false
     var selectedTab: FactionTabs = .overview
     var factionDetails: FactionDetails? = nil
+    var factionMembers: [FactionMember] = []
     
-    func fetchFactionDetails() async {
+    func loadInitialData() async {
         isLoading = true
         showError = false
         errorMessage = nil
-        
+        await fetchFactionDetails()
+        await getFactionMembers()
+        isLoading = false
+    }
+    
+    func fetchFactionDetails() async {
         let result = await factionHomeService.fetchFactionDetails()
         switch result {
         case .success(let factionDetails):
             self.factionDetails = factionDetails
-            isLoading = false
         case .failure(let error):
             setError(error.localizedDescription)
         }
     }
     
+    func getFactionMembers() async {
+        let result = await factionHomeService.getFactionMembers()
+        switch result {
+        case .success(let factionMembers):
+            self.factionMembers = factionMembers
+        case .failure(let error):
+            setError(error.localizedDescription)
+        }
+    }
     
     // MARK: - Private Methods
     
