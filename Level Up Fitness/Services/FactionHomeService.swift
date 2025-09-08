@@ -6,49 +6,62 @@
 //
 import SwiftUI
 import Foundation
+import FactoryKit
+import Helpers
 
 // MARK: Data Models
 struct FactionDetails: Codable, Identifiable {
-    let factionId: UUID
-    let factionType: Faction
-    let name: String
-    let iconName: String
-    let description: String
+    let id: UUID = UUID()
+    let faction: Faction
     let weeklyXP: Int
     let memberCount: Int
-    let levelLine: Int
     let topLeaders: [Leader]
-
-    var id: UUID { factionId }
+    
+    var levelLine: Int {
+        return Int(weeklyXP/memberCount)
+    }
 
     enum CodingKeys: String, CodingKey {
-        case factionId = "faction_id"
-        case factionType = "faction_type"
-        case name
-        case iconName = "icon_name"
-        case description
+        case faction
         case weeklyXP = "weekly_xp"
         case memberCount = "member_count"
-        case levelLine = "level_line"
         case topLeaders = "top_leaders"
     }
 }
 
 struct Leader: Identifiable, Codable {
-    let id = UUID() // Unique ID for SwiftUI
-    let rank: String
-    let name: String
-    let avatarName: String // Name of the image asset for the avatar
+    let id = UUID()
+    let avatarName: String
+    let avatarImageUrl: String
     let level: Int
-    let points: Int // Could be XP, contributions, etc.
+    let xpPoints: Int
+    var rank: String? = nil
 
-    // For Codable if your backend uses snake_case
     enum CodingKeys: String, CodingKey {
         case rank
-        case name
         case avatarName = "avatar_name"
+        case avatarImageUrl = "avatar_image_url"
         case level
-        case points
+        case xpPoints = "xp_points"
+    }
+}
+
+struct FactionMember: Codable, Identifiable {
+    let id: UUID
+    let avatarName: String
+    let avatarImageUrl: String?
+    let level: Int
+    let xpPoints: Int
+    let heroPath: HeroPath?
+    var rank: String? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case id = "user_id"
+        case avatarName = "avatar_name"
+        case avatarImageUrl = "avatar_image_url"
+        case level = "current_level"
+        case xpPoints = "xp_points"
+        case heroPath = "hero_path"
     }
 }
 
@@ -80,28 +93,112 @@ enum FactionHomeError: LocalizedError {
 
 protocol FactionHomeServiceProtocol {
     func fetchFactionDetails() async -> Result<FactionDetails, FactionHomeError>
+    func getFactionMembers() async -> Result<[FactionMember], FactionHomeError>
 }
 
+@MainActor
 class FactionHomeService: FactionHomeServiceProtocol {
-    
+    @ObservationIgnored @Injected(\.appState) var appState
+
     init() {}
     
-    func fetchFactionDetails() async -> Result<FactionDetails, FactionHomeError> {
-        let pulseforgeFaction = FactionDetails(
-            factionId: UUID(uuidString: "7a1b9c4d-2e6f-4a8b-9e1c-3d5f7a9c2b8d")!,
-            factionType: .pulseforge,
-            name: "PULSEFORGE",
-            iconName: "pulseforge_icon",
-            description: "Pulseforge burn with a fire that refuses to be contained. Their drive ignites those around them and it turns obstacles into fuel. They are unstoppable.",
-            weeklyXP: 2500,
-            memberCount: 21,
-            levelLine: 120,
-            topLeaders: [
-                Leader(rank: "Faction Leader", name: "WALLYG", avatarName: "avatar_wallyg", level: 9, points: 2080),
-                Leader(rank: "1st Officer", name: "EMBER", avatarName: "avatar_ember", level: 6, points: 900),
-                Leader(rank: "2nd Officer", name: "NYX", avatarName: "avatar_nyx", level: 5, points: 540)
-            ]
-        )
-        return .success(pulseforgeFaction)
+    private var isAuthenticated: Bool {
+        return appState.isAuthenticated
     }
+    
+    private var currentUserId: UUID? {
+        return client.auth.currentUser?.id
+    }
+    
+    private var currentUserFaction: Faction? {
+        return appState.userAccountData?.profile.faction
+    }
+    
+    func fetchFactionDetails() async -> Result<FactionDetails, FactionHomeError> {
+        guard isAuthenticated else {
+            return .failure(.notAuthenticated)
+        }
+        
+        guard (currentUserFaction != nil) else {
+            return .failure(.unknownError("Has no faction"))
+        }
+        
+        do {
+            let response: FactionDetails = try await client
+                .rpc("get_faction_overview", params: ["target_faction": currentUserFaction])
+                .single()
+                .execute()
+                .value
+            let updatedResponse: FactionDetails = configureTopLeaders(response)
+            
+            return .success(updatedResponse)
+        } catch {
+            // Handle database errors
+            if let apiError = error as? PostgrestError {
+                return .failure(.databaseError(apiError.message))
+            }
+            
+            // Handle the specific decoding error for a null or empty response
+            if let decodingError = error as? DecodingError, case .valueNotFound(_, _) = decodingError {
+                return .failure(.unknownError("No Data Returned"))
+            }
+            
+            // Fallback for any other unexpected errors
+            return .failure(.unknownError(error.localizedDescription))
+        }
+    }
+    
+    private func configureTopLeaders(_ details: FactionDetails) -> FactionDetails {
+        let sortedLeaders = details.topLeaders.sorted { $0.xpPoints > $1.xpPoints }
+        let rankedLeaders = sortedLeaders.enumerated().map { (index, leader) -> Leader in
+            var newLeader = leader
+            switch index {
+            case 0:
+                newLeader.rank = "Faction Leader"
+            case 1:
+                newLeader.rank = "1st Officer"
+            case 2:
+                newLeader.rank = "2nd Officer"
+            default:
+                newLeader.rank = nil
+            }
+            return newLeader
+        }
+        let updatedResponse = FactionDetails(
+            faction: details.faction,
+            weeklyXP: details.weeklyXP,
+            memberCount: details.memberCount,
+            topLeaders: rankedLeaders
+        )
+        return updatedResponse
+    }
+    
+    func getFactionMembers() async -> Result<[FactionMember], FactionHomeError> {
+        guard (currentUserFaction != nil) else {
+            return .failure(.unknownError("Has no faction"))
+        }
+        
+        do {
+            let response: [FactionMember] = try await client
+                .rpc("get_faction_members", params: ["target_faction": currentUserFaction])
+                .execute()
+                .value
+            
+            let rankedResponse = response.enumerated().map { index, member in
+                var updated = member
+                switch index {
+                case 0: updated.rank = "Faction Leader"
+                case 1: updated.rank = "1st Officer"
+                case 2: updated.rank = "2nd Officer"
+                default: break
+                }
+                return updated
+            }
+            
+            return .success(rankedResponse)
+        } catch {
+            return .failure(.unknownError(error.localizedDescription))
+        }
+    }
+
 }

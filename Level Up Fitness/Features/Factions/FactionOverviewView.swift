@@ -7,29 +7,29 @@
 import SwiftUI
 
 struct FactionOverviewView: View {
-    let faction: FactionDetails
+    let factionDetails: FactionDetails
 
     var body: some View {
         ScrollView {
             VStack(alignment: .center) {
-                FactionHeader(faction: faction)
+                FactionHeader(faction: factionDetails.faction)
                     .padding(.bottom, 12)
                 FactionDivider()
                 
                 TopLeadersView(
-                    leaders: faction.topLeaders,
-                    factionType: faction.factionType
+                    leaders: factionDetails.topLeaders,
+                    faction: factionDetails.faction
                 )
                 FactionDivider()
                 
                 MemberTraitsView(
-                    description: faction.factionType.memberTraitsDescription,
-                    traits: faction.factionType.memberTraits,
-                    traitIcons: faction.factionType.traitIcons
+                    description: factionDetails.faction.memberTraitsDescription,
+                    traits: factionDetails.faction.memberTraits,
+                    traitIcons: factionDetails.faction.traitIcons
                 )
                 FactionDivider()
                 
-                FactionStatsView(faction: faction)
+                FactionStatsView(faction: factionDetails)
             }
             .padding(.horizontal, 24)
         }
@@ -38,13 +38,13 @@ struct FactionOverviewView: View {
 
 
 struct FactionHeader: View {
-    let faction: FactionDetails
+    let faction: Faction
 
     var body: some View {
         VStack(alignment: .center) {
-            Image(faction.iconName)
+            Image(faction.main_image)
                 .resizable()
-                .frame(width: 48, height: 48)
+                .frame(width: 66, height: 66)
             
             Spacer().frame(height: 20)
             
@@ -54,7 +54,7 @@ struct FactionHeader: View {
             
             Spacer().frame(height: 12)
             
-            Text(faction.factionType.slogan)
+            Text(faction.slogan)
                 .font(.body)
                 .foregroundStyle(.pulseforge)
                 .textCase(.uppercase)
@@ -64,7 +64,7 @@ struct FactionHeader: View {
 
 struct TopLeadersView: View {
     let leaders: [Leader]
-    let factionType: Faction
+    let faction: Faction
 
     var body: some View {
         VStack(alignment: .center, spacing: 16) {
@@ -76,7 +76,7 @@ struct TopLeadersView: View {
             
             HStack(alignment: .top, spacing: 12) {
                 ForEach(leaders) { leader in
-                    LeaderCardView(leader: leader, factionType: factionType)
+                    LeaderCardView(leader: leader, factionType: faction)
                 }
             }
         }
@@ -89,15 +89,13 @@ struct LeaderCardView: View {
 
     var body: some View {
         VStack(alignment: .center, spacing: 8) {
-            Text(leader.rank)
+            Text(leader.rank ?? "")
                 .font(.caption)
                 .foregroundStyle(.generalText)
             
             VStack {
                 ZStack(alignment: .bottom) {
-                    Image(leader.avatarName)
-                        .resizable()
-                        .scaledToFill()
+                    ProfilePicture(url: leader.avatarImageUrl)
                         .frame(width: 60, height: 60)
                     
                     Text("\(leader.level)")
@@ -111,11 +109,11 @@ struct LeaderCardView: View {
                 }
                 .padding(.bottom, 4)
                 
-                Text(leader.name)
+                Text(leader.avatarName)
                     .font(.headline)
                     .foregroundStyle(.generalText)
                 
-                Text("\(leader.points)")
+                Text("\(leader.xpPoints)")
                     .font(.subheadline)
                     .foregroundStyle(.numbers)
             }
