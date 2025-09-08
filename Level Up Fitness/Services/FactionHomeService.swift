@@ -32,7 +32,7 @@ struct FactionDetails: Codable, Identifiable {
 struct Leader: Identifiable, Codable {
     let id = UUID()
     let avatarName: String
-    let avatarImageUrl: String
+    let profilePictureUrl: String
     let level: Int
     let xpPoints: Int
     var rank: String? = nil
@@ -40,7 +40,7 @@ struct Leader: Identifiable, Codable {
     enum CodingKeys: String, CodingKey {
         case rank
         case avatarName = "avatar_name"
-        case avatarImageUrl = "avatar_image_url"
+        case profilePictureUrl = "profile_picture_url"
         case level
         case xpPoints = "xp_points"
     }
@@ -49,7 +49,7 @@ struct Leader: Identifiable, Codable {
 struct FactionMember: Codable, Identifiable {
     let id: UUID
     let avatarName: String
-    let avatarImageUrl: String?
+    let profilePictureUrl: String?
     let level: Int
     let xpPoints: Int
     let heroPath: HeroPath?
@@ -58,7 +58,7 @@ struct FactionMember: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case id = "user_id"
         case avatarName = "avatar_name"
-        case avatarImageUrl = "avatar_image_url"
+        case profilePictureUrl = "profile_picture_url"
         case level = "current_level"
         case xpPoints = "xp_points"
         case heroPath = "hero_path"
