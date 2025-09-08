@@ -25,7 +25,7 @@ struct ProfileRowView: View {
         HStack(spacing: 16) {
             // Profile image with badge
             ZStack(alignment: .bottom) {
-                if let url = member.avatarImageUrl {
+                if let url = member.profilePictureUrl {
                     ProfilePicture(url: url)
                         .frame(width: 60, height: 60)
                 } else {

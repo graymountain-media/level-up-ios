@@ -97,7 +97,7 @@ struct LeaderCardView: View {
             
             VStack {
                 ZStack(alignment: .bottom) {
-                    ProfilePicture(url: leader.avatarImageUrl)
+                    ProfilePicture(url: leader.profilePictureUrl)
                         .frame(width: 60, height: 60)
                     
                     Text("\(leader.level)")
