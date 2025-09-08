@@ -49,7 +49,8 @@ struct ProfileRowView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(member.avatarName)
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.mainFont(size: 20))
+                        .fontWeight(.bold)
                         .foregroundColor(.generalText)
                     if let icon = member.heroPath?.iconName {
                         Image(icon)
@@ -76,9 +77,9 @@ struct ProfileRowView: View {
                 showingDetailedProfile = true
             }) {
                 Text("VIEW PROFILE")
-                    .font(.system(size: 12, weight: .bold))
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 6)
+                    .font(.mainFont(size: 12))
+                    .fontWeight(.bold)
+                    .padding(6)
                     .background(
                         RoundedRectangle(cornerRadius: 2)
                             .fill(.factionHomeSectionTitle)

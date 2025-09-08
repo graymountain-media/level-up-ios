@@ -49,7 +49,8 @@ struct FactionHeader: View {
             Spacer().frame(height: 20)
             
             Text(faction.name)
-                .font(.largeTitle)
+                .font(.mainFont(size: 32))
+                .fontWeight(.bold)
                 .foregroundStyle(.title)
             
             Spacer().frame(height: 12)
@@ -69,7 +70,8 @@ struct TopLeadersView: View {
     var body: some View {
         VStack(alignment: .center, spacing: 16) {
             Text("Top Members")
-                .font(.headline)
+                .font(.mainFont(size: 20))
+                .fontWeight(.bold)
                 .foregroundStyle(.factionHomeSectionTitle)
                 .padding(.bottom, 12)
                 .textCase(.uppercase)
@@ -110,7 +112,8 @@ struct LeaderCardView: View {
                 .padding(.bottom, 4)
                 
                 Text(leader.avatarName)
-                    .font(.headline)
+                    .font(.mainFont(size: 14))
+                    .fontWeight(.bold)
                     .foregroundStyle(.generalText)
                 
                 Text("\(leader.xpPoints)")
@@ -136,7 +139,8 @@ struct MemberTraitsView: View {
     var body: some View {
         VStack(alignment: .center) {
             Text("Member Traits")
-                .font(.headline)
+                .font(.mainFont(size: 20))
+                .fontWeight(.bold)
                 .foregroundStyle(.factionHomeSectionTitle)
                 .padding(.bottom, 12)
                 .textCase(.uppercase)
@@ -181,7 +185,8 @@ struct FactionStatsView: View {
     var body: some View {
         VStack(alignment: .center) {
             Text("Faction Stats")
-                .font(.headline)
+                .font(.mainFont(size: 20))
+                .fontWeight(.bold)
                 .foregroundStyle(.factionHomeSectionTitle)
                 .textCase(.uppercase)
             
@@ -224,7 +229,7 @@ struct FactionStatView: View {
             
             if statType == .levelLine {
                 Text("*Average Weekly XP per Faction member")
-                    .font(.mainFont(size: 8))
+                    .font(.system(size: 8))
                     .foregroundStyle(.generalText)
                     .multilineTextAlignment(.center)
             }
