@@ -620,8 +620,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/LottieFiles/dotlottie-ios";
 			requirement = {
-				kind = exactVersion;
-				version = 0.8.3;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.8.3;
 			};
 		};
 		A12A2BC62E47DF5F00439392 /* XCRemoteSwiftPackageReference "SwiftyCrop" */ = {

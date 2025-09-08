@@ -54,6 +54,8 @@ struct MainView: View {
                     FriendsListView()
                 case .factionHome:
                     FactionHomeView()
+                case .memberFeed:
+                    MessageBoardView()
                 case .help:
                     EmptyView()
                 }

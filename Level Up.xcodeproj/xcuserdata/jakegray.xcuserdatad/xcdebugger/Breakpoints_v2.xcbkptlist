@@ -18,36 +18,6 @@
             endingLineNumber = "224"
             landmarkName = "fetchAvatarAssets()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "DD9D922D-28BA-4553-8F5F-C828F4716D9D - 390365ccd167fc76"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(4) suspend resume partial function for Level_Up.AvatarService.fetchAvatarAssets() async -&gt; Swift.Result&lt;Swift.Array&lt;Level_Up.AvatarAsset&gt;, Level_Up.AvatarError&gt;"
-                  moduleName = "Level Up.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/jakegray/development/Level%20Up%20Fitness/Level%20Up%20Fitness/Services/AvatarService.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "225"
-                  endingLineNumber = "225">
-               </Location>
-               <Location
-                  uuid = "DD9D922D-28BA-4553-8F5F-C828F4716D9D - 390365ccd167fc76"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(4) suspend resume partial function for Level_Up.AvatarService.fetchAvatarAssets() async -&gt; Swift.Result&lt;Swift.Array&lt;Level_Up.AvatarAsset&gt;, Level_Up.AvatarError&gt;"
-                  moduleName = "Level Up.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/jakegray/development/Level%20Up%20Fitness/Level%20Up%20Fitness/Services/AvatarService.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "225"
-                  endingLineNumber = "225">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -64,36 +34,6 @@
             endingLineNumber = "226"
             landmarkName = "loadAvatarAssets()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "E46784EB-2B18-426E-89BE-34707A7B7DD6 - 16d585aedcaea910"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 @Swift.MainActor @Sendable () -&gt; () in closure #1 () async -&gt; () in Level_Up.OnboardingView.loadAvatarAssets() -&gt; ()"
-                  moduleName = "Level Up.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/jakegray/development/Level%20Up%20Fitness/Level%20Up%20Fitness/Features/Login/OnboardingView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "226"
-                  endingLineNumber = "226">
-               </Location>
-               <Location
-                  uuid = "E46784EB-2B18-426E-89BE-34707A7B7DD6 - 16d585aedcaea910"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 @Swift.MainActor @Sendable () -&gt; () in closure #1 () async -&gt; () in Level_Up.OnboardingView.loadAvatarAssets() -&gt; ()"
-                  moduleName = "Level Up.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/jakegray/development/Level%20Up%20Fitness/Level%20Up%20Fitness/Features/Login/OnboardingView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "226"
-                  endingLineNumber = "226">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -110,36 +50,6 @@
             endingLineNumber = "130"
             landmarkName = "selectedAvatarImageUrl"
             landmarkType = "24">
-            <Locations>
-               <Location
-                  uuid = "F165431F-1167-4FE7-BC96-C48385448B01 - 39b1f292e67490c7"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Level_Up.OnboardingView.selectedAvatarImageUrl.getter : Swift.Optional&lt;Swift.String&gt;"
-                  moduleName = "Level Up.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/jakegray/development/Level%20Up%20Fitness/Level%20Up%20Fitness/Features/Login/OnboardingView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "130"
-                  endingLineNumber = "130">
-               </Location>
-               <Location
-                  uuid = "F165431F-1167-4FE7-BC96-C48385448B01 - 39b1f292e67490c7"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Level_Up.OnboardingView.selectedAvatarImageUrl.getter : Swift.Optional&lt;Swift.String&gt;"
-                  moduleName = "Level Up.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/jakegray/development/Level%20Up%20Fitness/Level%20Up%20Fitness/Features/Login/OnboardingView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "130"
-                  endingLineNumber = "130">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -156,36 +66,22 @@
             endingLineNumber = "176"
             landmarkName = "avatarSelection"
             landmarkType = "24">
-            <Locations>
-               <Location
-                  uuid = "F693C934-6CE4-4CAD-AA74-6CB1B64DE7EB - c0b9a670672e1923"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #3 () -&gt; SwiftUI._ConditionalContent&lt;SwiftUI.TupleView&lt;(SwiftUI.ProgressView&lt;SwiftUI.EmptyView, SwiftUI.EmptyView&gt;, SwiftUI.Text)&gt;, &lt;&lt;opaque return type of Level_Up.OnboardingView.avatarImage(Swift.String) -&gt; some&gt;&gt;.0&gt; in closure #2 () -&gt; SwiftUI.TupleView&lt;(SwiftUI.Button&lt;&lt;&lt;opaque return type of SwiftUI.View.frame(width: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, height: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, alignment: SwiftUI.Alignment) -&gt; some&gt;&gt;.0&gt;, &lt;&lt;opaque return type of SwiftUI.View.background&lt;&#x3c4;_0_0 where &#x3c4;_1_0: SwiftUI.ShapeStyle&gt;(_: &#x3c4;_1_0, ignoresSafeAreaEdges: SwiftUI.Edge.Set) -&gt; some&gt;&gt;.0, SwiftUI.Button&lt;&lt;&lt;opaque return type of SwiftUI.View.frame(width: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, height: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, alignment: SwiftUI.Alignment) -&gt; some&gt;&gt;.0&gt;)&gt; in closure #1 () -&gt; SwiftUI.TupleView&lt;(&lt;&lt;opaque return type of SwiftUI.View.padding(SwiftUI.Edge.Set, Swift.Optional&lt;CoreGraphics.CGFloat&gt;) -&gt; some&gt;&gt;.0, SwiftUI.HStack&lt;SwiftUI.TupleView&lt;(SwiftUI.Button&lt;&lt;&lt;opaque return type of SwiftUI.View.frame(width: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, height: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, alignment: SwiftUI.Alignment) -&gt; some&gt;&gt;.0&gt;, &lt;&lt;opaque return type of SwiftUI.View.background&lt;&#x3c4;_0_0 where &#x3c4;_1_0: SwiftUI.ShapeStyle&gt;(_: &#x3c4;_1_0, ignoresSafeAreaEdges: SwiftUI.Edge.Set) -&gt; some&gt;&gt;.0, SwiftUI.Button&lt;&lt;&lt;opaque return type of SwiftUI.View.frame(width: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, height: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, alignment: SwiftUI.Alignment) -&gt; some&gt;&gt;.0&gt;)&gt;&gt;, SwiftUI.Text)&gt; in Level_Up.OnboardingView.avatarSelection.getter : some"
-                  moduleName = "Level Up.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/jakegray/development/Level%20Up%20Fitness/Level%20Up%20Fitness/Features/Login/OnboardingView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "176"
-                  endingLineNumber = "176">
-               </Location>
-               <Location
-                  uuid = "F693C934-6CE4-4CAD-AA74-6CB1B64DE7EB - c0b9a670672e1923"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #3 () -&gt; SwiftUI._ConditionalContent&lt;SwiftUI.TupleView&lt;(SwiftUI.ProgressView&lt;SwiftUI.EmptyView, SwiftUI.EmptyView&gt;, SwiftUI.Text)&gt;, &lt;&lt;opaque return type of Level_Up.OnboardingView.avatarImage(Swift.String) -&gt; some&gt;&gt;.0&gt; in closure #2 () -&gt; SwiftUI.TupleView&lt;(SwiftUI.Button&lt;&lt;&lt;opaque return type of SwiftUI.View.frame(width: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, height: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, alignment: SwiftUI.Alignment) -&gt; some&gt;&gt;.0&gt;, &lt;&lt;opaque return type of SwiftUI.View.background&lt;&#x3c4;_0_0 where &#x3c4;_1_0: SwiftUI.ShapeStyle&gt;(_: &#x3c4;_1_0, ignoresSafeAreaEdges: SwiftUI.Edge.Set) -&gt; some&gt;&gt;.0, SwiftUI.Button&lt;&lt;&lt;opaque return type of SwiftUI.View.frame(width: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, height: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, alignment: SwiftUI.Alignment) -&gt; some&gt;&gt;.0&gt;)&gt; in closure #1 () -&gt; SwiftUI.TupleView&lt;(&lt;&lt;opaque return type of SwiftUI.View.padding(SwiftUI.Edge.Set, Swift.Optional&lt;CoreGraphics.CGFloat&gt;) -&gt; some&gt;&gt;.0, SwiftUI.HStack&lt;SwiftUI.TupleView&lt;(SwiftUI.Button&lt;&lt;&lt;opaque return type of SwiftUI.View.frame(width: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, height: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, alignment: SwiftUI.Alignment) -&gt; some&gt;&gt;.0&gt;, &lt;&lt;opaque return type of SwiftUI.View.background&lt;&#x3c4;_0_0 where &#x3c4;_1_0: SwiftUI.ShapeStyle&gt;(_: &#x3c4;_1_0, ignoresSafeAreaEdges: SwiftUI.Edge.Set) -&gt; some&gt;&gt;.0, SwiftUI.Button&lt;&lt;&lt;opaque return type of SwiftUI.View.frame(width: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, height: Swift.Optional&lt;CoreGraphics.CGFloat&gt;, alignment: SwiftUI.Alignment) -&gt; some&gt;&gt;.0&gt;)&gt;&gt;, SwiftUI.Text)&gt; in Level_Up.OnboardingView.avatarSelection.getter : some"
-                  moduleName = "Level Up.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/jakegray/development/Level%20Up%20Fitness/Level%20Up%20Fitness/Features/Login/OnboardingView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "176"
-                  endingLineNumber = "176">
-               </Location>
-            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "02CF3F36-7EFB-425E-8D65-2AB28C1B9C14"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Level Up Fitness/Features/MessageBoard/MessageBoardView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "49"
+            endingLineNumber = "49"
+            landmarkName = "body"
+            landmarkType = "24">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
