@@ -23,29 +23,16 @@ struct ProfileRowView: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            // Profile image with badge
-            ZStack(alignment: .bottom) {
-                if let url = member.profilePictureUrl {
-                    ProfilePicture(url: url)
-                        .frame(width: 60, height: 60)
-                } else {
-                    Image("profile_placeholder")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 60, height: 60)
-                }
-
-                Text("\(member.level)")
-                    .font(.caption2)
-                    .bold()
-                    .foregroundColor(.generalText)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(.factionCardBorder)
-                    .offset(x: 0, y: 5)
+            if let url = member.profilePictureUrl {
+                ProfilePicture(url: url, level: member.level)
+                    .frame(width: 70, height: 70)
+            } else {
+                Image("profile_placeholder")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 60, height: 60)
             }
 
-            // Player details
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(member.avatarName)
@@ -72,7 +59,6 @@ struct ProfileRowView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // "View Profile" button
             Button(action: {
                 showingDetailedProfile = true
             }) {

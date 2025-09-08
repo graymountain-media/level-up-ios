@@ -96,19 +96,11 @@ struct LeaderCardView: View {
                 .foregroundStyle(.generalText)
             
             VStack {
-                ZStack(alignment: .bottom) {
-                    ProfilePicture(url: leader.profilePictureUrl)
-                        .frame(width: 60, height: 60)
-                    
-                    Text("\(leader.level)")
-                        .font(.caption2)
-                        .bold()
-                        .foregroundColor(.generalText)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.factionCardBorder)
-                        .offset(x: 0, y: 5)
-                }
+                ProfilePicture(
+                    url: leader.profilePictureUrl,
+                    level: leader.level
+                )
+                .frame(width: 60, height: 60)
                 .padding(.bottom, 4)
                 
                 Text(leader.avatarName)
