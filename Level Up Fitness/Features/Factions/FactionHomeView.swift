@@ -78,8 +78,42 @@ struct FactionHomeView: View {
             }
         } else {
             // Handle error state
-            Text("Failed to load faction data.")
+            errorView(errorMessage: "Failed to load faction data.")
         }
+    }
+    
+    private func errorView(errorMessage: String) -> some View {
+        VStack(spacing: 20) {
+            Spacer()
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 50))
+                .foregroundColor(.cyan)
+            
+            Text("Error")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(.cyan)
+            
+            Text(errorMessage)
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            
+            Button(action: {
+                Task {
+                    await viewModel.loadInitialData()
+                }
+            }) {
+                Text("Retry")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.cyan)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            Spacer()
+        }
+        .frame(maxHeight: .infinity)
     }
     
 }
