@@ -30,7 +30,7 @@ struct MissionCard: View {
         VStack {
             HStack(alignment: .center, spacing: 16) {
                 // Mission image
-                Image(mission.title.filter { !$0.isPunctuation })
+                Image(mission.title.filter{ !$0.isPunctuation })
                     .resizable()
                     .aspectRatio(1, contentMode: .fill)
                     .frame(width: 56, height: 56)

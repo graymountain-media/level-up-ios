@@ -57,7 +57,7 @@ struct FactionHeader: View {
             
             Text(faction.slogan)
                 .font(.body)
-                .foregroundStyle(.pulseforge)
+                .foregroundStyle(faction.baseColor)
                 .textCase(.uppercase)
         }
     }
@@ -106,7 +106,10 @@ struct LeaderCardView: View {
                 Text(leader.avatarName)
                     .font(.mainFont(size: 14))
                     .fontWeight(.bold)
-                    .foregroundStyle(.generalText)
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                    .foregroundStyle(.title)
+                    .multilineTextAlignment(.center)
                 
                 Text("\(leader.xpPoints)")
                     .font(.subheadline)
@@ -114,6 +117,7 @@ struct LeaderCardView: View {
             }
             .padding(12)
             .frame(width: 100)
+            .frame(minHeight: 128)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(.factionCardBg)
@@ -248,4 +252,35 @@ struct FactionDivider: View {
             .overlay(.textfieldBorder)
             .padding(.vertical, 12)
     }
+}
+
+#Preview {
+    let mockLeaders = [
+        Leader(
+            avatarName: "Commander Alpha",
+            profilePictureUrl: "",
+            level: 25,
+            xpPoints: 200,
+            rank: "Faction Leader"
+        ),
+        Leader(
+            avatarName: "Beta Squad",
+            profilePictureUrl: "",
+            level: 22,
+            xpPoints: 1000,
+            rank: "Lieutenant"
+        ),
+        Leader(
+            avatarName: "Gamma Unit",
+            profilePictureUrl: "",
+            level: 20,
+            xpPoints: 8000,
+            rank: "Sergeant"
+        )
+    ]
+    
+    let mockFactionDetails = FactionDetails(faction: .echoreach, weeklyXP: 45000, memberCount: 127, topLeaders: mockLeaders)
+    
+    FactionOverviewView(factionDetails: mockFactionDetails)
+        .mainBackground()
 }

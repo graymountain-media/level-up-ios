@@ -27,12 +27,39 @@ struct FactionDetails: Codable, Identifiable {
         case memberCount = "member_count"
         case topLeaders = "top_leaders"
     }
+    
+    init(faction: Faction, weeklyXP: Int, memberCount: Int, topLeaders: [Leader]) {
+        self.faction = faction
+        self.weeklyXP = weeklyXP
+        self.memberCount = memberCount
+        self.topLeaders = topLeaders
+    }
+    
+    init(from decoder: any Decoder) throws {
+        let container: KeyedDecodingContainer<FactionDetails.CodingKeys> = try decoder.container(keyedBy: FactionDetails.CodingKeys.self)
+        
+        self.faction = try container.decode(Faction.self, forKey: FactionDetails.CodingKeys.faction)
+        self.weeklyXP = try container.decode(Int.self, forKey: FactionDetails.CodingKeys.weeklyXP)
+        self.memberCount = try container.decode(Int.self, forKey: FactionDetails.CodingKeys.memberCount)
+        self.topLeaders = try container.decode([Leader].self, forKey: FactionDetails.CodingKeys.topLeaders)
+        
+    }
+    
+    func encode(to encoder: any Encoder) throws {
+        var container: KeyedEncodingContainer<FactionDetails.CodingKeys> = encoder.container(keyedBy: FactionDetails.CodingKeys.self)
+        
+        try container.encode(self.faction, forKey: FactionDetails.CodingKeys.faction)
+        try container.encode(self.weeklyXP, forKey: FactionDetails.CodingKeys.weeklyXP)
+        try container.encode(self.memberCount, forKey: FactionDetails.CodingKeys.memberCount)
+        try container.encode(self.topLeaders, forKey: FactionDetails.CodingKeys.topLeaders)
+    }
+    
 }
 
 struct Leader: Identifiable, Codable {
     let id = UUID()
     let avatarName: String
-    let profilePictureUrl: String
+    let profilePictureUrl: String?
     let level: Int
     let xpPoints: Int
     var rank: String? = nil

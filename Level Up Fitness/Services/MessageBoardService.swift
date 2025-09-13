@@ -9,6 +9,16 @@ import Foundation
 import FactoryKit
 import Supabase
 
+// MARK: - Extensions
+
+extension Date {
+    func toISOString() -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: self)
+    }
+}
+
 // MARK: - Enums
 
 enum MessageFilter: CaseIterable {
@@ -235,13 +245,17 @@ enum MessageBoardError: LocalizedError {
 protocol MessageBoardServiceProtocol {
     func fetchPosts(filter: MessageFilter) async -> Result<[Post], MessageBoardError>
     func createPost(content: String, imageUrl: String?) async -> Result<Post, MessageBoardError>
+    func editPost(postId: UUID, content: String, imageUrl: String?) async -> Result<Post, MessageBoardError>
     func likePost(postId: UUID) async -> Result<Void, MessageBoardError>
     func unlikePost(postId: UUID) async -> Result<Void, MessageBoardError>
+    func deletePost(postId: UUID) async -> Result<Void, MessageBoardError>
     
     func fetchComments(postId: UUID) async -> Result<[Comment], MessageBoardError>
     func createComment(postId: UUID, content: String) async -> Result<Comment, MessageBoardError>
+    func editComment(commentId: UUID, content: String) async -> Result<Comment, MessageBoardError>
     func likeComment(commentId: UUID) async -> Result<Void, MessageBoardError>
     func unlikeComment(commentId: UUID) async -> Result<Void, MessageBoardError>
+    func deleteComment(commentId: UUID) async -> Result<Void, MessageBoardError>
     
     func fetchPostLikers(postId: UUID) async -> Result<[String], MessageBoardError>
 }
@@ -573,6 +587,152 @@ class MessageBoardService: MessageBoardServiceProtocol {
             return .failure(.networkError(error.localizedDescription))
         }
     }
+    
+    func deletePost(postId: UUID) async -> Result<Void, MessageBoardError> {
+        do {
+            guard let currentUserId = client.auth.currentUser?.id else {
+                return .failure(.unauthorizedError)
+            }
+            
+            print("🗑️ MessageBoardService: Deleting post \(postId)")
+            
+            // Delete the post (only if current user is the owner)
+            try await client
+                .from("posts")
+                .delete()
+                .eq("id", value: postId.uuidString)
+                .eq("user_id", value: currentUserId.uuidString)
+                .execute()
+            
+            print("✅ MessageBoardService: Post deleted successfully")
+            return .success(())
+        } catch {
+            print("❌ MessageBoardService: Error deleting post - \(error.localizedDescription)")
+            return .failure(.networkError(error.localizedDescription))
+        }
+    }
+    
+    func deleteComment(commentId: UUID) async -> Result<Void, MessageBoardError> {
+        do {
+            guard let currentUserId = client.auth.currentUser?.id else {
+                return .failure(.unauthorizedError)
+            }
+            
+            print("🗑️ MessageBoardService: Deleting comment \(commentId)")
+            
+            // Delete the comment (only if current user is the owner)
+            try await client
+                .from("comments")
+                .delete()
+                .eq("id", value: commentId.uuidString)
+                .eq("user_id", value: currentUserId.uuidString)
+                .execute()
+            
+            print("✅ MessageBoardService: Comment deleted successfully")
+            return .success(())
+        } catch {
+            print("❌ MessageBoardService: Error deleting comment - \(error.localizedDescription)")
+            return .failure(.networkError(error.localizedDescription))
+        }
+    }
+    
+    func editPost(postId: UUID, content: String, imageUrl: String?) async -> Result<Post, MessageBoardError> {
+        do {
+            guard let currentUserId = client.auth.currentUser?.id else {
+                return .failure(.unauthorizedError)
+            }
+            
+            print("✏️ MessageBoardService: Editing post \(postId)")
+            
+            var updateData: [String: AnyJSON?] = [
+                "content": .string(content),
+                "is_edited": .bool(true),
+                "updated_at": .string(Date().toISOString())
+            ]
+            
+            if let imageUrl {
+                updateData["image_url"] = .string(imageUrl)
+            }
+            
+            // Update the post (only if current user is the owner)
+            try await client
+                .from("posts")
+                .update(updateData)
+                .eq("id", value: postId.uuidString)
+                .eq("user_id", value: currentUserId.uuidString)
+                .execute()
+            
+            // For now, return a temporary post - in a real implementation,
+            // you'd refetch the post with updated data
+            let updatedPost = Post(
+                id: postId,
+                userId: currentUserId,
+                content: content,
+                imageUrl: imageUrl,
+                createdAt: Date(), // This would be the original date
+                updatedAt: Date(),
+                isEdited: true,
+                likeCount: 0, // These would be fetched from DB
+                commentCount: 0,
+                userAvatarName: "You",
+                userProfilePicture: nil,
+                userFaction: nil,
+                userHeroPath: nil,
+                userHasLiked: false
+            )
+            
+            print("✅ MessageBoardService: Post edited successfully")
+            return .success(updatedPost)
+        } catch {
+            print("❌ MessageBoardService: Error editing post - \(error.localizedDescription)")
+            return .failure(.networkError(error.localizedDescription))
+        }
+    }
+    
+    func editComment(commentId: UUID, content: String) async -> Result<Comment, MessageBoardError> {
+        do {
+            guard let currentUserId = client.auth.currentUser?.id else {
+                return .failure(.unauthorizedError)
+            }
+            
+            print("✏️ MessageBoardService: Editing comment \(commentId)")
+            
+            let updateData: [String: AnyJSON] = [
+                "content": .string(content),
+                "is_edited": .bool(true),
+                "updated_at": .string(Date().toISOString())
+            ]
+            
+            // Update the comment (only if current user is the owner)
+            try await client
+                .from("comments")
+                .update(updateData)
+                .eq("id", value: commentId.uuidString)
+                .eq("user_id", value: currentUserId.uuidString)
+                .execute()
+            
+            // Return updated comment - in real implementation, you'd refetch
+            let updatedComment = Comment(
+                id: commentId,
+                postId: UUID(), // This would be the actual post ID
+                userId: currentUserId,
+                content: content,
+                createdAt: Date(), // This would be the original date
+                updatedAt: Date(),
+                isEdited: true,
+                likeCount: 0, // This would be fetched from DB
+                userAvatarName: "You",
+                userAvatarImageUrl: nil,
+                userHasLiked: false
+            )
+            
+            print("✅ MessageBoardService: Comment edited successfully")
+            return .success(updatedComment)
+        } catch {
+            print("❌ MessageBoardService: Error editing comment - \(error.localizedDescription)")
+            return .failure(.networkError(error.localizedDescription))
+        }
+    }
 }
 
 // MARK: - Mock Implementation
@@ -692,5 +852,54 @@ class MockMessageBoardService: MessageBoardServiceProtocol {
             "https://example.com/avatar3.jpg"
         ]
         return .success(mockProfileUrls)
+    }
+    
+    func deletePost(postId: UUID) async -> Result<Void, MessageBoardError> {
+        print("🗑️ MockMessageBoardService: Mock deleting post \(postId)")
+        return .success(())
+    }
+    
+    func deleteComment(commentId: UUID) async -> Result<Void, MessageBoardError> {
+        print("🗑️ MockMessageBoardService: Mock deleting comment \(commentId)")
+        return .success(())
+    }
+    
+    func editPost(postId: UUID, content: String, imageUrl: String?) async -> Result<Post, MessageBoardError> {
+        print("✏️ MockMessageBoardService: Mock editing post \(postId)")
+        let editedPost = Post(
+            id: postId,
+            userId: UUID(),
+            content: content,
+            imageUrl: imageUrl,
+            createdAt: Date().addingTimeInterval(-3600),
+            updatedAt: Date(),
+            isEdited: true,
+            likeCount: 5,
+            commentCount: 2,
+            userAvatarName: "You",
+            userProfilePicture: nil,
+            userFaction: "echoreach",
+            userHeroPath: "ranger",
+            userHasLiked: false
+        )
+        return .success(editedPost)
+    }
+    
+    func editComment(commentId: UUID, content: String) async -> Result<Comment, MessageBoardError> {
+        print("✏️ MockMessageBoardService: Mock editing comment \(commentId)")
+        let editedComment = Comment(
+            id: commentId,
+            postId: UUID(),
+            userId: UUID(),
+            content: content,
+            createdAt: Date().addingTimeInterval(-1800),
+            updatedAt: Date(),
+            isEdited: true,
+            likeCount: 1,
+            userAvatarName: "You",
+            userAvatarImageUrl: nil,
+            userHasLiked: false
+        )
+        return .success(editedComment)
     }
 }

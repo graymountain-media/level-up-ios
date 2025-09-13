@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FactoryKit
+import Supabase
 
 struct OtherUserProfileView: View {
     let userId: UUID
@@ -19,6 +20,11 @@ struct OtherUserProfileView: View {
     @State private var isPerformingFriendAction = false
     
     var dismiss: () -> Void = {}
+    
+    private var isOwnProfile: Bool {
+        guard let currentUserId = client.auth.currentUser?.id else { return false }
+        return currentUserId == userId
+    }
     
     init(userId: UUID, userProfile: OtherUserProfile? = nil, dismiss: @escaping () -> Void) {
         self.userId = userId
@@ -139,9 +145,11 @@ struct OtherUserProfileView: View {
                         .foregroundColor(.white)
                 }
                 Spacer()
-                VStack(spacing: 12) {
-                    friendActionButton(for: friendsManager.getFriendStatus(for: userId))
-                    blockButton()
+                if !isOwnProfile {
+                    VStack(spacing: 12) {
+                        friendActionButton(for: friendsManager.getFriendStatus(for: userId))
+                        blockButton()
+                    }
                 }
             }
             .padding(.horizontal, 20)

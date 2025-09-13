@@ -153,7 +153,7 @@ struct ItemShopView: View {
                         .bold()
                     
                     // Item image placeholder
-                    Image(item.name)
+                    Image(item.name.filter{ !$0.isPunctuation })
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 115, height: 115)
@@ -220,9 +220,10 @@ struct ItemShopView: View {
             .padding(24)
             .frame(width: geometry.size.width - 150)
             .background(
-                RoundedRectangle(cornerRadius: 25)
+                CustomCardShape()
                     .fill(.textfieldBg)
             )
+            .clipShape(CustomCardShape())
             Spacer()
         }
     }
@@ -276,7 +277,7 @@ struct ItemShopView: View {
     var tabSelector: some View {
         return HStack(spacing: 8) {
             ForEach(ItemSlot.allCases, id: \.rawValue) { tab in
-                let isDisabled = tab != .weapon
+                let isDisabled = tab == .chest
                 
                 Button(action: {
                     guard !isDisabled else { return }
@@ -361,18 +362,21 @@ struct ItemShopView: View {
                     scrollTo(targetItem.id)
                 }
             }
+        } else {
+            scrollTo(availableItems.filter { $0.itemSlot == selectedTab }.first?.id ?? UUID())
         }
     }
     
     // MARK: - Data Loading
     
     private func loadData() async {
+        isLoading = true
         await loadItems()
         await loadUserInventory()
+        isLoading = false
     }
     
     private func loadItems() async {
-        isLoading = true
         errorMessage = nil
         
         do {
@@ -381,7 +385,6 @@ struct ItemShopView: View {
             errorMessage = "Failed to load items: \(error.localizedDescription)"
         }
         
-        isLoading = false
     }
     
     private func loadUserInventory() async {

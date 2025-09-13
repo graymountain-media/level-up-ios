@@ -260,7 +260,7 @@ struct LeaderboardView: View {
             rankView(entry, rank: rank)
             
             // Avatar
-            ProfilePicture(url: entry.profilePictureURL)
+            ProfilePicture(url: entry.profilePictureURL, level: entry.level)
             
             VStack {
                 HStack {
@@ -269,6 +269,8 @@ struct LeaderboardView: View {
                         HStack(spacing: 6) {
                             Text(entry.avatarName?.uppercased() ?? "UNKNOWN")
                                 .font(.mainFont(size: 17.5))
+                                .minimumScaleFactor(0.5)
+                                .lineLimit(1)
                                 .bold()
                                 .foregroundColor(.title)
                             if let path = entry.heroPath {
@@ -371,16 +373,31 @@ struct LeaderboardView: View {
                     }
                     Rectangle().fill(.white.opacity(0.3)).frame(height: 1)
                     HStack(alignment: .center, spacing: 12) {
-                        CachedAsyncImage(url: URL(string: entry.topPlayerImage ?? "")) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Image("profile_placeholder")
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
+                        ZStack(alignment: .bottom) {
+                            CachedAsyncImage(url: URL(string: entry.topPlayerImage ?? "")) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                Image("profile_placeholder")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            }
+                            .frame(width: 35, height: 35)
+                            Text("\(entry.topPlayerLevel)")
+                                .font(.system(size: 8))
+                                .foregroundColor(.white.opacity(0.7))
+                                .bold()
+                                .padding(.horizontal, 2)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 1)
+                                        .fill(Color.textfieldBorder)
+                                        .strokeBorder(Color.majorDark)
+                                        .frame(height: 15)
+                                        .frame(minWidth: 15)
+                                )
+                                .offset(y: 4)
                         }
-                        .frame(width: 35, height: 35)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Faction Leader")
                                 .font(.system(size: 10))

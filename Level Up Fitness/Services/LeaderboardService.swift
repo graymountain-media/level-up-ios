@@ -161,10 +161,10 @@ class MockLeaderboardService: LeaderboardServiceProtocol {
         
         // Mock faction leaderboard data
         let mockFactionEntries: [FactionLeaderboardEntry] = [
-            FactionLeaderboardEntry(faction: .pulseforge, totalXp: 5000, memberCount: 847, topPlayerName: "MEGATRON", topPlayerXp: 1280, rank: 1),
-            FactionLeaderboardEntry(faction: .neurospire, totalXp: 4200, memberCount: 756, topPlayerName: "AVARII", topPlayerXp: 920, rank: 2),
-            FactionLeaderboardEntry(faction: .echoreach, totalXp: 4000, memberCount: 692, topPlayerName: "NYLA_X", topPlayerXp: 700, rank: 3),
-            FactionLeaderboardEntry(faction: .voidkind, totalXp: 2960, memberCount: 534, topPlayerName: "STRIKER", topPlayerXp: 500, rank: 4)
+            FactionLeaderboardEntry(faction: .pulseforge, totalXp: 5000, memberCount: 847, topPlayerName: "MEGATRON", topPlayerXp: 1280, topPlayerLevel: 2, rank: 1),
+            FactionLeaderboardEntry(faction: .neurospire, totalXp: 4200, memberCount: 756, topPlayerName: "AVARII", topPlayerXp: 920, topPlayerLevel: 3, rank: 2),
+            FactionLeaderboardEntry(faction: .echoreach, totalXp: 4000, memberCount: 692, topPlayerName: "NYLA_X", topPlayerXp: 700, topPlayerLevel: 4, rank: 3),
+            FactionLeaderboardEntry(faction: .voidkind, totalXp: 2960, memberCount: 534, topPlayerName: "STRIKER", topPlayerXp: 500, topPlayerLevel: 6, rank: 4)
         ]
         
         // Simulate network delay

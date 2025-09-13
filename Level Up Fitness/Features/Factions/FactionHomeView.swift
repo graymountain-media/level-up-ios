@@ -66,13 +66,17 @@ struct FactionHomeView: View {
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let factionDetails = viewModel.factionDetails {
-            ScrollView {
-                switch viewModel.selectedTab {
-                case .overview:
+            switch viewModel.selectedTab {
+            case .overview:
+                ScrollView {
                     FactionOverviewView(factionDetails: factionDetails)
-                case .members:
+                }
+            case .members:
+                ScrollView {
                     FactionMembersView(factionMembers: viewModel.factionMembers)
-                case .strongholds:
+                }
+            case .strongholds:
+                ScrollView {
                     FactionStrongholdsView()
                 }
             }

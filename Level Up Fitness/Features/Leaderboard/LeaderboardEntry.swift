@@ -14,6 +14,7 @@ protocol LeaderboardEntry: Identifiable, Decodable, Equatable {
     var profilePictureURL: String? { get }
     var heroPath: HeroPath? { get }
     var faction: Faction? { get }
+    var level: Int { get }
     var rank: Int { get }
     var id: UUID { get }
 }

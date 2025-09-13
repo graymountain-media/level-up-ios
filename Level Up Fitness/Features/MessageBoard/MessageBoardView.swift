@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FactoryKit
+import Supabase
 
 struct MessageBoardView: View {
     @Environment(\.dismiss) var dismiss
@@ -18,6 +19,7 @@ struct MessageBoardView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var selectedPost: Post?
+    @State private var editingPost: Post?
     
     var body: some View {
         NavigationView {
@@ -56,6 +58,14 @@ struct MessageBoardView: View {
                     }
                 }
                 selectedPost = nil
+            }
+        }
+        .sheet(item: $editingPost) { post in
+            CreatePostView(editingPost: post) {
+                Task {
+                    await refreshPosts()
+                }
+                editingPost = nil
             }
         }
     }
@@ -168,17 +178,63 @@ struct MessageBoardView: View {
                     .cornerRadius(8)
                 }
                 .frame(maxWidth: .infinity, minHeight: 200)
+            } else if posts.isEmpty {
+                // Empty state
+                VStack(spacing: 20) {
+                    Image(systemName: "message")
+                        .font(.system(size: 50))
+                        .foregroundColor(.textInput)
+                    
+                    VStack(spacing: 8) {
+                        Text("No Posts Yet")
+                            .font(.mainFont(size: 18))
+                            .fontWeight(.medium)
+                            .foregroundColor(.title)
+                        
+                        Text("Be the first to share something with your faction!")
+                            .font(.system(size: 14))
+                            .foregroundColor(.textLight)
+                            .multilineTextAlignment(.center)
+                    }
+                    
+                    Button(action: {
+                        showingCreatePost = true
+                    }) {
+                        Text("Create First Post")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.textOrange)
+                            )
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 300)
+                .padding(.horizontal, 40)
             } else {
                 LazyVStack(spacing: 16) {
                     ForEach(posts) { post in
-                        PostCard(post: post) { post in
-                            Task {
-                                await togglePostLike(post)
+                        PostCard(
+                            post: post,
+                            onLikeToggle: { post in
+                                Task {
+                                    await togglePostLike(post)
+                                }
+                            },
+                            onEdit: { post in
+                                editingPost = post
+                            },
+                            onDelete: { post in
+                                Task {
+                                    await deletePost(post)
+                                }
+                            },
+                            onTap: { post in
+                                selectedPost = post
                             }
-                        }
-                        .onTapGesture {
-                            selectedPost = post
-                        }
+                        )
                     }
                     
                     if isLoading {
@@ -228,6 +284,19 @@ struct MessageBoardView: View {
         // Refresh posts to get updated counts
         await loadPosts()
     }
+    
+    private func deletePost(_ post: Post) async {
+        let result = await messageBoardService.deletePost(postId: post.id)
+        
+        switch result {
+        case .success:
+            print("✅ MessageBoardView: Post deleted successfully")
+            await loadPosts() // Refresh after deletion
+        case .failure(let error):
+            print("❌ MessageBoardView: Failed to delete post - \(error.localizedDescription)")
+            errorMessage = error.localizedDescription
+        }
+    }
 }
 
 // MARK: - Supporting Types
@@ -237,33 +306,66 @@ struct MessageBoardView: View {
 struct PostCard: View {
     let post: Post
     let onLikeToggle: (Post) -> Void
+    let onEdit: (Post) -> Void
+    let onDelete: (Post) -> Void
+    let onTap: (Post) -> Void
+    
+    @State private var showDeleteAlert = false
+    
+    private var isOwnPost: Bool {
+        guard let currentUserId = client.auth.currentUser?.id else { return false }
+        return currentUserId == post.userId
+    }
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             // Avatar
             ProfilePicture(url: post.userProfilePicture, hasBorder: true)
+                .onTapGesture {
+                    onTap(post)
+                }
             
             VStack(alignment: .leading, spacing: 10) {
                 // Username and time
                 HStack {
                     Text(post.userAvatarName)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textLight)
                     
                     Text(timeAgoString(from: post.createdAt))
                         .font(.system(size: 12))
-                        .foregroundColor(.gray)
+                        .foregroundColor(.textLight)
                     
                     Spacer()
+                    
+                    // Edit menu for own posts
+                    if isOwnPost {
+                        Menu {
+                            Button("Edit") {
+                                onEdit(post)
+                            }
+                            Button("Delete", role: .destructive) {
+                                showDeleteAlert = true
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 16))
+                                .foregroundColor(.textLight)
+                                .frame(width: 45, height: 30, alignment: .trailing)
+                        }
+                    }
                 }
                 .foregroundStyle(.textLight)
                 
                 // Content
                 Text(post.content)
                     .font(.system(size: 14))
-                    .foregroundColor(.textDetail)
+                    .foregroundColor(.title)
                     .multilineTextAlignment(.leading)
                     .lineLimit(2)
+                    .onTapGesture {
+                        onTap(post)
+                    }
                 // Action buttons
                 HStack(spacing: 20) {
                     // Like button
@@ -325,8 +427,19 @@ struct PostCard: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(.majorDark)
                 .strokeBorder(Color.textfieldBorder)
+                .onTapGesture {
+                    onTap(post)
+                }
                 
         )
+        .alert("Delete Post", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                onDelete(post)
+            }
+        } message: {
+            Text("Are you sure you want to delete this post? This action cannot be undone.")
+        }
     }
     
     // MARK: - Helper Methods

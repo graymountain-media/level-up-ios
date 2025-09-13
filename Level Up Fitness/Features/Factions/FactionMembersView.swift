@@ -23,20 +23,15 @@ struct ProfileRowView: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            if let url = member.profilePictureUrl {
-                ProfilePicture(url: url, level: member.level)
-                    .frame(width: 70, height: 70)
-            } else {
-                Image("profile_placeholder")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 60, height: 60)
-            }
+            ProfilePicture(url: member.profilePictureUrl, level: member.level)
+                .frame(width: 70, height: 70)
 
             VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .center) {
                     Text(member.avatarName)
                         .font(.mainFont(size: 20))
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
                         .fontWeight(.bold)
                         .foregroundColor(.generalText)
                     if let icon = member.heroPath?.iconName {

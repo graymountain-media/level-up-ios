@@ -31,7 +31,7 @@ struct WeaponUpgradePopup: View {
                             .multilineTextAlignment(.center)
                         
                         // Item icon with border
-                        WeaponSlotView(item: item)
+                        ItemSlotView(itemSlot: item.itemSlot, item: item)
                         .frame(width: 100, height: 100)
                         
                         // XP Bonus

@@ -22,6 +22,11 @@ struct PostDetailView: View {
     @State private var showingEditMenu = false
     @State private var postNeedsRefresh: Bool = false
     @State private var likerProfileUrls: [String] = []
+    @State private var showDeleteAlert = false
+    @State private var editingComment: Comment?
+    @State private var editCommentText = ""
+    @State private var isEditingComment = false
+    @State private var showingEditPost = false
     
     let dismiss: (_ postNeedsRefresh: Bool) -> Void
     
@@ -70,6 +75,23 @@ struct PostDetailView: View {
             await loadComments()
             await loadPostLikers()
         }
+        .alert("Delete Post", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                Task {
+                    await deletePost()
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete this post? This action cannot be undone.")
+        }
+        .sheet(isPresented: $showingEditPost) {
+            CreatePostView(editingPost: currentPost) {
+                Task {
+                    await refreshPost()
+                }
+            }
+        }
     }
     
     // MARK: - Main Post Section
@@ -96,8 +118,12 @@ struct PostDetailView: View {
                         // Edit menu for own posts
                         if currentPost.userId == getCurrentUserId() {
                             Menu {
-                                Button("Edit", action: { /* TODO: Edit post */ })
-                                Button("Delete", role: .destructive, action: { /* TODO: Delete post */ })
+                                Button("Edit") {
+                                    showingEditPost = true
+                                }
+                                Button("Delete", role: .destructive) {
+                                    showDeleteAlert = true
+                                }
                             } label: {
                                 Image(systemName: "ellipsis")
                                     .font(.system(size: 16))
@@ -146,6 +172,7 @@ struct PostDetailView: View {
                                     Circle()
                                         .strokeBorder(Color.textPath)
                                 }
+                                .background(Circle().fill(.majorDark))
                                 .padding(.leading, -6)
                         } placeholder: {
                             Image(systemName: "person")
@@ -190,11 +217,37 @@ struct PostDetailView: View {
                         .padding(.vertical, 40)
                 } else {
                     ForEach(comments) { comment in
-                        CommentCard(comment: comment) { comment in
-                            Task {
-                                await toggleCommentLike(comment)
+                        CommentCard(
+                            comment: comment,
+                            isEditing: editingComment?.id == comment.id,
+                            editText: editCommentText,
+                            onEditTextChange: { newText in
+                                editCommentText = newText
+                            },
+                            toggleCommentLike: { comment in
+                                Task {
+                                    await toggleCommentLike(comment)
+                                }
+                            },
+                            onEdit: { comment in
+                                startEditingComment(comment)
+                            },
+                            onSaveEdit: { comment, newContent in
+                                Task {
+                                    await editComment(comment, newContent: newContent)
+                                }
+                            },
+                            onCancelEdit: {
+                                editingComment = nil
+                                editCommentText = ""
+                                isEditingComment = false
+                            },
+                            onDelete: { comment in
+                                Task {
+                                    await deleteComment(comment)
+                                }
                             }
-                        }
+                        )
                     }
                 }
             }
@@ -210,9 +263,9 @@ struct PostDetailView: View {
                 .background(Color.textfieldBorder)
             
             HStack(spacing: 12) {
-                TextField("Add a Comment", text: $newCommentText)
+                TextField("", text: $newCommentText, prompt: Text("Add a comment").foregroundStyle(Color.textInput))
                     .font(.system(size: 14))
-                    .foregroundColor(.textInput)
+                    .foregroundColor(.textBlue)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                     .background(
@@ -378,13 +431,122 @@ struct PostDetailView: View {
             }
         }
     }
+    
+    private func deletePost() async {
+        let result = await messageBoardService.deletePost(postId: currentPost.id)
+        
+        switch result {
+        case .success:
+            print("✅ PostDetailView: Post deleted successfully")
+            // Dismiss the detail view and trigger refresh
+            dismiss(true)
+        case .failure(let error):
+            print("❌ PostDetailView: Failed to delete post - \(error.localizedDescription)")
+            errorMessage = error.localizedDescription
+        }
+    }
+    
+    private func deleteComment(_ comment: Comment) async {
+        let result = await messageBoardService.deleteComment(commentId: comment.id)
+        
+        switch result {
+        case .success:
+            print("✅ PostDetailView: Comment deleted successfully")
+            // Remove comment from local array
+            await MainActor.run {
+                comments.removeAll { $0.id == comment.id }
+                // Update comment count
+                currentPost = Post(
+                    id: currentPost.id,
+                    userId: currentPost.userId,
+                    content: currentPost.content,
+                    imageUrl: currentPost.imageUrl,
+                    createdAt: currentPost.createdAt,
+                    updatedAt: currentPost.updatedAt,
+                    isEdited: currentPost.isEdited,
+                    likeCount: currentPost.likeCount,
+                    commentCount: max(0, currentPost.commentCount - 1),
+                    userAvatarName: currentPost.userAvatarName,
+                    userProfilePicture: currentPost.userProfilePicture,
+                    userFaction: currentPost.userFaction,
+                    userHeroPath: currentPost.userHeroPath,
+                    userHasLiked: currentPost.userHasLiked
+                )
+                postNeedsRefresh = true
+            }
+        case .failure(let error):
+            print("❌ PostDetailView: Failed to delete comment - \(error.localizedDescription)")
+            errorMessage = error.localizedDescription
+        }
+    }
+    
+    private func startEditingComment(_ comment: Comment) {
+        editingComment = comment
+        editCommentText = comment.content
+        isEditingComment = true
+    }
+    
+    private func editComment(_ comment: Comment, newContent: String) async {
+        let result = await messageBoardService.editComment(commentId: comment.id, content: newContent)
+        
+        switch result {
+        case .success:
+            print("✅ PostDetailView: Comment edited successfully")
+            await MainActor.run {
+                // Update the comment in the local array
+                if let index = comments.firstIndex(where: { $0.id == comment.id }) {
+                    comments[index] = Comment(
+                        id: comment.id,
+                        postId: comment.postId,
+                        userId: comment.userId,
+                        content: newContent,
+                        createdAt: comment.createdAt,
+                        updatedAt: Date(),
+                        isEdited: true,
+                        likeCount: comment.likeCount,
+                        userAvatarName: comment.userAvatarName,
+                        userAvatarImageUrl: comment.userAvatarImageUrl,
+                        userHasLiked: comment.userHasLiked
+                    )
+                }
+                // Clear editing state
+                editingComment = nil
+                editCommentText = ""
+                isEditingComment = false
+                postNeedsRefresh = true
+            }
+        case .failure(let error):
+            print("❌ PostDetailView: Failed to edit comment - \(error.localizedDescription)")
+            errorMessage = error.localizedDescription
+        }
+    }
+    
+    private func refreshPost() async {
+        // Refresh post data after editing
+        await loadComments()
+        postNeedsRefresh = true
+    }
 }
 
 // MARK: - Comment Card Component
 
 struct CommentCard: View {
     let comment: Comment
+    let isEditing: Bool
+    let editText: String
+    let onEditTextChange: (String) -> Void
     let toggleCommentLike: (_ comment: Comment) -> Void
+    let onEdit: (Comment) -> Void
+    let onSaveEdit: (Comment, String) -> Void
+    let onCancelEdit: () -> Void
+    let onDelete: (Comment) -> Void
+    
+    @State private var showDeleteAlert = false
+    
+    private var isOwnComment: Bool {
+        guard let currentUserId = client.auth.currentUser?.id else { return false }
+        return currentUserId == comment.userId
+    }
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             // Avatar
@@ -402,13 +564,62 @@ struct CommentCard: View {
                         .foregroundColor(.textLight)
                     
                     Spacer()
+                    
+                    // Edit menu for own comments
+                    if isOwnComment && !isEditing {
+                        Menu {
+                            Button("Edit") {
+                                onEdit(comment)
+                            }
+                            Button("Delete", role: .destructive) {
+                                showDeleteAlert = true
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 14))
+                                .foregroundColor(.textLight)
+                        }
+                    } else if isOwnComment && isEditing {
+                        // Edit mode buttons
+                        HStack(spacing: 8) {
+                            Button("Cancel") {
+                                onCancelEdit()
+                            }
+                            .font(.system(size: 12))
+                            .foregroundColor(.textLight)
+                            
+                            Button("Save") {
+                                onSaveEdit(comment, editText)
+                            }
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.textOrange)
+                            .disabled(editText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+                    }
                 }
                 
-                // Comment content
-                Text(comment.content)
+                // Comment content or edit field
+                if isEditing {
+                    TextEditor(text: Binding(
+                        get: { editText },
+                        set: { onEditTextChange($0) }
+                    ))
                     .font(.system(size: 14))
-                    .foregroundColor(.title)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundColor(.textInput)
+                    .scrollContentBackground(.hidden)
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(.textfieldBg)
+                            .stroke(.textfieldBorder, lineWidth: 1)
+                    )
+                    .frame(minHeight: 60)
+                } else {
+                    Text(comment.content)
+                        .font(.system(size: 14))
+                        .foregroundColor(.title)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 
                 // Like button
                 Button(action: { 
@@ -434,6 +645,14 @@ struct CommentCard: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .alert("Delete Comment", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                onDelete(comment)
+            }
+        } message: {
+            Text("Are you sure you want to delete this comment? This action cannot be undone.")
+        }
     }
     
     private func timeAgoString(from date: Date) -> String {

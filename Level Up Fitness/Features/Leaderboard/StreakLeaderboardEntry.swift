@@ -14,10 +14,12 @@ struct StreakLeaderboardEntry: LeaderboardEntry {
     var profilePictureURL: String? = nil
     var heroPath: HeroPath? = nil
     var faction: Faction? = nil
+    var currentLevel: Int
     let rank: Int
     
     var id: UUID { userId }
     var value: Int { currentStreak }
+    var level: Int { currentLevel }
     
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
@@ -26,6 +28,7 @@ struct StreakLeaderboardEntry: LeaderboardEntry {
         case profilePictureURL = "profile_picture_url"
         case heroPath = "hero_path"
         case faction
+        case currentLevel = "current_level"
         case rank
     }
     
@@ -62,16 +65,4 @@ struct StreakLeaderboardEntry: LeaderboardEntry {
 //            rank: 5
 //        )
 //    ]
-    
-    init(from decoder: any Decoder) throws {
-        let container: KeyedDecodingContainer<StreakLeaderboardEntry.CodingKeys> = try decoder.container(keyedBy: StreakLeaderboardEntry.CodingKeys.self)
-        
-        self.userId = try container.decode(UUID.self, forKey: StreakLeaderboardEntry.CodingKeys.userId)
-        self.currentStreak = try container.decode(Int.self, forKey: StreakLeaderboardEntry.CodingKeys.currentStreak)
-        self.avatarName = try container.decodeIfPresent(String.self, forKey: StreakLeaderboardEntry.CodingKeys.avatarName)
-        self.profilePictureURL = try container.decodeIfPresent(String.self, forKey: StreakLeaderboardEntry.CodingKeys.profilePictureURL)
-        self.faction = try container.decodeIfPresent(Faction.self, forKey: StreakLeaderboardEntry.CodingKeys.faction)
-        self.rank = try container.decode(Int.self, forKey: StreakLeaderboardEntry.CodingKeys.rank)
-        
-    }
 }

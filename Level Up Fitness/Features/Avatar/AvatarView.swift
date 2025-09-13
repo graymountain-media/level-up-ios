@@ -104,53 +104,57 @@ struct AvatarView: View {
                         .zIndex(-11)
                     
                     streakView
-                    
+                        .padding(.horizontal, -14)
                     
                 }
                 .padding(.horizontal, 40)
                 .foregroundStyle(.white)
                 Spacer(minLength: 12)
-                CachedAsyncImage(url: URL(string: appState.userAccountData?.profile.avatarUrl ?? "")) { image in
-                    EquatableView(id: 3) {
-                        image
-                            .resizable()
-                            .aspectRatio(4/5, contentMode: .fit)
-                            .id(1)
+                ZStack {
+                    CachedAsyncImage(url: URL(string: appState.userAccountData?.profile.avatarUrl ?? "")) { image in
+                        EquatableView(id: 3) {
+                            image
+                                .resizable()
+                                .aspectRatio(4/5, contentMode: .fit)
+                                .id(1)
+                        }
+                        .equatableTipSource(id: 3, nameSpace: mainNamespace, manager: manager)
+                    } placeholder: {
+                        EquatableView(id: 4) {
+                            Image("avatar_placeholder")
+                                .resizable()
+                                .aspectRatio(4/5, contentMode: .fit)
+                                .opacity(0.5)
+                        }
+                        .equatableTipSource(id: 3, nameSpace: mainNamespace, manager: manager)
                     }
-                    .equatableTipSource(id: 3, nameSpace: mainNamespace, manager: manager)
-                } placeholder: {
-                    EquatableView(id: 4) {
-                        Image("avatar_placeholder")
-                            .resizable()
-                            .aspectRatio(4/5, contentMode: .fit)
-                            .opacity(0.5)
+                    
+                    VStack(alignment: .trailing) {
+                        HStack {
+                            VStack(spacing: 8) {
+                                itemSlot(for: .helmet)
+                                itemSlot(for: .chest)
+                                itemSlot(for: .weapon)
+                            }
+                            .padding(12)
+                            .padding(.bottom, 6)
+                            .background(
+                                VStack {
+                                    Image("item_slot_bg")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                    Spacer()
+                                }
+                            )
+                            
+                            Spacer()
+                        }
+                        Spacer()
                     }
-                    .equatableTipSource(id: 3, nameSpace: mainNamespace, manager: manager)
+                    .padding(.horizontal, 16)
                 }
             }
             .padding(.top, 32)
-            VStack(alignment: .trailing) {
-                Spacer()
-                HStack {
-                    Spacer()
-                    VStack(spacing: 2) {
-                        WeaponSlotView(item: appState.userInventory?.equippedItem(for: .weapon)?.item)
-                            .frame(width: 90, height: 90)
-                        if let xpBonus = appState.userInventory?.equippedItem(for: .weapon)?.item?.formattedXPBonus {
-                            Text(xpBonus)
-                                .font(.mainFont(size: 14))
-                                .bold()
-                                .foregroundStyle(.white)
-                        }
-                    }
-                    .onTapGesture {
-                        appState.selectedMenuItem = .itemShop
-                    }
-                    .padding(.horizontal, 24)
-                }
-                
-                Spacer()
-            }
             if appState.shouldShowFactionButton {
                 VStack {
                     Spacer()
@@ -182,6 +186,20 @@ struct AvatarView: View {
                 .padding(.bottom, 36)
             }
             
+        }
+    }
+    
+    func itemSlot(for slot: ItemSlot) -> some View {
+        VStack(spacing: 4) {
+            ItemSlotView(itemSlot: slot, item: appState.userInventory?.equippedItem(for: slot)?.item)
+                .frame(width: 50, height: 50)
+            Text(appState.userInventory?.equippedItem(for: slot)?.item?.formattedXPBonus ?? "0.0%")
+                .font(.mainFont(size: 10))
+                .fontWeight(.medium)
+                .foregroundStyle(.white)
+        }
+        .onTapGesture {
+            appState.selectedMenuItem = .itemShop
         }
     }
     
@@ -244,32 +262,32 @@ struct AvatarView: View {
         let dayText = streak == 1 ? "day" : "days"
         return VStack(alignment: .trailing) {
             HStack {
+                Spacer()
                 Text("Streak:")
                     .bold()
                     .foregroundStyle(.white)
                 Text("\(streak) \(dayText)")
                     .foregroundStyle(.white)
-                HStack(spacing: 0) {
-                    if streak >= 3 {
+                if streak >= 3 {
+                    HStack(spacing: 0) {
                         Image("fire_icon")
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 16, height: 16)
-                    }
-                    if streak >= 7 {
-                        Image("fire_icon")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 16, height: 16)
-                    }
-                    if streak >= 14 {
-                        Image("fire_icon")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 16, height: 16)
+                        if streak >= 7 {
+                            Image("fire_icon")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 16, height: 16)
+                        }
+                        if streak >= 14 {
+                            Image("fire_icon")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 16, height: 16)
+                        }
                     }
                 }
-                Spacer()
             }
             .tipSource(id: 4, nameSpace: mainNamespace, manager: manager, anchorPoint: .bottom)
         }

@@ -20,6 +20,7 @@ struct FactionLeaderboardEntry: LeaderboardEntry {
     let topPlayerName: String
     let topPlayerXp: Int
     var topPlayerImage: String? = nil
+    let topPlayerLevel: Int
     let rank: Int
     
     // Conform to LeaderboardEntry protocol
@@ -27,6 +28,7 @@ struct FactionLeaderboardEntry: LeaderboardEntry {
     var value: Int { totalXp }
     var avatarName: String? { topPlayerName }
     var id: UUID { UUID() }
+    var level: Int { topPlayerLevel }
     
     enum CodingKeys: String, CodingKey {
         case faction
@@ -35,15 +37,17 @@ struct FactionLeaderboardEntry: LeaderboardEntry {
         case topPlayerName = "top_player_name"
         case topPlayerXp = "top_player_xp"
         case topPlayerImage = "top_player_image"
+        case topPlayerLevel = "top_player_level"
         case rank
     }
     
-    init(faction: Faction, totalXp: Int, memberCount: Int, topPlayerName: String, topPlayerXp: Int, rank: Int) {
+    init(faction: Faction, totalXp: Int, memberCount: Int, topPlayerName: String, topPlayerXp: Int, topPlayerLevel: Int, rank: Int) {
         self.faction = faction
         self.totalXp = totalXp
         self.memberCount = memberCount
         self.topPlayerName = topPlayerName
         self.topPlayerXp = topPlayerXp
+        self.topPlayerLevel = topPlayerLevel
         self.rank = rank
     }
     
@@ -56,6 +60,7 @@ struct FactionLeaderboardEntry: LeaderboardEntry {
         self.topPlayerName = try container.decode(String.self, forKey: FactionLeaderboardEntry.CodingKeys.topPlayerName)
         self.topPlayerXp = try container.decode(Int.self, forKey: FactionLeaderboardEntry.CodingKeys.topPlayerXp)
         self.topPlayerImage = try container.decodeIfPresent(String.self, forKey: FactionLeaderboardEntry.CodingKeys.topPlayerImage)
+        self.topPlayerLevel = try container.decode(Int.self, forKey: FactionLeaderboardEntry.CodingKeys.topPlayerLevel)
         self.rank = try container.decode(Int.self, forKey: FactionLeaderboardEntry.CodingKeys.rank)
         
     }

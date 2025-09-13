@@ -19,6 +19,8 @@ struct XpLeaderboardEntry: LeaderboardEntry {
     
     var id: UUID { userId }
     var value: Int { xp }
+    var level: Int { currentLevel }
+    
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
         case xp

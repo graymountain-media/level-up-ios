@@ -7,7 +7,7 @@
 
 
 enum ItemSlot: String, CaseIterable, Identifiable, Codable {
-    case weapon, chest, helmet
+    case weapon, helmet, chest
     
     var id: String { self.rawValue }
     
@@ -16,6 +16,14 @@ enum ItemSlot: String, CaseIterable, Identifiable, Codable {
         case .weapon: "Weapon"
         case .chest: "Chest"
         case .helmet: "Helmet"
+        }
+    }
+    
+    var placeholderImageName: String {
+        switch self {
+        case .weapon: "weapon_placeholder"
+        case .chest: "chestguard_placeholder"
+        case .helmet: "helmet_placeholder"
         }
     }
 }

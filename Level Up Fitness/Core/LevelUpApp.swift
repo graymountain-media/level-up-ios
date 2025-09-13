@@ -47,7 +47,13 @@ struct RootView: View {
                 } else {
                     switch appState.authState {
                     case .loading:
-                        ProgressView()
+                        VStack {
+                            Image("logo")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .padding(.horizontal, 24)
+                            ProgressView()
+                        }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color.major)
                             .transition(.opacity)

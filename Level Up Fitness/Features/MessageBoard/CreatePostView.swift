@@ -12,12 +12,19 @@ struct CreatePostView: View {
     @Environment(\.dismiss) private var dismiss
     @Injected(\.messageBoardService) var messageBoardService
     
-    @State private var postContent = ""
+    @State private var postContent: String
     @State private var isPosting = false
     @State private var errorMessage: String?
     
     private let maxCharacters = 280
+    private let editingPost: Post?
     let onPostCreated: () -> Void
+    
+    init(editingPost: Post? = nil, onPostCreated: @escaping () -> Void) {
+        self.editingPost = editingPost
+        self.onPostCreated = onPostCreated
+        self._postContent = State(initialValue: editingPost?.content ?? "")
+    }
     
     var body: some View {
         NavigationView {
@@ -68,7 +75,7 @@ struct CreatePostView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Create Post")
+                    Text(isEditMode ? "Edit Post" : "Create Post")
                         .font(.mainFont(size: 17))
                         .bold()
                         .foregroundStyle(.white)
@@ -77,14 +84,18 @@ struct CreatePostView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .foregroundColor(.textfieldBorder)
+                    .foregroundColor(.textBlue)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Post") {
-                        createPost()
+                    Button(isEditMode ? "Save" : "Post") {
+                        if isEditMode {
+                            editPost()
+                        } else {
+                            createPost()
+                        }
                     }
-                    .foregroundColor(canPost ? .textfieldBorder : .gray)
+                    .foregroundColor(canPost ? .textBlue : .gray)
                     .disabled(!canPost || isPosting)
                     .overlay(
                         ProgressView()
@@ -104,6 +115,10 @@ struct CreatePostView: View {
         postContent.count <= maxCharacters
     }
     
+    private var isEditMode: Bool {
+        editingPost != nil
+    }
+    
     private func createPost() {
         guard canPost else { return }
         
@@ -119,6 +134,29 @@ struct CreatePostView: View {
                 switch result {
                 case .success:
                     onPostCreated()
+                    dismiss()
+                case .failure(let error):
+                    errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+    
+    private func editPost() {
+        guard canPost, let post = editingPost else { return }
+        
+        isPosting = true
+        errorMessage = nil
+        
+        Task {
+            let result = await messageBoardService.editPost(postId: post.id, content: postContent, imageUrl: post.imageUrl)
+            
+            await MainActor.run {
+                isPosting = false
+                
+                switch result {
+                case .success:
+                    onPostCreated() // This will trigger a refresh
                     dismiss()
                 case .failure(let error):
                     errorMessage = error.localizedDescription
