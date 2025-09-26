@@ -92,6 +92,12 @@ class WorkoutService: WorkoutServiceProtocol {
                 xpEarned: workout.xpEarned
             ))
 
+            // Track XP earned
+            tracking.track(.xpAwarded(
+                amount: workout.xpEarned,
+                source: "workout"
+            ))
+
             return .success(workout)
         } catch {
             return .failure(.databaseError(error.localizedDescription))

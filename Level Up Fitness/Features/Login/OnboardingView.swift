@@ -23,6 +23,7 @@ enum AvatarType: CaseIterable {
 struct OnboardingView: View {
     @InjectedObservable(\.appState) var appState
     @Injected(\.avatarService) var avatarService
+    @Injected(\.trackingService) var tracking
     @State private var firstName: String = ""
     @State private var lastName: String = ""
     @State private var avatarName: String = ""
@@ -280,7 +281,7 @@ struct OnboardingView: View {
                 
                 switch result {
                 case .success:
-                    // Profile created successfully, AppState will handle the navigation
+                    tracking.track(.onboardingCompleted)
                     break
                 case .failure(let error):
                     alertMessage = "Failed to create profile: \(error.localizedDescription)"

@@ -83,7 +83,7 @@ class MissionService: MissionServiceProtocol {
                 .execute()
                 .value
             // Track mission claimed
-            tracking.track(.missionClaimed(missionId: mission.id.uuidString))
+            tracking.track(.missionStarted(missionId: mission.id.uuidString))
 
             return .success(userMission)
         } catch {
