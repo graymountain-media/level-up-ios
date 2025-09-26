@@ -18,6 +18,8 @@ enum LUEvent {
             return "faction_joined"
         case .workoutComplete:
             return "workout_complete"
+        case .missionStarted:
+            return "mission_started"
         case .missionCompleted:
             return "mission_completed"
         case .drillCompleted:
@@ -37,12 +39,16 @@ enum LUEvent {
             return ["faction": faction]
         case .workoutComplete(let type, let duration, let xpEarned):
             return ["workout_type": type, "duration": duration, "xp_earned": xpEarned]
+        case .missionStarted(let missionId):
+            return ["mission_id": missionId]
         case .missionCompleted(let missionId, let success):
             return ["mission_id": missionId, "success": success]
         case .levelUp(let newLevel):
             return ["new_level": newLevel]
         case .xpAwarded(let amount, let source):
             return ["amount": amount, "source": source]
+        case .drillCompleted(let category):
+            return ["category": category]
         }
     }
 }
