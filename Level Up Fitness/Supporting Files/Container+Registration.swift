@@ -77,6 +77,10 @@ extension Container {
     var messageBoardService: Factory<MessageBoardServiceProtocol> {
         self { @MainActor in MessageBoardService() }
     }
+
+    var trackingService: Factory<TrackingProtocol> {
+        self { Tracking() }.singleton
+    }
 }
 
 extension Container {

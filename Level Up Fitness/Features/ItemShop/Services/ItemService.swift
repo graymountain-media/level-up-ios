@@ -49,6 +49,7 @@ protocol ItemServiceProtocol {
 
 @MainActor
 class ItemService: ItemServiceProtocol {
+    @ObservationIgnored @Injected(\.trackingService) private var tracking: TrackingProtocol
     
     // MARK: - Fetch Items
     
@@ -165,6 +166,9 @@ class ItemService: ItemServiceProtocol {
         ]
         // Perform transaction: deduct credits and add item
         try await client.rpc("purchase_item", params: params).execute()
+
+        // Track item purchase
+        tracking.track(.itemPurchased(itemId: itemId.uuidString, cost: item.price))
     }
     
     func purchaseAndEquipItem(_ itemId: UUID) async throws {
@@ -208,6 +212,9 @@ class ItemService: ItemServiceProtocol {
         ]
         
         try await client.rpc("equip_item", params: params).execute()
+
+        // Track item equip
+        tracking.track(.itemEquipped(itemId: itemId.uuidString, slot: item.itemSlot.rawValue))
     }
     
     func unequipItem(slot: ItemSlot) async throws {

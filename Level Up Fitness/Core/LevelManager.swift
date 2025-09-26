@@ -15,6 +15,7 @@ class LevelManager {
     @ObservationIgnored @Injected(\.userDataService) var userDataService
     @ObservationIgnored @Injected(\.pathCalculator) var pathCalculator
     @ObservationIgnored @Injected(\.appFlowManager) var flowManager
+    @ObservationIgnored @Injected(\.trackingService) private var tracking: TrackingProtocol
     
     // Level up notification state
     private(set) var pendingLevelUpNotification: LevelUpNotification?
@@ -74,7 +75,10 @@ class LevelManager {
                 // Store the notification and queue it through flow manager
                 pendingLevelUpNotification = levelUpNotification
                 flowManager.queueFlow(.levelUp(levelUpNotification))
-                
+
+                // Track level up event
+                tracking.track(.levelUp(newLevel: newLevel))
+
                 return .leveledUp(levelUpNotification)
             } else {
                 return .noLevelChange(newXP: newXp)

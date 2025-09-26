@@ -44,6 +44,7 @@ protocol WorkoutServiceProtocol {
 @MainActor
 class WorkoutService: WorkoutServiceProtocol {
     @ObservationIgnored @Injected(\.appState) var appState
+    @ObservationIgnored @Injected(\.trackingService) private var tracking: TrackingProtocol
     init() {}
     
     private var isAuthenticated: Bool {
@@ -78,12 +79,19 @@ class WorkoutService: WorkoutServiceProtocol {
             try await client.from("workouts")
                 .insert(workout)
                 .execute()
-            
+
             // Update the user's streak only if this was the first workout today
             if isFirstWorkoutToday {
                 _ = await updateStreak(userId: userId)
             }
-            
+
+            // Track workout completion
+            tracking.track(.workoutComplete(
+                type: types.joined(separator: ","),
+                duration: duration,
+                xpEarned: workout.xpEarned
+            ))
+
             return .success(workout)
         } catch {
             return .failure(.databaseError(error.localizedDescription))

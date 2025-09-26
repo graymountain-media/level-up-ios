@@ -1,5 +1,6 @@
 import Foundation
 import Supabase
+import FactoryKit
 
 // MARK: - Error Types
 
@@ -61,6 +62,7 @@ struct UserMission: Codable, Identifiable, Equatable {
 
 @MainActor
 class MissionService: MissionServiceProtocol {
+    @ObservationIgnored @Injected(\.trackingService) private var tracking: TrackingProtocol
     func startUserMission(mission: Mission) async -> Result<UserMission, MissionServiceError> {
         guard let userId = client.auth.currentUser?.id else {
             return .failure(.notAuthenticated)
@@ -80,6 +82,9 @@ class MissionService: MissionServiceProtocol {
                 .select()
                 .execute()
                 .value
+            // Track mission claimed
+            tracking.track(.missionClaimed(missionId: mission.id.uuidString))
+
             return .success(userMission)
         } catch {
             return .failure(.databaseError(error.localizedDescription))
@@ -149,7 +154,10 @@ class MissionService: MissionServiceProtocol {
                     .eq("mission_id", value: mission.id)
                     .execute()
             }
-            
+
+            // Track mission completion
+            tracking.track(.missionCompleted(missionId: mission.id.uuidString, success: success))
+
             return .success(())
         } catch {
             return .failure(.databaseError(error.localizedDescription))

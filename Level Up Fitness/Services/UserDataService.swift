@@ -1,6 +1,7 @@
 import Foundation
 import Supabase
 import Combine
+import FactoryKit
 
 class Profile: Codable, Identifiable {
     let id: UUID
@@ -237,8 +238,10 @@ protocol UserDataServiceProtocol {
 }
 
 class UserDataService: UserDataServiceProtocol {
+    @Injected(\.trackingService) private var tracking: TrackingProtocol
+
     // MARK: - Initialization
-    
+
     init() {}
     
     // MARK: - Authentication Methods
@@ -389,12 +392,15 @@ class UserDataService: UserDataServiceProtocol {
     func updateFaction(_ faction: Faction) async -> Result<Void, Error> {
         do {
             let userId = try await client.auth.session.user.id
-            
+
             try await client.from("profiles")
                 .update(["faction": faction.name.lowercased()])
                 .eq("id", value: userId)
                 .execute()
-            
+
+            // Track faction selection
+            tracking.track(.factionJoined(faction: faction.name.lowercased()))
+
             return .success(())
         } catch {
             return .failure(error)
@@ -485,7 +491,17 @@ class UserDataService: UserDataServiceProtocol {
                 xpToNextLevel: currentLevelInfo.xpToNextLevel,
                 progressToNextLevel: currentLevelInfo.progressToNextLevel
             )
-            
+
+            // Update tracking with latest user data
+            tracking.identifyUser(
+                userId: userId.uuidString,
+                faction: profile.faction?.name.lowercased(),
+                heroPath: profile.path?.name.lowercased(),
+                level: xpResult.currentLevel,
+                xpTotal: xpResult.xp,
+                streakDays: streakResult
+            )
+
             return .success(userAccountData)
             
         } catch {
